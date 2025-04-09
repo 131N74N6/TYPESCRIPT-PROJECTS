@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shopping Cart Optimized</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+    <div class="shopping-cart">
+        <!-- Bagian Keranjang -->
+        <div id="cart">
+            <h2>Keranjang (<span id="totalItem">0</span>)</h2>
+            <div id="cartItems"></div>
+            <p>Total: Rp<span id="totalPrice">0</span></p>
+            <!-- Tambahkan ID pada tombol -->
+            <button id="checkout-btn">Checkout</button>
+            <button id="clear-btn">Kosongkan</button>
+        </div>
+
+        <!-- Daftar Produk -->
+        <div id="products"></div>
+
+        <!-- Modal -->
+        <div id="modal" class="modal" style="display: none;">
+            <p id="modalText"></p>
+            <button onclick="CartManager.hideModal()">Tutup</button>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>
