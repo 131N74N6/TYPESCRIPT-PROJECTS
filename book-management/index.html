@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Management</title>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+    <main class="main-page">
+        <!-- Tambahkan buku -->
+        <form id="book-form">
+            <input type="text" id="title" placeholder="Judul" required>
+            <input type="text" id="author" placeholder="Penulis" required>
+            <input type="number" id="year" placeholder="Tahun" required>
+            <div class="control">
+                <button type="button" class="search-mode">Cari Buku</button>
+                <button type="submit" class="submit-btn">Tambah Buku</button>
+                <button type="button" class="delete-all">Hapus Semua Buku</button>
+            </div>
+        </form>
+
+        <!-- Search Buku -->
+         <form id="search-form">
+            <input type="text" id="search-title" placeholder="cari judul buku" required/>
+            <button type="submit" class="search-btn">Cari</button>
+            <button type="button" class="close-search">Kembali</button>
+         </form>
+    
+        <!-- List buku -->
+        <section id="book-list"></section>
+
+        <!-- List buku -->
+        <section id="message">
+            <p id="text"></p>
+            <button type="button" class="close-modal">Tutup</button>
+        </section>
+    </main>
+    <script src="dist/index.js"></script>
+</body>
+</html>

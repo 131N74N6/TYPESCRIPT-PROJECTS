@@ -1,0 +1,181 @@
+.main-page {
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 20px; 
+    min-height: 100dvh;
+}
+
+form#book-form {
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+form#book-form input {
+    padding: 0.7rem;
+    font-size: 1rem;
+    border: 1px solid #9b989d;
+    border-radius: 0.7rem;
+}
+
+form#book-form .submit-btn {
+    border: none;
+    font-family: Arial;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background-color: #5437c0;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+form#book-form .search-mode {
+    border: none;
+    font-family: Arial;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background-color: #565e30;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+form#book-form .control {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+form#book-form .delete-all {
+    border: none;
+    font-family: Arial;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background-color: #5d355f;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+#book-list .book-item {
+    border-bottom: 1px solid #7a4d4d;
+    padding: 1rem;
+    font-family: Arial;
+    font-size: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#book-list .book-item .control {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#book-list .book-item .control .edit-btn {
+    border: none;
+    font-family: Arial;
+    font-size: 0.9rem;
+    font-weight: 500;
+    width: 90px;
+    background-color: #7837a0;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+#book-list .book-item .control .delete-btn {
+    border: none;
+    font-family: Arial;
+    font-size: 0.9rem;
+    font-weight: 500;
+    width: 90px;
+    background-color: #105816;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+form#search-form {
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 50;
+    display: none;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+form#search-form input {
+    padding: 0.7rem;
+    font-size: 1rem;
+    border: 1px solid #9b989d;
+    border-radius: 0.7rem;
+}
+
+form#search-form .search-btn {
+    border: none;
+    font-family: Arial;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background-color: #5437c0;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+form#search-form .close-search {
+    border: none;
+    font-family: Arial;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background-color: #5d355f;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+#message {
+    display: none; 
+    font-family: Arial;
+    font-size: 1rem;
+    position: fixed; 
+    top: 20%; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    background: white; 
+    padding: 20px; 
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    z-index: 70;
+}
+
+#message button {
+    border: none;
+    font-family: Arial;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background-color: #4e315b;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
