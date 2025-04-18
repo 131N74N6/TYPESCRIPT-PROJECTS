@@ -1,0 +1,49 @@
+body {
+    margin: 0;
+}
+
+input#dark-toggle {
+    display: none;
+}
+
+main {
+    min-height: 100dvh;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+body[dark-mode="inactive"] {
+    background-color: #FFFF;
+    color: #CE2928;
+    font-family: Arial;
+    font-size: 1rem;
+}
+
+body[dark-mode="inactive"] header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 1rem;
+    background-color: white;
+    box-shadow: 0 0 8px #CE2928;
+}
+
+body[dark-mode="active"] {
+    background-color: black;
+    color: #995CD0;
+    font-family: Arial;
+    font-size: 1rem;
+}
+
+body[dark-mode="active"] header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 1rem;
+    background-color: black;
+    box-shadow: 0 0 8px #995CD0;
+}
