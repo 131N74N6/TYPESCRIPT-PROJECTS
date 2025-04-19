@@ -1,38 +1,32 @@
 class ThemeSetter {
     private themeKey: string;
     private attr: string;
-    private currentState: string;
+    private currentState: 'active' | 'inactive';
 
     constructor(key: string, attrKey: string) {
         this.themeKey = key;
         this.attr = attrKey;
-        this.currentState = localStorage.getItem(this.themeKey) || 'inactive';
-        this.applyThemeState(); // Initial apply
+        this.currentState = (localStorage.getItem(this.themeKey) as 'active' | 'inactive') || 'inactive';
+        this.applyTheme(); 
     }
 
-    private applyThemeState(): void {
-        const newState = this.currentState === 'active' ? 'active' : 'inactive';
-        
+    private applyTheme(): void {
         // Update DOM hanya jika state berubah
-        if (document.body.getAttribute(this.attr) !== newState) {
-            document.body.setAttribute(this.attr, newState);
+        if (document.body.getAttribute(this.attr) !== this.currentState) {
+            document.body.setAttribute(this.attr, this.currentState);
         }
         
         // Update localStorage hanya jika diperlukan
-        if (localStorage.getItem(this.themeKey) !== newState) {
-            localStorage.setItem(this.themeKey, newState);
+        if (localStorage.getItem(this.themeKey) !== this.currentState) {
+            localStorage.setItem(this.themeKey, this.currentState);
         }
     }
 
     setTheme(state: 'active' | 'inactive'): void {
         if (this.currentState !== state) {
             this.currentState = state;
-            this.applyThemeState();
+            this.applyTheme();
         }
-    }
-
-    toggleTheme(): void {
-        this.setTheme(this.currentState === 'active' ? 'inactive' : 'active');
     }
 
     get isActive(): boolean {
@@ -58,6 +52,7 @@ const debounce = (fn: Function, delay: number) => {
 document.addEventListener("DOMContentLoaded", (): void => {
     const darkTheme = new DarkTheme();
     const darkToggle = document.getElementById("dark-toggle") as HTMLInputElement;
+    const icon = document.querySelector('[for="dark-toggle"]') as HTMLLabelElement;
 
     // Sync checkbox dengan state awal
     darkToggle.checked = darkTheme.isActive;
@@ -65,6 +60,7 @@ document.addEventListener("DOMContentLoaded", (): void => {
     // Handle perubahan tema dengan debounce 100ms
     const handleThemeChange = debounce((isChecked: boolean) => {
         darkTheme.setTheme(isChecked ? 'active' : 'inactive');
+        icon.textContent = darkToggle.checked ? "☀️" : "🌙";
     }, 100);
 
     darkToggle.addEventListener("change", (e) => {
