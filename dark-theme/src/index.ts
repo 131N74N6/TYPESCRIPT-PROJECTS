@@ -43,7 +43,7 @@ class DarkTheme extends ThemeSetter {
 // Event Handler dengan Debouncing
 const debounce = (fn: Function, delay: number) => {
     let timeoutId: number;
-    return (...args: any[]) => {
+    return (...args: any[]): void => {
         window.clearTimeout(timeoutId);
         timeoutId = window.setTimeout(() => fn(...args), delay);
     };

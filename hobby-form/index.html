@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hobby Form</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <section id="form-controller">
+            <button type="button" id="addDataMode">Add Data</button>
+            <button type="button" id="searchMode">Search</button>
+        </section>
+
+        <form id="dataForm" title="dataForm">
+            <section class="form-group">
+                <label for="name">Nama:</label>
+                <input type="text" id="name" required/>
+            </section>
+            
+            <section class="form-group">
+                <div>
+                    <input type="radio" name="gender" id="Laki-laki" value="Laki-laki">
+                    <label for="Laki-laki">Laki-laki</label>
+                </div>
+                <div>
+                    <input type="radio" name="gender" id="Perempuan" value="Perempuan">
+                    <label for="Perempuan">Perempuan</label>
+                </div>
+            </section>
+            
+            <section class="form-group">
+                <label>Hobi:</label>
+                <label><input type="checkbox" name="hobbies" value="Membaca"> Membaca</label>
+                <label><input type="checkbox" name="hobbies" value="Olahraga"> Olahraga</label>
+                <label><input type="checkbox" name="hobbies" value="Musik"> Musik</label>
+            </section>
+            
+            <button type="submit" id="submit-btn">Submit Data</button>
+            <button type="button" id="closeForm">Tutup</button>
+        </form>
+
+        <form id="searchForm" title="searchForm">
+            <input type="text" id="searched-name" required/>
+            <button type="submit">Cari</button>
+            <button type="button" id="closeFilter">Tutup</button>
+        </form>
+
+        <section id="data-list"></section>
+    </main>
+    <script src="./dist/index.js" type="module"></script>
+</body>
+</html>

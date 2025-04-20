@@ -1,0 +1,43 @@
+body {
+    margin: 0;
+    background-color: #FFFF;
+}
+
+main {
+    max-width: 850px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    background-color: #F0F0F0;
+    padding: 1.2rem;
+}
+
+form#dataForm {
+    display: none;
+}
+
+form#searchForm {
+    display: none;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.data-item {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
