@@ -1,0 +1,81 @@
+body[dark-mode="inactive"]  {
+    margin: 0;
+    background-color: #FFFF;
+}
+
+main {
+    max-width: 1000px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    background-color: #F0F0F0;
+    padding: 1.2rem;
+}
+
+#form-controller {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+}
+
+form#dataForm {
+    display: none;
+    padding: 1rem 0;
+}
+
+input#dark-mode {
+    display: none;
+}
+
+label[for="dark-mode"] {
+    background-color: #1d1d1d;
+    padding: 0.5px;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+
+form#searchForm {
+    display: none;
+    padding: 1rem 0;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#data-list {
+    padding: 1rem 0;
+    text-transform: capitalize;
+    font-family: Arial;
+}
+
+/*Dark Mode*/
+body[dark-mode="active"] {
+    margin: 0;
+    background-color: #000000;
+}
+
+body[dark-mode="active"] main {
+    background-color: #1d1d1d;
+}
+
+body[dark-mode="active"] form#dataForm {
+    color: #CDD3F4;
+}
+
+body[dark-mode="active"] form#searchForm {
+    color: #CDD3F4;
+}
+
+body[dark-mode="active"] #data-list {
+    color: #CDD3F4;
+}

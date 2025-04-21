@@ -11,6 +11,11 @@
         <section id="form-controller">
             <button type="button" id="addDataMode">Add Data</button>
             <button type="button" id="searchMode">Search</button>
+            <button type="button" id="delete-all">Delete All User</button>
+            <div class="theme-toggle">
+                <label for="dark-mode">🌙</label>
+                <input type="checkbox" id="dark-mode" name="dark-toggle"/>
+            </div>
         </section>
 
         <form id="dataForm" title="dataForm">
@@ -35,6 +40,7 @@
                 <label><input type="checkbox" name="hobbies" value="Membaca"> Membaca</label>
                 <label><input type="checkbox" name="hobbies" value="Olahraga"> Olahraga</label>
                 <label><input type="checkbox" name="hobbies" value="Musik"> Musik</label>
+                <label><input type="checkbox" name="hobbies" value="Melukis/Menggambar"> Melukis/Menggambar</label>
             </section>
             
             <button type="submit" id="submit-btn">Submit Data</button>
@@ -48,6 +54,10 @@
         </form>
 
         <section id="data-list"></section>
+
+        <section id="notification">
+            <p id="notification-message"></p>
+        </section>
     </main>
     <script src="./dist/index.js" type="module"></script>
 </body>
