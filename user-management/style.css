@@ -9,6 +9,7 @@ main {
     min-height: 100dvh;
     background-color: #F0F0F0;
     padding: 1.2rem;
+    position: relative;
 }
 
 #form-controller {
@@ -58,6 +59,29 @@ button:hover {
     font-family: Arial;
 }
 
+
+#notification {
+    display: none;
+    box-shadow: 0 0 6px rgba(0,0,0,0.322);
+    background-color: #FFFF;
+    font-size: 1rem;
+    font-family: Arial;
+    padding: 1rem;
+}
+
+#notification button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#notification button:hover {
+    background-color: #45a049;
+}
+
 /*Dark Mode*/
 body[dark-mode="active"] {
     margin: 0;
@@ -78,4 +102,27 @@ body[dark-mode="active"] form#searchForm {
 
 body[dark-mode="active"] #data-list {
     color: #CDD3F4;
+}
+
+body[dark-mode="active"] #notification {
+    display: none;
+    background-color: #000000;
+    padding: 1rem;
+    font-size: 1rem;
+    font-family: Arial;
+    color: #CDD3F4;
+    box-shadow: 0 0 6px #CDD3F4;
+}
+
+body[dark-mode="active"] #notification button {
+    background-color: #CDD3F4;
+    color: black;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+body[dark-mode="active"] #notification button:hover {
+    background-color: #b3bdf6;
 }
