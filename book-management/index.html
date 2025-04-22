@@ -12,11 +12,13 @@
         <form id="book-form">
             <input type="text" id="title" placeholder="Judul" required>
             <input type="text" id="author" placeholder="Penulis" required>
-            <input type="number" id="year" placeholder="Tahun" required>
+            <input type="text" id="year" placeholder="Tahun" required>
             <div class="control">
                 <button type="button" class="search-mode">Cari Buku</button>
                 <button type="submit" class="submit-btn">Tambah Buku</button>
                 <button type="button" class="delete-all">Hapus Semua Buku</button>
+                <button type="button" class="asc-sort">A-Z</button>
+                <button type="button" class="dsc-sort">Z-A</button>
             </div>
         </form>
 
@@ -36,6 +38,6 @@
             <button type="button" class="close-modal">Tutup</button>
         </section>
     </main>
-    <script src="dist/index.js"></script>
+    <script src="dist/index.js" type="module"></script>
 </body>
 </html>
