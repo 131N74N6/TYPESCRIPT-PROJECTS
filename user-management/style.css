@@ -13,8 +13,12 @@ main {
 }
 
 #form-controller {
+    background-color: #F0F0F0;
     display: flex;
     flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 35;
     align-items: center;
     gap: 1rem;
 }
@@ -22,6 +26,9 @@ main {
 form#dataForm {
     display: none;
     padding: 1rem 0;
+    position: sticky;
+    top: 4.5%;
+    z-index: 35;
 }
 
 input#dark-mode {
@@ -63,6 +70,9 @@ button:hover {
 #notification {
     display: none;
     box-shadow: 0 0 6px rgba(0,0,0,0.322);
+    position: sticky;
+    position: fixed; 
+    top: 20%; 
     background-color: #FFFF;
     font-size: 1rem;
     font-family: Arial;
@@ -105,11 +115,7 @@ body[dark-mode="active"] #data-list {
 }
 
 body[dark-mode="active"] #notification {
-    display: none;
     background-color: #000000;
-    padding: 1rem;
-    font-size: 1rem;
-    font-family: Arial;
     color: #CDD3F4;
     box-shadow: 0 0 6px #CDD3F4;
 }
@@ -117,10 +123,6 @@ body[dark-mode="active"] #notification {
 body[dark-mode="active"] #notification button {
     background-color: #CDD3F4;
     color: black;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
 }
 
 body[dark-mode="active"] #notification button:hover {

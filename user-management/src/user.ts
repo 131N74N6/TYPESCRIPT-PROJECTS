@@ -132,6 +132,8 @@ class UserManagement extends DataStorage<UserInfo> {
     hideForm(): void {
         this.dataForm.style.display = "none";
         this.dataForm.reset();
+        this.submitBtn.textContent = "Add Data";
+        this.selectedId = null;
     }
 
     showSearchFilter(): void {
