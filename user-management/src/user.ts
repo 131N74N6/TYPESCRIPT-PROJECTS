@@ -137,8 +137,7 @@ class UserManagement extends DataStorage<UserInfo> {
     }
 
     showSearchFilter(): void {
-        const searchForm = document.getElementById("searchForm") as HTMLFormElement;
-        searchForm.style.display = "block";
+        this.searchForm.style.display = "block";
         this.dataForm.style.display = "none";
     }
 

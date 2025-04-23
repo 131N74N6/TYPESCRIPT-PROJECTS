@@ -1,4 +1,5 @@
 import BookManager from "./book.js";
+import { debounce, Theme } from "./theme.js";
 
 interface Book {
     id: number;      
@@ -10,10 +11,11 @@ interface Book {
 const bookForm = document.getElementById("book-form") as HTMLFormElement;
 const searchForm = document.getElementById("search-form") as HTMLFormElement;
 
+const darkToggle = document.getElementById("dark-mode") as HTMLInputElement;
 const title = document.getElementById("title") as HTMLInputElement;
 const author = document.getElementById("author") as HTMLInputElement;
 const year = document.getElementById("year") as HTMLInputElement;
-const searchTitle = (document.getElementById("search-title") as HTMLInputElement).value;
+const searchTitle = document.getElementById("search-title") as HTMLInputElement;
 
 const submitBtn = document.querySelector(".submit-btn") as HTMLButtonElement;
 const bookList = document.getElementById("book-list") as HTMLElement;
@@ -22,14 +24,17 @@ const message = document.getElementById("message") as HTMLElement;
 const messageContent = document.getElementById("text") as HTMLElement;
 
 let bookManager : BookManager;
+let darkTheme : Theme;
 let abortController : AbortController;
 
 function setupService(): void {
     bookManager = new BookManager(bookForm, title, author, year, submitBtn, searchForm, bookList, message, messageContent);
+    darkTheme = new Theme("dark-mode", "dark-mode");
 }
 
 function setupDataAndTheme(): void {
-    bookManager.initialRender();
+    bookManager.showAllBooks();
+    darkToggle.checked = darkTheme.isActive;
 }
 
 function setupEventListener(): void {
@@ -40,7 +45,7 @@ function setupEventListener(): void {
         const target = event.target as HTMLElement;
         if (target.closest(".search-mode")) bookManager.searchMode();
         if (target.closest(".close-search")) bookManager.closeSearchMode();
-        if (target.closest(".delete-all")) bookManager.closeSearchMode();
+        if (target.closest(".delete-all")) bookManager.deleteAllBooks();
         if (target.closest(".close-modal")) bookManager.closeModal();
         if (target.closest(".asc-sort")) bookManager.ascSort();
         if (target.closest(".dsc-sort")) bookManager.dscSort();
@@ -48,6 +53,16 @@ function setupEventListener(): void {
 
     bookForm.addEventListener("submit", handleForm, { signal });
     searchForm.addEventListener("submit", handleSearch, { signal });
+    darkToggle.addEventListener("change", handleThemeToggle, { signal });
+}
+
+const handleThemeChange = debounce((isChecked: boolean): void => {
+    darkTheme.changeTheme(isChecked ? 'active' : 'inactive');
+    darkTheme.changeSign(isChecked ? 'Light Mode' : 'Dark Mode');
+}, 100);
+
+const handleThemeToggle = (event: Event): void => {
+    handleThemeChange((event.target as HTMLInputElement).checked);
 }
 
 function handleForm(event: SubmitEvent): void {
@@ -89,7 +104,8 @@ function handleForm(event: SubmitEvent): void {
         };
         
         bookManager.add(newBook);
-        bookManager.addBookToDOM(newBook);
+        bookList.appendChild(bookManager.createListBookComponent(newBook));
+        bookManager.showModal("Buku berhasil ditambahkan!");
     }
 
     bookForm.reset();
@@ -97,15 +113,16 @@ function handleForm(event: SubmitEvent): void {
 
 function handleSearch(event: SubmitEvent): void {
     event.preventDefault();
+    const items = bookManager.getAll();
+    const searched = searchTitle.value.toLowerCase();
 
-    if (searchTitle.trim() === "") {
+    if (searched.trim() === "") {
         bookManager.showModal("Masukkan judul buku yang akan dicari");
         return;
     }
 
-    const items = bookManager.getAll();
-    const searched = items.filter((search) => search.title.toLowerCase().includes(searchTitle.toLowerCase()));
-    bookManager.showSearchResult(searched);
+    const filterBooks = items.filter((search) => search.title.toLowerCase().includes(searched));
+    bookManager.showSearchResult(filterBooks);
 }
 
 function init(): void {

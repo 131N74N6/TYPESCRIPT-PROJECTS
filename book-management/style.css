@@ -70,6 +70,7 @@ form#book-form .delete-all {
 
 #book-list .book-item {
     border-bottom: 1px solid #7a4d4d;
+    text-transform: capitalize;
     padding: 1rem;
     font-family: Arial;
     font-size: 1rem;
@@ -153,6 +154,10 @@ form#search-form .close-search {
     padding: 0.5rem;
 }
 
+input#dark-mode {
+    display: none;
+}
+
 #message {
     display: none; 
     font-family: Arial;
@@ -178,4 +183,9 @@ form#search-form .close-search {
     border-radius: 0.5rem;
     cursor: pointer;
     padding: 0.5rem;
+}
+
+body[dark-mode="active"] {
+    background-color: black;
+    color: #b182ce;
 }

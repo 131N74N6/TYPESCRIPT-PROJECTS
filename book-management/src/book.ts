@@ -2,8 +2,6 @@ import DataStorage from "./storage.js";
 import Book from './index.js';
 
 class BookManager extends DataStorage<Book> {
-    private domMap = new Map<number, HTMLElement>();
-
     bookForm: HTMLFormElement;
     title: HTMLInputElement;
     author: HTMLInputElement;
@@ -13,8 +11,6 @@ class BookManager extends DataStorage<Book> {
     bookList: HTMLElement;
     message: HTMLElement;
     messageContent: HTMLElement;
-
-    currentSearchResults: Book[] | null = null;
     selectedId: number | null = null;
 
     constructor(
@@ -32,10 +28,32 @@ class BookManager extends DataStorage<Book> {
         this.bookList = bookList;
         this.message = message;
         this.messageContent = messageContent;
+        this.setEventListeners();
     }
 
-    addBookToDOM(book: Book): void {
-        this.currentSearchResults = null;
+    private setEventListeners(): void {
+        this.bookList.addEventListener('click', (event) => {
+            const target = event.target as HTMLElement;
+            const userId = Number(target.closest('.user-list')?.getAttribute('data-id'));
+            
+            if (target.classList.contains('delete-btn')) this.deleteBook(userId); 
+            if (target.classList.contains('edit-btn')) this.selectedItem(userId);
+        });
+    }
+
+    showAllBooks(): void {
+        const bookFragment = document.createDocumentFragment();
+
+        this.getAll().forEach(book => {
+            const component = this.createListBookComponent(book);
+            bookFragment.appendChild(component);
+        });
+
+        this.bookList.innerHTML = '';
+        this.bookList.appendChild(bookFragment);
+    }
+
+    createListBookComponent(book: Book): HTMLDivElement {
         const bookElement = document.createElement("div");
         bookElement.className = "book-item";
         bookElement.setAttribute("book-id", String(book.id));
@@ -50,28 +68,19 @@ class BookManager extends DataStorage<Book> {
                 <button class="delete-btn">Hapus</button>
             </div>
         `;
-
-        this.domMap.set(book.id, bookElement);
-
-        const deleteBtn = bookElement.querySelector(".delete-btn") as HTMLElement;
-        const editBtn = bookElement.querySelector(".edit-btn") as HTMLElement;
-        
-        if (deleteBtn) deleteBtn.addEventListener("click", () => this.deleteBook(book.id));
-        if (editBtn) editBtn.addEventListener("click", () => this.selectedItem(book.id));
-
-        this.bookList.appendChild(bookElement);
+        return bookElement;
     }
 
-    selectedItem(id: number): void {
+    private selectedItem(id: number): void {
         this.selectedId = id;
 
-        const bookInfo = this.getAll().find(book => book.id === id);
+        const bookInfo = this.getAll().find(book => book.id === this.selectedId);
 
         if (!bookInfo) return;
         
         this.title.value = bookInfo.title;
         this.author.value = bookInfo.author;
-        this.year.value = bookInfo.year.toString();
+        this.year.value = bookInfo.year;
         
         this.submitBtn.textContent = "Edit Buku";
     }
@@ -80,73 +89,36 @@ class BookManager extends DataStorage<Book> {
         const item = this.getAll();
         const index = item.findIndex(it => it.id === id);
 
-        if (index !== -1) {
-            item[index] = book;
-            const getSign = this.domMap.get(id);
-
-            if (getSign) {
-                getSign.querySelector('h3')!.textContent = book.title;
-                getSign.querySelectorAll('p')[0].textContent = `Penulis: ${book.author}`;
-                getSign.querySelectorAll('p')[1].textContent = `Tahun: ${book.year}`;
-            }
-        }
+        item[index] = book;
+        this.saveToStorage(item);
     }
 
-    deleteBook(id: number): void {
-        const element = this.domMap.get(id);
-        if(element) {
-            element.remove();    // Hapus dari DOM
-            this.domMap.delete(id); // Hapus dari Map
-            this.delete(id);
-        }
+    private deleteBook(id: number): void {
+        const element = this.bookList.querySelector(`[book-id="${id}"]`) as HTMLElement;
+        element.remove();
+        this.delete(id);
     }
 
     deleteAllBooks(): void {
-        this.deleteAll();
-        this.domMap.forEach(item => item.remove());
-        this.domMap.clear();
-    }
-
-    // Tampilkan semua buku saat pertama kali load
-    initialRender(): void {
-        this.getAll().forEach(book => this.addBookToDOM(book));
-    }
-
-    showSearchResult(book: Book[]): void {
-        this.currentSearchResults = book;
-        
-        const existingIds = new Set(book.map(b => b.id));
-        
-        this.domMap.forEach((element, id) => {
-            if (!existingIds.has(id)) {
-                element.remove();
-                this.domMap.delete(id);
-            }
-        });
-
-        book.forEach(bk => {
-            if (!this.domMap.has(bk.id)) {
-                this.addBookToDOM(bk);
-            }
-        });
-    }
-
-    backToDefaults(): void {
-        this.currentSearchResults = null;
-        const allBooks = this.getAll();
-        
-        if (this.domMap.size !== allBooks.length) {
-            this.domMap.forEach(element => element.remove());
-            this.domMap.clear();
-            this.initialRender();
+        const data = this.getAll();
+        if (data.length > 0) {
+            this.deleteAll();
+            this.showAllBooks();
         } else {
-            allBooks.forEach(book => {
-                const element = this.domMap.get(book.id)!;
-                element.querySelector('h3')!.textContent = book.title;
-                element.querySelectorAll('p')[0].textContent = `Penulis: ${book.author}`;
-                element.querySelectorAll('p')[1].textContent = `Tahun: ${book.year}`;
-            });
+            this.showModal("Tidak ada buku yang ditambahkan");
         }
+    }
+
+    showSearchResult(books: Book[]): void {
+        const filteredBooks = document.createDocumentFragment();
+
+        books.forEach(book => {
+            const searchedComponents = this.createListBookComponent(book);
+            filteredBooks.appendChild(searchedComponents);
+        });
+
+        this.bookList.innerHTML = '';
+        this.bookList.appendChild(filteredBooks);
     }
 
     showModal(text: string): void {
@@ -165,10 +137,11 @@ class BookManager extends DataStorage<Book> {
     }
 
     closeSearchMode(): void {
+        this.selectedId = null;
         this.bookForm.style.display = "flex";
         this.searchForm.style.display = "none";
         this.searchForm.reset();
-        this.backToDefaults();
+        this.showAllBooks();
     }
 
     ascSort(): Book[] {
