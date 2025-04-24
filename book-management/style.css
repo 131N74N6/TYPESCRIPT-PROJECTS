@@ -154,6 +154,16 @@ form#search-form .close-search {
     padding: 0.5rem;
 }
 
+label[for="dark-mode"] {
+    width: 90px;
+    background-color: white;
+    border: 1px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
 input#dark-mode {
     display: none;
 }
@@ -188,4 +198,39 @@ input#dark-mode {
 body[dark-mode="active"] {
     background-color: black;
     color: #b182ce;
+}
+
+body[dark-mode="active"] form#book-form {
+    background-color: black;
+}
+
+body[dark-mode="active"] form#book-form input {
+    padding: 0.7rem;
+    font-size: 1rem;
+    outline: none;
+    background-color: black;
+    color: #b182ce;
+    border: 1px solid #b182ce;
+    border-radius: 0.7rem;
+}
+
+body[dark-mode="active"] form#book-form input::placeholder {
+    color: rgb(148, 88, 186);
+}
+
+
+body[dark-mode="active"] label[for="dark-mode"] {
+    color: #b182ce;
+    background-color: black;
+    border: 1px solid #b182ce;
+}
+
+body[dark-mode="active"] form#search-form {
+    background-color: black;
+}
+
+body[dark-mode="active"] form#search-form input {
+    color: #b182ce;
+    background-color: black;
+    border: 1px solid #b182ce;
 }

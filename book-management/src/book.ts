@@ -34,10 +34,10 @@ class BookManager extends DataStorage<Book> {
     private setEventListeners(): void {
         this.bookList.addEventListener('click', (event) => {
             const target = event.target as HTMLElement;
-            const userId = Number(target.closest('.user-list')?.getAttribute('data-id'));
+            const bookId = Number(target.closest('.book-item')?.getAttribute('book-id'));
             
-            if (target.classList.contains('delete-btn')) this.deleteBook(userId); 
-            if (target.classList.contains('edit-btn')) this.selectedItem(userId);
+            if (target.classList.contains('delete-btn') && bookId) this.deleteBook(bookId); 
+            if (target.classList.contains('edit-btn') && bookId) this.selectedItem(bookId);
         });
     }
 
@@ -131,6 +131,7 @@ class BookManager extends DataStorage<Book> {
     }
 
     searchMode(): void {
+        this.selectedId = null;
         this.bookForm.style.display = "none";
         this.searchForm.style.display = "flex";
         this.bookForm.reset();
@@ -142,17 +143,6 @@ class BookManager extends DataStorage<Book> {
         this.searchForm.style.display = "none";
         this.searchForm.reset();
         this.showAllBooks();
-    }
-
-    ascSort(): Book[] {
-        const allBooks = this.getAll();
-        return allBooks.toSorted();
-    }
-
-    dscSort(): Book[] {
-        const allBooks = this.getAll();
-        const sort1 = allBooks.toSorted();
-        return sort1.reverse();
     }
 }
 

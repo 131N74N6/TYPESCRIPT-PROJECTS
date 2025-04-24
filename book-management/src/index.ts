@@ -28,7 +28,9 @@ let darkTheme : Theme;
 let abortController : AbortController;
 
 function setupService(): void {
-    bookManager = new BookManager(bookForm, title, author, year, submitBtn, searchForm, bookList, message, messageContent);
+    bookManager = new BookManager(
+        bookForm, title, author, year, submitBtn, searchForm, bookList, message, messageContent
+    );
     darkTheme = new Theme("dark-mode", "dark-mode");
 }
 
@@ -47,8 +49,6 @@ function setupEventListener(): void {
         if (target.closest(".close-search")) bookManager.closeSearchMode();
         if (target.closest(".delete-all")) bookManager.deleteAllBooks();
         if (target.closest(".close-modal")) bookManager.closeModal();
-        if (target.closest(".asc-sort")) bookManager.ascSort();
-        if (target.closest(".dsc-sort")) bookManager.dscSort();
     }, { signal });
 
     bookForm.addEventListener("submit", handleForm, { signal });
@@ -83,6 +83,12 @@ function handleForm(event: SubmitEvent): void {
             author: author.value,
             year: year.value
         };
+
+        const selected = document.querySelector(`[book-id="${bookManager.selectedId}"]`) as HTMLElement;
+
+        if (selected) {
+            selected.innerHTML = bookManager.createListBookComponent(updatedBook).innerHTML;
+        }
         
         bookManager.editBook(bookManager.selectedId, updatedBook);
         

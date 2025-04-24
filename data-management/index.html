@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Data</title>
+    <style>
+        .container { max-width: 800px; margin: 20px auto; }
+        .input-group { margin: 10px 0; display: flex; gap: 5px; }
+        button { cursor: pointer; padding: 5px 10px; }
+        .item-card { border: 1px solid #ccc; padding: 10px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Form Input -->
+        <div id="inputSection">
+            <div class="input-group">
+                <input type="text" id="nameInput" placeholder="Masukkan nama">
+                <button onclick="addNewField()">+ Tambah Field</button>
+            </div>
+            <div id="dynamicFields"></div>
+            <button onclick="handleSubmit()">Simpan Data</button>
+        </div>
+
+        <!-- Daftar Item -->
+        <div id="itemsList"></div>
+    </div>
+
+    <script src="./dist/index.js"></script>
+</body>
+</html>
