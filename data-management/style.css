@@ -1,0 +1,31 @@
+.container {
+    max-width: 800px; 
+    margin: 20px auto; 
+    min-height: 100dvh;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+#inputSection { 
+    display: none;
+    padding: 1rem;
+    gap: 5px; 
+    padding: 0 0 5px 0;
+}
+
+#searchSection { 
+    display: none;
+    padding: 1rem;
+    gap: 5px; 
+    padding: 0 0 5px 0;
+}
+
+button { 
+    cursor: pointer; 
+    padding: 5px 10px; 
+}
+
+.item-card { 
+    border: 1px solid #ccc; 
+    padding: 10px; 
+    margin: 5px 0; 
+}

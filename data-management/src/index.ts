@@ -1,9 +1,17 @@
-// script.ts
 interface DataItem {
     id: number;
     name: string;
     details: string[];
 }
+
+const inputSection = document.getElementById("inputSection") as HTMLFormElement;
+const nameInput = document.getElementById('nameInput') as HTMLInputElement;
+const dynamicFields = document.getElementById("dynamicFields") as HTMLDivElement;
+
+const searchSection = document.getElementById("searchSection") as HTMLFormElement;
+const searchData = document.getElementById("searchData") as HTMLInputElement;
+
+const itemsList = document.getElementById("itemsList") as HTMLElement;
 
 class DataManager {
     private static instance: DataManager;
@@ -35,7 +43,7 @@ class DataManager {
     }
 
     public addItem(item: Omit<DataItem, 'id'>): void {
-        const newItem = { ...item, id: Date.now() };
+        const newItem = { id: Date.now(), ...item };
         this.data.push(newItem);
         this.saveToLocalStorage();
     }
@@ -43,7 +51,7 @@ class DataManager {
     public updateItem(id: number, updatedItem: Omit<DataItem, 'id'>): void {
         const index = this.data.findIndex(item => item.id === id);
         if (index > -1) {
-            this.data[index] = { ...updatedItem, id };
+            this.data[index] = { id, ...updatedItem };
             this.saveToLocalStorage();
         }
     }
@@ -65,15 +73,18 @@ class DataManager {
 class DisplayManager {
     private dataManager = DataManager.getInstance();
 
-    public initialize(): void {
-        this.renderList();
-        this.setupForm();
+    constructor() {
+        this.setEventListeners();
     }
 
-    private setupForm(): void {
-        const nameInput = document.getElementById('nameInput') as HTMLInputElement;
-        nameInput.value = '';
-        document.getElementById('dynamicFields')!.innerHTML = '';
+    private setEventListeners(): void {
+        document.addEventListener("click", (event) => {
+            const target = event.target as HTMLElement;
+            const cardId = Number(target.closest(".item-card")?.getAttribute("card-id"));
+            
+            if (target.classList.contains("edit-btn") && cardId) this.selectedData(cardId);
+            if (target.classList.contains("delete-btn") && cardId) this.deleteData(cardId);
+        });
     }
 
     private createInputField(value?: string): HTMLInputElement {
@@ -85,81 +96,186 @@ class DisplayManager {
     }
 
     public addNewField(): void {
-        const container = document.getElementById('dynamicFields')!;
-        container.appendChild(this.createInputField());
+        dynamicFields.appendChild(this.createInputField());
     }
 
-    getFormData(): Omit<DataItem, 'id'> {
-        const name = (document.getElementById('nameInput') as HTMLInputElement).value;
-        const details = Array.from(document.querySelectorAll<HTMLInputElement>('#dynamicFields input'))
-            .map((input: HTMLInputElement) => input.value.trim())
-            .filter(v => v);
+    public showAllData(): void {
+        const cardFragment = document.createDocumentFragment();
+        const data = this.dataManager.getAllItems();
 
-        return { name, details };
-    }
-
-    public renderList(): void {
-        const container = document.getElementById('itemsList')!;
-        container.innerHTML = '';
-
-        this.dataManager.getAllItems().forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'item-card';
-            card.innerHTML = `
-                <h3>${item.name}</h3>
-                ${item.details.map(d => `<p>• ${d}</p>`).join('')}
-                <button onclick="handleEdit(${item.id})">Edit</button>
-                <button onclick="handleDelete(${item.id})">Hapus</button>
-            `;
-            container.appendChild(card);
-        });
-    }
-
-    public prepareEditForm(item: DataItem): void {
-        const nameInput = document.getElementById('nameInput') as HTMLInputElement;
-        nameInput.value = item.name;
-
-        const fieldsContainer = document.getElementById('dynamicFields')!;
-        fieldsContainer.innerHTML = '';
-        item.details.forEach(detail => {
-            fieldsContainer.appendChild(this.createInputField(detail));
+        data.forEach(dt => {
+            const getCardItem = this.createCardItem(dt);
+            cardFragment.appendChild(getCardItem);
         });
 
-        this.dataManager.setEditingId(item.id);
+        itemsList.innerHTML = '';
+        itemsList.appendChild(cardFragment);
+    }
+
+    public createCardItem(data: DataItem): HTMLDivElement {
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.setAttribute("card-id", String(data.id))
+        card.innerHTML = `
+            <h3>${data.name}</h3>
+            ${data.details.map(d => `<p>• ${d}</p>`).join('')}
+            <button type="button" class="edit-btn">Edit</button>
+            <button type="button" class="delete-btn">Hapus</button>
+        `;
+
+        return card;
+    }
+
+    private selectedData(id: number): void {
+        dynamicFields.innerHTML = '';
+        inputSection.style.display = "flex";
+        const data = this.dataManager.getAllItems().find(dt => dt.id === id); 
+
+        if (!data) return;
+
+        nameInput.value = data.name;
+        data.details.forEach(detail => {
+            dynamicFields.appendChild(this.createInputField(detail));
+        });
+        this.dataManager.setEditingId(id);
+    }
+
+    public searchedData(searched: DataItem[]): void {
+        const filteredCard = document.createDocumentFragment();
+        
+        searched.forEach(search => {
+            const getSearchedData = this.createCardItem(search);
+            filteredCard.appendChild(getSearchedData);
+        });
+        
+        itemsList.appendChild(filteredCard);
+        itemsList.innerHTML = searched.length > 0 ? '' : '<p class="empty-message">Tidak ada hasil ditemukan</p>';
+    }
+
+    private deleteData(id: number): void {
+        this.dataManager.deleteItem(id);
+        this.showAllData();
+    }
+
+    public openFormData(): void {
+        inputSection.style.display = "flex";
+        searchSection.style.display = "none";
+    }
+
+    public closeFormData(): void {
+        inputSection.style.display = "none";
+        inputSection.reset();
+        searchSection.reset();
+        this.dataManager.setEditingId(null);
+    }
+
+    public openSearchData(): void {
+        searchSection.style.display = "flex";
+        inputSection.style.display = "none";
+        this.dataManager.setEditingId(null);
+    }
+
+    public closeSearchData(): void {
+        searchSection.style.display = "none";
+        searchSection.reset();
+        inputSection.reset();
+        this.showAllData();
+        this.dataManager.setEditingId(null);
     }
 }
 
-const displayManager = new DisplayManager();
-displayManager.initialize();
+let displayManager : DisplayManager;
+let abortController : AbortController;
 
-function addNewField(): void {
-    displayManager.addNewField();
+const setServices = (): void => {
+    displayManager = new DisplayManager();
 }
 
-function handleSubmit(): void {
+const setDataAndUI = (): void => {
+    displayManager.showAllData();
+}
+
+const submitData = (event: SubmitEvent): void => {
+    event.preventDefault();
     const dataManager = DataManager.getInstance();
-    const formData = displayManager.getFormData();
+    const smallText = nameInput.value.toLowerCase();
+    const isExist = dataManager.getAllItems().some(data => data.name.toLowerCase().includes(smallText));
+
+    const newData: DataItem = {
+        id: DataManager.getInstance().getEditingId() || Date.now(),
+        name: nameInput.value,
+        details: Array.from(document.querySelectorAll<HTMLInputElement>('#dynamicFields input'))
+            .map((input: HTMLInputElement) => input.value.trim())
+            .filter(v => v)
+    }
+
+    if (nameInput.value.trim().length === 0) {
+        console.log("input tidak boleh kosong!");
+        return;
+    }
     
     if (dataManager.getEditingId()) {
-        dataManager.updateItem(dataManager.getEditingId()!, formData);
+        const selectedData = document.querySelector(`[card-id="${newData.id}"]`) as HTMLElement;
+
+        if (selectedData)  selectedData.innerHTML = displayManager.createCardItem(newData).innerHTML;
+
+        dataManager.updateItem(dataManager.getEditingId() as number, newData);
     } else {
-        dataManager.addItem(formData);
+        if (!isExist) {
+            dataManager.addItem(newData);
+            itemsList.appendChild(displayManager.createCardItem(newData));
+        } else {
+            console.log("Data sudah ada");
+        }
     }
     
     dataManager.setEditingId(null);
-    displayManager.initialize();
+    inputSection.style.display = "none";
+    inputSection.reset();
 }
 
-function handleEdit(id: number): void {
-    const dataManager = DataManager.getInstance();
-    const item = dataManager.getAllItems().find(i => i.id === id);
-    if (item) {
-        displayManager.prepareEditForm(item);
+const filterData = (event: SubmitEvent): void => {
+    event.preventDefault();
+
+    if (nameInput.value.trim().length === 0) {
+        console.log("input tidak boleh kosong!");
+        return;
     }
+
+    const keyword = searchData.value.toLowerCase();
+    const data = DataManager.getInstance().getAllItems();
+    const result = data.filter(dt => dt.name.toLowerCase().includes(keyword));
+
+    displayManager.searchedData(result);
 }
 
-function handleDelete(id: number): void {
-    const dataManager = DataManager.getInstance();
-    dataManager.deleteItem(id);
-    displayManager.renderList();
+const setEventListener = () => {
+    abortController = new AbortController();
+    const { signal } = abortController;
+
+    document.addEventListener("click", (event) => {
+        const target = event.target as HTMLElement;
+
+        if (target.closest("#addFieldBtn")) displayManager.addNewField();
+        if (target.closest("#openForm")) displayManager.openFormData();
+        if (target.closest("#closeForm")) displayManager.closeFormData();
+        if (target.closest("#openSearch")) displayManager.openSearchData();
+        if (target.closest("#closeSearch")) displayManager.closeSearchData();
+    }, { signal });
+    
+    inputSection.addEventListener("submit", submitData, { signal });
+    searchSection.addEventListener("submit", filterData, { signal });
 }
+
+const init = (): void => {
+    setServices();
+    setDataAndUI();
+    setEventListener();
+}
+
+const cleanUp = (): void => {
+    abortController?.abort();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("beforeunload", cleanUp);

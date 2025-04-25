@@ -4,29 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Data</title>
-    <style>
-        .container { max-width: 800px; margin: 20px auto; }
-        .input-group { margin: 10px 0; display: flex; gap: 5px; }
-        button { cursor: pointer; padding: 5px 10px; }
-        .item-card { border: 1px solid #ccc; padding: 10px; margin: 5px 0; }
-    </style>
+    <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    <div class="container">
+    <main class="container">
+        <header class="header">
+            <button id="openForm" type="button">Add Data</button>
+            <button id="openSearch" type="button">Search Data</button>
+        </header>
         <!-- Form Input -->
-        <div id="inputSection">
+        <form id="inputSection">
             <div class="input-group">
                 <input type="text" id="nameInput" placeholder="Masukkan nama">
-                <button onclick="addNewField()">+ Tambah Field</button>
+                <button type="button" id="addFieldBtn">+ Tambah Field</button>
             </div>
             <div id="dynamicFields"></div>
-            <button onclick="handleSubmit()">Simpan Data</button>
-        </div>
+            <div id="formController">
+                <button type="submit">Simpan Data</button>
+                <button type="button" id="closeForm">X</button>
+            </div>
+        </form>
+
+        <!-- Search Item -->
+         <form id="searchSection">
+            <input type="text" id="searchData" placeholder="cari..."/>
+            <button type="submit" id="searchBtn">Cari</button>
+            <button type="button" id="closeSearch">X</button>
+         </form>
 
         <!-- Daftar Item -->
-        <div id="itemsList"></div>
-    </div>
-
-    <script src="./dist/index.js"></script>
+        <section id="itemsList"></section>
+    </main>
+    <script src="./dist/index.js" type="module"></script>
 </body>
 </html>
