@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css"/>
+    <title>checkbox filter</title>
+</head>
+<body>
+    <form id="dataForm">
+        <input type="text" id="name" placeholder="Name" required>
+        <select id="category" required>
+            <option value="">Pilih Kategori</option>
+            <option value="electronics">Elektronik</option>
+            <option value="fashion">Fashion</option>
+        </select>
+        <input type="file" id="image" accept="image/*">
+        <button type="submit">Simpan</button>
+    </form>
+    
+    <div id="filters">
+        <label><input type="checkbox" value="electronics" checked> Elektronik</label>
+        <label><input type="checkbox" value="fashion" checked> Fashion</label>
+    </div>
+    
+    <div id="itemsContainer"></div>
+    <script src="./dist/index.js" type="module"></script>
+</body>
+</html>

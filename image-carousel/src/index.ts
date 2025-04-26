@@ -7,6 +7,7 @@ type Carousel = {
     nextSlide: () => void;
     startAutoSlide?: () => void;
     stopAutoSlide?: () => void;
+    abortController?: AbortController;
 }
 
 const images1 = document.querySelectorAll(".image-1");
@@ -18,23 +19,25 @@ const carouselContainer2 = document.querySelector(".carousel-container-2") as HT
 const images3 = document.querySelectorAll(".image-3");
 const carouselContainer3 = document.querySelector(".carousel-container-3") as HTMLElement;
 
+let abortController: AbortController;
+
 const firstCarousel: Carousel = {
     currentIndex: 0,
     totalSlide: images1.length,
 
-    updateCarousel() {
+    updateCarousel(): void {
         if (this.currentIndex < 0) this.currentIndex = this.totalSlide - 1;
         if (this.currentIndex >= this.totalSlide) this.currentIndex = 0;
         
         carouselContainer1.style.transform = `translateX(-${this.currentIndex * 100}%)`;
     },
 
-    prevSlide() {
+    prevSlide(): void {
         this.currentIndex--;
         this.updateCarousel();
     },
 
-    nextSlide() {
+    nextSlide(): void {
         this.currentIndex++;
         this.updateCarousel();
     }
@@ -45,31 +48,30 @@ const secondCarousel: Carousel = {
     totalSlide: images2.length,
     intervalId: null,
 
-    updateCarousel() {
+    updateCarousel(): void {
         if (this.currentIndex < 0) this.currentIndex = this.totalSlide - 1;
         if (this.currentIndex >= this.totalSlide) this.currentIndex = 0;
 
         carouselContainer2.style.transform = `translateY(-${this.currentIndex * 100}%)`;
     },
 
-    nextSlide() {
+    nextSlide(): void {
         this.currentIndex++;
         this.updateCarousel();
     },
 
-    prevSlide() {
+    prevSlide(): void {
         this.currentIndex--;
         this.updateCarousel();
     },
 
     startAutoSlide(): void {
-        this.intervalId = setInterval(() => {
-            this.nextSlide();
-        }, 3000);
+        this.intervalId = setInterval(() => this.nextSlide(), 3000);
     },
 
-    stopAutoSlide() {
+    stopAutoSlide(): void {
         if (this.intervalId) clearInterval(this.intervalId);
+        this.intervalId = null;
     }
 }
 
@@ -78,69 +80,74 @@ const thirdCarousel: Carousel = {
     totalSlide: images3.length,
     intervalId: null,
 
-    updateCarousel() {
+    updateCarousel(): void {
         if (this.currentIndex < 0) this.currentIndex = this.totalSlide - 1;
         if (this.currentIndex >= this.totalSlide) this.currentIndex = 0;
 
         carouselContainer3.style.transform = `translateX(-${this.currentIndex * 100}%)`;
     },
 
-    nextSlide() {
+    nextSlide(): void {
         this.currentIndex++;
         this.updateCarousel();
     },
 
-    prevSlide() {
+    prevSlide(): void {
         this.currentIndex--;
         this.updateCarousel();
     },
 
     startAutoSlide(): void {
-        this.intervalId = setInterval(() => {
-            this.nextSlide();
-        }, 3000);
+        this.intervalId = setInterval(() => this.nextSlide(), 3000);
     },
 
-    stopAutoSlide() {
+    stopAutoSlide(): void {
         if (this.intervalId) clearInterval(this.intervalId);
+        this.intervalId = null;
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    if (secondCarousel.startAutoSlide) secondCarousel.startAutoSlide();
-    if (thirdCarousel.startAutoSlide) thirdCarousel.startAutoSlide();
+function setupEventListeners(): void {
+    abortController = new AbortController();
+    const { signal } = abortController;
 
-    if (secondCarousel.startAutoSlide) carouselContainer2.addEventListener("mouseleave", (): void => {
-        if (secondCarousel.startAutoSlide) secondCarousel.startAutoSlide();
-    });
+    document.addEventListener("click", (event) => {
+        const target = event.target as HTMLElement;
 
-    if (thirdCarousel.startAutoSlide) carouselContainer3.addEventListener("mouseleave", (): void => {
-        if (thirdCarousel.startAutoSlide) thirdCarousel.startAutoSlide();
-    });
+        if (target.classList.contains("left-btn-1")) firstCarousel.prevSlide();
+        if (target.classList.contains("right-btn-1")) firstCarousel.nextSlide();
+        if (target.classList.contains("left-btn-2")) secondCarousel.prevSlide();
+        if (target.classList.contains("right-btn-2")) secondCarousel.nextSlide();
+        if (target.classList.contains("left-btn-3")) thirdCarousel.prevSlide();
+        if (target.classList.contains("right-btn-3")) thirdCarousel.nextSlide();
+    }, { signal });
 
-    if (secondCarousel.startAutoSlide) carouselContainer2.addEventListener("mouseenter", (): void => {
+    carouselContainer2.addEventListener("mouseenter", (): void => {
         if (secondCarousel.stopAutoSlide) secondCarousel.stopAutoSlide();
-    });
+    }, { signal });
 
-    if (thirdCarousel.startAutoSlide) carouselContainer3.addEventListener("mouseenter", (): void => {
+    carouselContainer2.addEventListener("mouseleave", (): void => {
+        if (secondCarousel.startAutoSlide) secondCarousel.startAutoSlide()
+    }, { signal });
+
+    carouselContainer3.addEventListener("mouseenter", (): void => {
         if (thirdCarousel.stopAutoSlide) thirdCarousel.stopAutoSlide();
-    });
-    
-    const leftBtn1 = document.querySelector(".left-btn-1") as HTMLButtonElement;
-    const rightBtn1 = document.querySelector(".right-btn-1") as HTMLButtonElement;
+    }, { signal });
 
-    const leftBtn2 = document.querySelector(".left-btn-2") as HTMLButtonElement;
-    const rightBtn2 = document.querySelector(".right-btn-2") as HTMLButtonElement;
+    carouselContainer3.addEventListener("mouseleave", (): void => {
+        if (thirdCarousel.startAutoSlide) thirdCarousel.startAutoSlide();
+    }, { signal });
+}
 
-    const leftBtn3 = document.querySelector(".left-btn-3") as HTMLButtonElement;
-    const rightBtn3 = document.querySelector(".right-btn-3") as HTMLButtonElement;
+function init(): void {
+    setupEventListeners();
+}
 
-    if (leftBtn1) leftBtn1.addEventListener("click", (): void => firstCarousel.prevSlide());
-    if (rightBtn1) rightBtn1.addEventListener("click", (): void => firstCarousel.nextSlide());
+function cleanUp(): void {
+    abortController.abort();
+    secondCarousel.stopAutoSlide?.();
+    thirdCarousel.stopAutoSlide?.();
+}
 
-    if (leftBtn2) leftBtn2.addEventListener("click", (): void => secondCarousel.prevSlide());
-    if (rightBtn2) rightBtn2.addEventListener("click", (): void => secondCarousel.nextSlide());
-
-    if (leftBtn3) leftBtn3.addEventListener("click", (): void => thirdCarousel.prevSlide());
-    if (rightBtn3) rightBtn3.addEventListener("click", (): void => thirdCarousel.nextSlide());
-});
+document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("beforeunload", cleanUp);

@@ -139,6 +139,7 @@ function init(): void {
 
 function cleanUp(): void {
     abortController?.abort();
+    bookManager.cleanUp();
 }
 
 document.addEventListener("DOMContentLoaded", init);

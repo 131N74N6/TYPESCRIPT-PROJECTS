@@ -2,6 +2,7 @@ import DataStorage from "./storage.js";
 import Book from './index.js';
 
 class BookManager extends DataStorage<Book> {
+    private abortCtrl: AbortController;
     bookForm: HTMLFormElement;
     title: HTMLInputElement;
     author: HTMLInputElement;
@@ -19,6 +20,7 @@ class BookManager extends DataStorage<Book> {
         messageContent: HTMLElement
     ) {
         super("BOOKS_DATA"); 
+        this.abortCtrl = new AbortController();
         this.bookForm = bookForm;
         this.title = title;
         this.author = author;
@@ -32,13 +34,14 @@ class BookManager extends DataStorage<Book> {
     }
 
     private setEventListeners(): void {
+        const { signal } = this.abortCtrl;
         this.bookList.addEventListener('click', (event) => {
             const target = event.target as HTMLElement;
             const bookId = Number(target.closest('.book-item')?.getAttribute('book-id'));
             
             if (target.classList.contains('delete-btn') && bookId) this.deleteBook(bookId); 
             if (target.classList.contains('edit-btn') && bookId) this.selectedItem(bookId);
-        });
+        }, { signal });
     }
 
     showAllBooks(): void {
@@ -143,6 +146,10 @@ class BookManager extends DataStorage<Book> {
         this.searchForm.style.display = "none";
         this.searchForm.reset();
         this.showAllBooks();
+    }
+
+    cleanUp(): void {
+        this.abortCtrl.abort();
     }
 }
 

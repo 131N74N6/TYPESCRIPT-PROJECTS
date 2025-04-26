@@ -139,7 +139,10 @@ const init = (): void => {
     setupEventListeners();
 }
 
-const cleanUp = (): void => abortController?.abort();
+const cleanUp = (): void => {
+    abortController?.abort();
+    userManagement.cleanUp();
+}
 
 document.addEventListener("DOMContentLoaded", init);
 window.addEventListener("beforeunload", cleanUp);

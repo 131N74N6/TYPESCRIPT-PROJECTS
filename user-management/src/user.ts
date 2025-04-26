@@ -2,6 +2,7 @@ import DataStorage from "./storage.js";
 import { UserInfo } from "./type.js";
 
 class UserManagement extends DataStorage<UserInfo> {
+    private abortCtrl: AbortController;
     selectedId: number | null = null;
     inputName: HTMLInputElement;
     hobbies: NodeListOf<HTMLInputElement>;
@@ -19,6 +20,7 @@ class UserManagement extends DataStorage<UserInfo> {
         notification: HTMLElement, notificationMessage: HTMLElement
     ) {
         super("user-data");
+        this.abortCtrl = new AbortController();
         this.inputName = inputName
         this.hobbies = hobbies;
         this.submitBtn = submitBtn;
@@ -32,17 +34,14 @@ class UserManagement extends DataStorage<UserInfo> {
     }
 
     private setupGlobalListeners() {
+        const { signal } = this.abortCtrl;
         this.dataList.addEventListener('click', (event) => {
             const target = event.target as HTMLElement;
             const userId = Number(target.closest('.user-list')?.getAttribute('data-id'));
             
-            if(target.classList.contains('delete-btn')) {
-                this.deleteUser(userId);
-            } 
-            else if(target.classList.contains('edit-btn')) {
-                this.handleEdit(userId);
-            }
-        });
+            if(target.classList.contains('delete-btn')) this.deleteUser(userId);
+            if(target.classList.contains('edit-btn')) this.handleEdit(userId);
+        }, { signal });
     }
 
     showAllData(): void {
@@ -154,6 +153,10 @@ class UserManagement extends DataStorage<UserInfo> {
 
     hideModal(): void {
         this.notification.style.display = "none";
+    }
+
+    cleanUp(): void {
+        this.abortCtrl.abort();
     }
 }
 
