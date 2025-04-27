@@ -7,23 +7,34 @@
     <title>checkbox filter</title>
 </head>
 <body>
-    <form id="dataForm">
-        <input type="text" id="name" placeholder="Name" required>
-        <select id="category" required>
-            <option value="">Pilih Kategori</option>
-            <option value="electronics">Elektronik</option>
-            <option value="fashion">Fashion</option>
-        </select>
-        <input type="file" id="image" accept="image/*">
-        <button type="submit">Simpan</button>
-    </form>
-    
-    <div id="filters">
-        <label><input type="checkbox" value="electronics" checked> Elektronik</label>
-        <label><input type="checkbox" value="fashion" checked> Fashion</label>
-    </div>
-    
-    <div id="itemsContainer"></div>
+    <main class="content">
+        <section>
+            <button type="button" id="delete-all">Delete All</button>
+        </section>
+        <section id="filters">
+            <input type="checkbox" value="anime" checked/>
+            <label for="Anime">Anime</label>
+            <input type="checkbox" value="buildings/urbans" checked/>
+            <label for="buildings/urbans">Buildings/Urbans</label>
+            <input type="checkbox" value="nature" checked/>
+            <label for="nature">Nature</label>
+        </section>
+        
+        <form id="dataForm">
+            <input type="text" id="name" placeholder="Name" required>
+            <select id="category" required>
+                <option value="anime">Anime</option>
+                <option value="buildings/urbans">Buildings/Urbans</option>
+                <option value="nature">Nature</option>
+            </select>
+            <input type="file" id="image" accept="image/*">
+            <button type="submit">Simpan</button>
+        </form>
+        
+        <section id="itemsContainer"></section>
+
+        <section id="modal"></section>
+    </main>
     <script src="./dist/index.js" type="module"></script>
 </body>
 </html>

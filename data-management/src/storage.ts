@@ -6,7 +6,7 @@ interface DataItem {
 
 class DataManager {
     private static instance: DataManager;
-    private data: DataItem[] = [];
+    data: DataItem[] = [];
     private currentEditingId: number | null = null;
 
     private constructor() {

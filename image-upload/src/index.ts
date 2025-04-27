@@ -1,128 +1,180 @@
-type Item = {
-    id: string;
-    name: string;
-    category: 'electronics' | 'fashion';
-    image: string;
-}
-  
-type ItemInput = Omit<Item, 'id'>; // Untuk form input (tanpa ID)
-type PartialItem = Partial<Item>; // Untuk update data
-  
-class DataManager {
-    private items: Item[] = [];
-    private selectedCategory: string[] = ['electronics', 'fashion'];
-    private currentEditingId: string | null = null;
+import Modal from "./modal.js";
+import { DataStorage, Item, ItemInput } from "./storage.js";
+
+const dataForm = document.getElementById('dataForm') as HTMLFormElement;
+const imgName = (document.getElementById('name') as HTMLInputElement);
+const category = (document.getElementById('category') as HTMLSelectElement);
+const imageFile = document.getElementById('image') as HTMLInputElement;
+const itemsContainer = document.getElementById('itemsContainer') as HTMLElement;
+const checkboxCategories = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+
+class Displayer extends DataStorage {
+    protected selectedCategory: string[] = ['anime', 'buildings/urbans', 'nature'];
+    private abortCtrl : AbortController;
   
     constructor() {
-        this.loadFromLocalStorage();
-        this.initEventListeners();
-        this.renderItems();
+        super();
+        this.abortCtrl = new AbortController();
+        this.clickAndSubmitListeners();
     }
-  
-    private loadFromLocalStorage() {
-        const saved = localStorage.getItem('items');
-        if (saved) this.items = JSON.parse(saved);
+
+    private clickAndSubmitListeners(): void {
+        const { signal } = this.abortCtrl;
+        
+        document.addEventListener("click", (event) => {
+            const target = event.target as HTMLElement;
+            const imageId = target.closest(".image-data")?.getAttribute("image-id");
+
+            if (target.classList.contains("edit-btn") && imageId) this.selectedItem(imageId);
+            if (target.classList.contains("delete-btn") && imageId) this.deleteImage(imageId);
+            if (target.closest("#delete-all")) this.deleteAllImage();
+
+            checkboxCategories.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    this.selectedCategory = Array.from(checkboxCategories)
+                        .filter(c => c.checked)
+                        .map(c => c.value as Item['category']);
+                    this.showAllData();
+                }, { signal });
+            });
+        }, { signal });
+
+        dataForm.addEventListener("submit", (event) => this.handleFormSubmit(event), { signal });
     }
-  
-    private saveToLocalStorage() {
-        localStorage.setItem('items', JSON.stringify(this.items));
-    }
-  
-    private async readImage(file: File): Promise<string> {
-        return new Promise((resolve) => {
+
+    async processingImage(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = (event) => resolve(event.target?.result as string);
+            reader.onload = (event) => resolve((event.target as FileReader).result as string);
+            reader.onerror = reject;
             reader.readAsDataURL(file);
         });
     }
-  
-    async addItem(itemData: ItemInput) {
-        const newItem: Item = { id: Date.now().toString(), ...itemData };
-        this.items = [...this.items, newItem];
-        this.saveToLocalStorage();
-    }
-  
-    updateItem(id: string, updates: PartialItem) {
-        this.items = this.items.map(item => item.id === id ? {...item, ...updates} : item);
-        this.saveToLocalStorage();
-    }
-  
-    deleteItem(id: string) {
-      this.items = this.items.filter(item => item.id !== id);
-      this.saveToLocalStorage();
-    }
-  
-    private shouldRender(newItems: Item[]): boolean {
-        return newItems.length !== this.items.length || 
-        newItems.some((item, i) => item.id !== this.items[i]?.id);
-    }
-  
-    private renderItems() {
-        const filtered = this.items.filter(item => this.selectedCategory.includes(item.category));
 
-        if (!this.shouldRender(filtered)) return;
-
-        const container = document.getElementById('itemsContainer') as HTMLElement;
-        container.innerHTML = filtered.map(item => `
-            <div class="item-card" data-id="${item.id}">
-            <h3>${item.name}</h3>
-            <img class="image-preview" src="${item.image}" alt="${item.name}">
-            <p>Kategori: ${item.category}</p>
-            <button class="editBtn">Edit</button>
-            <button class="deleteBtn">Hapus</button>
-            </div>
-        `).join('');
+    private async handleFormSubmit(event: SubmitEvent): Promise<void> {
+        event.preventDefault();
+        const file = imageFile.files?.[0];
         
-        filtered.forEach(item => {
-            const card = document.querySelector(`[data-id="${item.id}"]`)!;
-            card.querySelector('.deleteBtn')!.addEventListener('click', () => {
-                this.deleteItem(item.id);
-                this.renderItems();
-            });
-        
-            card.querySelector('.editBtn')!.addEventListener('click', () => {
-                this.currentEditingId = item.id;
-                (document.getElementById('name') as HTMLInputElement).value = item.name;
-                (document.getElementById('category') as HTMLSelectElement).value = item.category;
-            });
-        });
-    }
-  
-    // 6. Event listeners dan inisialisasi
-    private initEventListeners() {
-        document.getElementById('dataForm')!.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            
-            const name = (document.getElementById('name') as HTMLInputElement).value;
-            const category = (document.getElementById('category') as HTMLSelectElement).value;
-            const imageFile = (document.getElementById('image') as HTMLInputElement).files?.[0];
-            
-            if (imageFile) {
-            const image = await this.readImage(imageFile);
-            const itemData: ItemInput = { name, category: category as any, image };
-            
-            if (this.currentEditingId) {
-                this.updateItem(this.currentEditingId, itemData);
-                this.currentEditingId = null;
-            } else {
-                await this.addItem(itemData);
-            }
-            
-            this.renderItems();
-            (event.target as HTMLFormElement).reset();
+        if (!imgName.value.trim() || !category.value || !file) {
+            new Modal("Masukkan data dengan lengkap");
+            return;
         }
-    });
-  
-    document.getElementById('filters')!.addEventListener('change', (e) => {
-        const target = e.target as HTMLInputElement;
-        if (target.type === 'checkbox') {
-            this.selectedCategory = target.checked
-                ? [...this.selectedCategory, target.value]
-                : this.selectedCategory.filter(cat => cat !== target.value);
-             this.renderItems();
-        }});
+
+        try {
+            const imageData = await this.processingImage(file);
+            const newItem: ItemInput = {
+                imgName: imgName.value,
+                category: category.value as Item['category'],
+                image: imageData
+            };
+
+            if (this.getSelectedId()) {
+                this.changeSelectedData(this.getSelectedId()!, newItem);
+            } else {
+                this.addDataToStorages(newItem);
+            }
+            this.showAllData();
+        } catch (error) {
+            new Modal("Gagal memproses gambar");
+        }
+        
+        dataForm.reset();
+        this.setSelectedId(null);
+    }
+
+    showAllData(): void {
+        const imageFragment = document.createDocumentFragment();
+        const data = this.getAllData();
+
+        data.forEach(dt => {
+            const getComponents = this.createImageComponent(dt);
+            imageFragment.appendChild(getComponents);
+        });
+
+        itemsContainer.innerHTML = '';
+        itemsContainer.appendChild(imageFragment);
+    }
+
+    createImageComponent(item: Item): HTMLElement {
+        const div = document.createElement("div") as HTMLDivElement;
+        div.className = "image-data";
+        div.setAttribute("image-id", item.id);
+
+        const h3 = document.createElement("h3") as HTMLHeadingElement;
+        h3.textContent = `${item.imgName}`;
+        
+        const imageWrap = document.createElement("div") as HTMLDivElement;
+        imageWrap.className = "image-wrap";
+
+        const images = document.createElement("img") as HTMLImageElement;
+        images.src = item.image;
+        imageWrap.appendChild(images);
+
+        const p = document.createElement("p") as HTMLParagraphElement;
+        p.className = "category"
+        p.textContent = `Kategori : ${item.category}`;
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "edit-btn";
+        editBtn.textContent = "Edit";
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "Delete";
+
+        div.append(imageWrap, h3, p, editBtn, deleteBtn);
+        return div;
+    }
+
+    private selectedItem(id: string): void {
+        const getData = this.getAllData().find(data => data.id === id);
+        
+        if (!getData) return;
+        
+        imgName.value = getData.imgName;
+        category.value = getData.category;
+        this.setSelectedId(id);
+    }
+
+    deleteImage(id: string): void {
+        const selectedItem = document.querySelector(`[image-id="${id}"]`);
+        if (selectedItem) {
+            selectedItem.remove();
+            this.deleteFromStorages(id);
+        }
+    }
+
+    deleteAllImage(): void {
+        const data = this.getAllData();
+        if (data.length > 0) {
+            itemsContainer.replaceChildren();
+            this.deleteAllFromStorages();
+        } else {
+            new Modal("Tambahkan minimal 1 gambar");
+        }
+    }
+
+    cleanUpListeners(): void {
+        this.abortCtrl.abort();
     }
 }
-  
-  // Jalankan aplikasi
-  new DataManager();
+
+let displayer: Displayer;
+
+function setupServices(): void {
+    displayer = new Displayer();
+    displayer.showAllData();
+}
+
+function cleanUp(): void {
+    displayer.cleanUpListeners();
+}
+
+function init(): void {
+    setupServices();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("beforeunload", cleanUp);

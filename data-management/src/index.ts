@@ -112,7 +112,7 @@ class DisplayManager {
         if (data.length > 0) {
             this.dataManager.deleteAllItems();
             itemsList.replaceChildren();
-            
+            this.dataManager.data = [];
             new Modal("Data berhasil dihapus");
         } else {
             new Modal("Tambahkan minimal 1 data")
