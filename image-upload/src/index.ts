@@ -2,9 +2,11 @@ import Modal from "./modal.js";
 import { DataStorage, Item, ItemInput } from "./storage.js";
 
 const dataForm = document.getElementById('dataForm') as HTMLFormElement;
-const imgName = (document.getElementById('name') as HTMLInputElement);
-const category = (document.getElementById('category') as HTMLSelectElement);
+const addDataBtn = document.getElementById('add-data') as HTMLButtonElement;
+const imgName = document.getElementById('name') as HTMLInputElement;
+const category = document.getElementById('category') as HTMLSelectElement;
 const imageFile = document.getElementById('image') as HTMLInputElement;
+const imagePreview = document.getElementById('image-preview') as HTMLImageElement;
 const itemsContainer = document.getElementById('itemsContainer') as HTMLElement;
 const checkboxCategories = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
 
@@ -13,7 +15,7 @@ class Displayer extends DataStorage {
     private abortCtrl : AbortController;
   
     constructor() {
-        super();
+        super("images-data");
         this.abortCtrl = new AbortController();
         this.clickAndSubmitListeners();
     }
@@ -28,24 +30,26 @@ class Displayer extends DataStorage {
             if (target.classList.contains("edit-btn") && imageId) this.selectedItem(imageId);
             if (target.classList.contains("delete-btn") && imageId) this.deleteImage(imageId);
             if (target.closest("#delete-all")) this.deleteAllImage();
-
-            checkboxCategories.forEach(checkbox => {
-                checkbox.addEventListener('change', () => {
-                    this.selectedCategory = Array.from(checkboxCategories)
-                        .filter(c => c.checked)
-                        .map(c => c.value as Item['category']);
-                    this.showAllData();
-                }, { signal });
-            });
+            if (target.closest("#add-data")) this.openForm();
+            if (target.closest("#close-form")) this.closeForm();
         }, { signal });
 
         dataForm.addEventListener("submit", (event) => this.handleFormSubmit(event), { signal });
+        
+        checkboxCategories.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                this.selectedCategory = Array.from(checkboxCategories)
+                    .filter(c => c.checked)
+                    .map(c => c.value as Item['category']);
+                this.showAllData();
+            }, { signal });
+        });
     }
 
     async processingImage(file: File): Promise<string> {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = (event) => resolve((event.target as FileReader).result as string);
+            reader.onloadend = (event) => resolve((event.target as FileReader).result as string);
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
@@ -54,31 +58,56 @@ class Displayer extends DataStorage {
     private async handleFormSubmit(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         const file = imageFile.files?.[0];
+        const isInEditMode: boolean = !!this.getSelectedId();
         
-        if (!imgName.value.trim() || !category.value || !file) {
+        if (!imgName.value.trim() || !category.value || (!file && !isInEditMode)) {
             new Modal("Masukkan data dengan lengkap");
             return;
         }
 
         try {
-            const imageData = await this.processingImage(file);
+            let imageData = "";
+      
+            if (isInEditMode && !file) {
+              const existingData = this.getAllData().find(d => d.id === this.getSelectedId());
+              imageData = existingData?.image || "";
+            } else {
+                if (file) {
+                    if (!file.type.startsWith('image/')) {
+                        new Modal("File harus berupa gambar");
+                        return;
+                    }
+                    imageData = await this.processingImage(file);
+                    imagePreview.src = imageData;
+                    imagePreview.style.display = 'block';
+                }
+            }
+
             const newItem: ItemInput = {
                 imgName: imgName.value,
                 category: category.value as Item['category'],
                 image: imageData
-            };
-
-            if (this.getSelectedId()) {
-                this.changeSelectedData(this.getSelectedId()!, newItem);
+            }
+        
+            if (isInEditMode) {
+                this.changeSelectedData(this.getSelectedId() as string, newItem);
             } else {
                 this.addDataToStorages(newItem);
             }
+            
             this.showAllData();
         } catch (error) {
             new Modal("Gagal memproses gambar");
         }
-        
+
+        this.resetForm();
+    }
+
+    private resetForm(): void {
         dataForm.reset();
+        dataForm.style.display = "none";
+        addDataBtn.style.display = "block";
+        imagePreview.style.display = 'none';
         this.setSelectedId(null);
     }
 
@@ -114,6 +143,9 @@ class Displayer extends DataStorage {
         p.className = "category"
         p.textContent = `Kategori : ${item.category}`;
 
+        const buttonWrap = document.createElement("div") as HTMLDivElement;
+        buttonWrap.className = "button-wrap";
+
         const editBtn = document.createElement("button");
         editBtn.type = "button";
         editBtn.className = "edit-btn";
@@ -124,18 +156,23 @@ class Displayer extends DataStorage {
         deleteBtn.className = "delete-btn";
         deleteBtn.textContent = "Delete";
 
-        div.append(imageWrap, h3, p, editBtn, deleteBtn);
+        buttonWrap.append(editBtn, deleteBtn);
+
+        div.append(imageWrap, h3, p, buttonWrap);
         return div;
     }
 
     private selectedItem(id: string): void {
+        dataForm.style.display = "grid";
         const getData = this.getAllData().find(data => data.id === id);
         
         if (!getData) return;
         
         imgName.value = getData.imgName;
         category.value = getData.category;
-        this.setSelectedId(id);
+        imagePreview.src = getData.image;
+        imagePreview.style.display = 'block';
+        imagePreview.alt = getData.imgName;
     }
 
     deleteImage(id: string): void {
@@ -156,6 +193,19 @@ class Displayer extends DataStorage {
         }
     }
 
+    openForm(): void {
+        dataForm.style.display = "grid";
+        addDataBtn.style.display = "none";
+    }
+
+    closeForm(): void {
+        dataForm.style.display = "none";
+        addDataBtn.style.display = "block";
+        dataForm.reset();
+        imagePreview.style.display = 'none';
+        this.setSelectedId(null);
+    }
+
     cleanUpListeners(): void {
         this.abortCtrl.abort();
     }
@@ -163,17 +213,13 @@ class Displayer extends DataStorage {
 
 let displayer: Displayer;
 
-function setupServices(): void {
+function init(): void {
     displayer = new Displayer();
     displayer.showAllData();
 }
 
 function cleanUp(): void {
     displayer.cleanUpListeners();
-}
-
-function init(): void {
-    setupServices();
 }
 
 document.addEventListener("DOMContentLoaded", init);

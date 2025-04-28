@@ -10,18 +10,20 @@ type ItemInput = Omit<Item, 'id'>;
 class DataStorage {
     private imageItems: Item[] = [];
     private selectedId: string | null = null;
+    private storageKey: string;
 
-    constructor () {
+    constructor (storageKey: string) {
+        this.storageKey = storageKey;
         this.loadFromStorages();
     }
 
     private loadFromStorages(): void {
-        const data = localStorage.getItem("images-data");
+        const data = localStorage.getItem(this.storageKey);
         this.imageItems = data ? JSON.parse(data) : [];
     }
 
     private saveToStorages(): void {
-        localStorage.setItem("images-data", JSON.stringify(this.imageItems));
+        localStorage.setItem(this.storageKey, JSON.stringify(this.imageItems));
     }
 
     addDataToStorages(item: ItemInput): void {
@@ -40,7 +42,7 @@ class DataStorage {
     }
 
     getAllData(): Item[] {
-        return this.imageItems;
+        return [...this.imageItems];
     }
 
     deleteFromStorages(id: string): void {
@@ -51,7 +53,7 @@ class DataStorage {
 
     deleteAllFromStorages(): void {
         this.imageItems = [];
-        localStorage.removeItem("images-data");
+        localStorage.removeItem(this.storageKey);
     }
 
     setSelectedId(id: string | null): void {

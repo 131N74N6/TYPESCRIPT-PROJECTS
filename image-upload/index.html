@@ -7,19 +7,30 @@
     <title>checkbox filter</title>
 </head>
 <body>
-    <main class="content">
+    <section id="modal"></section>
+
+    <header>
         <section>
             <button type="button" id="delete-all">Delete All</button>
+            <button type="button" id="add-data">Add Image</button>
         </section>
         <section id="filters">
-            <input type="checkbox" value="anime" checked/>
-            <label for="Anime">Anime</label>
-            <input type="checkbox" value="buildings/urbans" checked/>
-            <label for="buildings/urbans">Buildings/Urbans</label>
-            <input type="checkbox" value="nature" checked/>
-            <label for="nature">Nature</label>
+            <div class="filter-1">
+                <input type="checkbox" id="Anime" value="anime" checked/>
+                <label for="Anime">Anime</label>
+            </div>
+            <div class="filter-2">
+                <input type="checkbox" id="buildings/urbans" value="buildings/urbans" checked/>
+                <label for="buildings/urbans">Buildings/Urbans</label>
+            </div>
+            <div class="filter-3">
+                <input type="checkbox" id="nature" value="nature" checked/>
+                <label for="nature">Nature</label>
+            </div>
         </section>
-        
+    </header>
+
+    <main class="content">    
         <form id="dataForm">
             <input type="text" id="name" placeholder="Name" required>
             <select id="category" required>
@@ -28,13 +39,19 @@
                 <option value="nature">Nature</option>
             </select>
             <input type="file" id="image" accept="image/*">
-            <button type="submit">Simpan</button>
+            <div class="preview-img">
+                <img id="image-preview" alt="preview"/>
+            </div>
+            <div class="form-button">
+                <button type="submit">Save</button>
+                <button type="button" id="close-form">Close</button>
+            </div>
         </form>
         
         <section id="itemsContainer"></section>
 
-        <section id="modal"></section>
     </main>
+
     <script src="./dist/index.js" type="module"></script>
 </body>
 </html>
