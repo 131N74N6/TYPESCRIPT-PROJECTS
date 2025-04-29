@@ -13,6 +13,8 @@
         <section>
             <button type="button" id="delete-all">Delete All</button>
             <button type="button" id="add-data">Add Image</button>
+            <input type="checkbox" id="dark-mode"/>
+            <label for="dark-mode">Dark Mode</label>
         </section>
         <section id="filters">
             <div class="filter-1">
@@ -27,20 +29,26 @@
                 <input type="checkbox" id="nature" value="nature" checked/>
                 <label for="nature">Nature</label>
             </div>
+            <div class="filter-4">
+                <input type="checkbox" id="cartoon" value="cartoon" checked/>
+                <label for="cartoon">Cartoon</label>
+            </div>
         </section>
     </header>
 
     <main class="content">    
         <form id="dataForm">
             <input type="text" id="name" placeholder="Name" required>
-            <select id="category" required>
+            <select id="category" title="img-category" required>
                 <option value="anime">Anime</option>
                 <option value="buildings/urbans">Buildings/Urbans</option>
                 <option value="nature">Nature</option>
+                <option value="cartoon">Cartoon</option>
             </select>
-            <input type="file" id="image" accept="image/*">
+            <input type="file" id="image" accept="image/*" title="image-file"/>
             <div class="preview-img">
-                <img id="image-preview" alt="preview"/>
+                <img src="./image/default-profile-picture.jpg" title="image" 
+                id="image-preview" alt="preview"/>
             </div>
             <div class="form-button">
                 <button type="submit">Save</button>
