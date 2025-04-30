@@ -104,7 +104,7 @@ class UserManagement extends DataStorage<UserInfo> {
         const index = data.findIndex(dt => dt.id === id);
 
         data[index] = user;
-        this.saveToStorage(data);
+        this.saveToStorage();
     }
 
     private deleteUser(id: number): void {
@@ -117,7 +117,7 @@ class UserManagement extends DataStorage<UserInfo> {
         const data = this.getAllData();
         if (data.length > 0) {
             this.deleteAllData();
-            this.showAllData();
+            this.dataList.replaceChildren();
         } else {
             this.showModal("Tambahkan data terlebih dahulu!")
         }

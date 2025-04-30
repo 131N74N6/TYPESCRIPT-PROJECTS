@@ -1,5 +1,5 @@
 import Modal from "./modal.js";
-import { DataItem, DataManager } from "./storage.js";
+import { DataItem, DataManager, ForInput } from "./storage.js";
 
 const inputSection = document.getElementById("inputSection") as HTMLFormElement;
 const nameInput = document.getElementById('nameInput') as HTMLInputElement;
@@ -10,11 +10,11 @@ const searchData = document.getElementById("searchData") as HTMLInputElement;
 
 const itemsList = document.getElementById("itemsList") as HTMLElement;
 
-class DisplayManager {
-    private dataManager = DataManager.getInstance();
+class DisplayManager extends DataManager {
     private abortCtrl: AbortController;
 
     constructor() {
+        super("items");
         this.abortCtrl = new AbortController();
         this.setEventListeners();
     }
@@ -28,24 +28,69 @@ class DisplayManager {
             
             if (target.classList.contains("edit-btn") && cardId) this.selectedData(cardId);
             if (target.classList.contains("delete-btn") && cardId) this.deleteData(cardId);
+    
+            if (target.closest("#addFieldBtn")) this.addNewField();
+            if (target.closest("#openForm")) this.openFormData();
+            if (target.closest("#closeForm")) this.closeFormData();
+            if (target.closest("#openSearch")) this.openSearchData();
+            if (target.closest("#closeSearch")) this.closeSearchData();
+            if (target.closest("#delete-all")) this.deleteAllData();
         }, { signal });
+
+        inputSection.addEventListener("submit", (event) => this.submitData(event), { signal });
+        searchSection.addEventListener("submit", (event) => this.filterData(event), { signal });
     }
 
     private createInputField(value?: string): HTMLInputElement {
         const input = document.createElement('input');
+        input.className = 'additional-detail';
         input.type = 'text';
         input.placeholder = 'Detail tambahan';
         if (value) input.value = value;
         return input;
     }
 
-    public addNewField(): void {
+    private addNewField(): void {
         dynamicFields.appendChild(this.createInputField());
+    }
+
+    private submitData(event: SubmitEvent): void {
+        event.preventDefault();
+        const smallText = nameInput.value.toLowerCase();
+        const isExist = this.getAllItems().some(data => data.name.toLowerCase().includes(smallText));
+        const isInEditMode = !!this.getEditingId();
+
+        const newData: ForInput = {
+            name: nameInput.value,
+            details: Array.from(document.querySelectorAll<HTMLInputElement>('#dynamicFields input'))
+                .map((input: HTMLInputElement) => input.value.trim())
+                .filter(v => v)
+        }
+
+        if (nameInput.value.trim().length === 0) {
+            new Modal("input tidak boleh kosong!");
+            return;
+        }
+        
+        if (isInEditMode) {
+            this.updateItem(this.getEditingId() as number, newData);
+        } else {
+            if (!isExist) {
+                this.addItem(newData);
+            } else {
+                new Modal("Data sudah ada");
+            }
+        }
+        
+        this.setEditingId(null);
+        this.showAllData();
+        inputSection.style.display = "none";
+        inputSection.reset();
     }
 
     public showAllData(): void {
         const cardFragment = document.createDocumentFragment();
-        const data = this.dataManager.getAllItems();
+        const data = this.getAllItems();
 
         data.forEach(dt => {
             const getCardItem = this.createCardItem(dt);
@@ -56,16 +101,36 @@ class DisplayManager {
         itemsList.appendChild(cardFragment);
     }
 
-    public createCardItem(data: DataItem): HTMLDivElement {
+    private createCardItem(data: DataItem): HTMLDivElement {
         const card = document.createElement('div');
         card.className = 'item-card';
         card.setAttribute("card-id", String(data.id));
-        card.innerHTML = `
-            <h3>${data.name}</h3>
-            ${data.details.map(d => `<p>• ${d}</p>`).join('')}
-            <button type="button" class="edit-btn">Edit</button>
-            <button type="button" class="delete-btn">Hapus</button>
-        `;
+
+        const h3 = document.createElement("h3") as HTMLHeadingElement;
+        h3.textContent = data.name;
+
+        const detailsContainer = document.createElement('div');
+        data.details.forEach(detail => {
+            const p = document.createElement('p');
+            p.textContent = `• ${detail}`;
+            detailsContainer.appendChild(p);
+        });
+
+        const buttonWrap = document.createElement("div");
+        buttonWrap.className = "button-wrap";
+
+        const editBtn = document.createElement("button") as HTMLButtonElement;
+        editBtn.type = "button";
+        editBtn.className = "edit-btn";
+        editBtn.textContent = "Edit";
+        
+        const deleteBtn = document.createElement("button") as HTMLButtonElement;
+        deleteBtn.type = "button";
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "Hapus";
+
+        buttonWrap.append(editBtn, deleteBtn);
+        card.append(h3, detailsContainer, buttonWrap);
 
         return card;
     }
@@ -74,7 +139,7 @@ class DisplayManager {
         dynamicFields.innerHTML = '';
         inputSection.style.display = "flex";
 
-        const data = this.dataManager.getAllItems().find(dt => dt.id === id); 
+        const data = this.getAllItems().find(dt => dt.id === id); 
 
         if (!data) return;
 
@@ -83,10 +148,25 @@ class DisplayManager {
             dynamicFields.appendChild(this.createInputField(detail));
         });
 
-        this.dataManager.setEditingId(id);
+        this.setEditingId(id);
     }
 
-    public searchedData(searched: DataItem[]): void {
+    private filterData = (event: SubmitEvent): void => {
+        event.preventDefault();
+    
+        if (searchData.value.trim().length === 0) {
+            new Modal("input tidak boleh kosong!");
+            return;
+        }
+    
+        const keyword = searchData.value.toLowerCase();
+        const data = this.getAllItems();
+        const result = data.filter(dt => dt.name.toLowerCase().includes(keyword));
+    
+        this.searchedData(result);
+    }
+
+    private searchedData(searched: DataItem[]): void {
         const filteredCard = document.createDocumentFragment();
         
         searched.forEach(search => {
@@ -98,8 +178,8 @@ class DisplayManager {
         itemsList.appendChild(filteredCard);
     }
 
-    private deleteData(id: number): void {
-        this.dataManager.deleteItem(id); 
+    protected deleteData(id: number): void {
+        this.deleteItem(id); 
         const itemElement = document.querySelector(`[card-id="${id}"]`);
 
         if (itemElement) itemElement.remove();
@@ -107,12 +187,11 @@ class DisplayManager {
         new Modal("Data berhasil dihapus");
     }
 
-    public deleteAllData(): void {
-        const data = this.dataManager.getAllItems();
+    protected deleteAllData(): void {
+        const data = this.getAllItems();
         if (data.length > 0) {
-            this.dataManager.deleteAllItems();
+            this.deleteAllItems();
             itemsList.replaceChildren();
-            this.dataManager.data = [];
             new Modal("Data berhasil dihapus");
         } else {
             new Modal("Tambahkan minimal 1 data")
@@ -128,13 +207,13 @@ class DisplayManager {
         inputSection.style.display = "none";
         inputSection.reset();
         searchSection.reset();
-        this.dataManager.setEditingId(null);
+        this.setEditingId(null);
     }
 
     public openSearchData(): void {
         searchSection.style.display = "flex";
         inputSection.style.display = "none";
-        this.dataManager.setEditingId(null);
+        this.setEditingId(null);
     }
 
     public closeSearchData(): void {
@@ -142,7 +221,7 @@ class DisplayManager {
         searchSection.reset();
         inputSection.reset();
         this.showAllData();
-        this.dataManager.setEditingId(null);
+        this.setEditingId(null);
     }
 
     public cleanUp(): void {
@@ -151,97 +230,13 @@ class DisplayManager {
 }
 
 let displayManager : DisplayManager;
-let abortController : AbortController;
 
-const setServices = (): void => {
+const init = (): void => {
     displayManager = new DisplayManager();
-}
-
-const setDataAndUI = (): void => {
     displayManager.showAllData();
 }
 
-const submitData = (event: SubmitEvent): void => {
-    event.preventDefault();
-    const dataManager = DataManager.getInstance();
-    const smallText = nameInput.value.toLowerCase();
-    const isExist = dataManager.getAllItems().some(data => data.name.toLowerCase().includes(smallText));
-
-    const newData: DataItem = {
-        id: DataManager.getInstance().getEditingId() || Date.now(),
-        name: nameInput.value,
-        details: Array.from(document.querySelectorAll<HTMLInputElement>('#dynamicFields input'))
-            .map((input: HTMLInputElement) => input.value.trim())
-            .filter(v => v)
-    }
-
-    if (nameInput.value.trim().length === 0) {
-        new Modal("input tidak boleh kosong!");
-        return;
-    }
-    
-    if (dataManager.getEditingId()) {
-        const selectedData = document.querySelector(`[card-id="${newData.id}"]`) as HTMLElement;
-
-        if (selectedData) selectedData.innerHTML = displayManager.createCardItem(newData).innerHTML;
-
-        dataManager.updateItem(dataManager.getEditingId() as number, newData);
-    } else {
-        if (!isExist) {
-            dataManager.addItem(newData);
-            itemsList.appendChild(displayManager.createCardItem(newData));
-        } else {
-            new Modal("Data sudah ada");
-        }
-    }
-    
-    dataManager.setEditingId(null);
-    inputSection.style.display = "none";
-    inputSection.reset();
-}
-
-const filterData = (event: SubmitEvent): void => {
-    event.preventDefault();
-
-    if (searchData.value.trim().length === 0) {
-        new Modal("input tidak boleh kosong!");
-        return;
-    }
-
-    const keyword = searchData.value.toLowerCase();
-    const data = DataManager.getInstance().getAllItems();
-    const result = data.filter(dt => dt.name.toLowerCase().includes(keyword));
-
-    displayManager.searchedData(result);
-}
-
-const setEventListener = () => {
-    abortController = new AbortController();
-    const { signal } = abortController;
-
-    document.addEventListener("click", (event) => {
-        const target = event.target as HTMLElement;
-
-        if (target.closest("#addFieldBtn")) displayManager.addNewField();
-        if (target.closest("#openForm")) displayManager.openFormData();
-        if (target.closest("#closeForm")) displayManager.closeFormData();
-        if (target.closest("#openSearch")) displayManager.openSearchData();
-        if (target.closest("#closeSearch")) displayManager.closeSearchData();
-        if (target.closest("#delete-all")) displayManager.deleteAllData();
-    }, { signal });
-    
-    inputSection.addEventListener("submit", submitData, { signal });
-    searchSection.addEventListener("submit", filterData, { signal });
-}
-
-const init = (): void => {
-    setServices();
-    setDataAndUI();
-    setEventListener();
-}
-
 const cleanUp = (): void => {
-    abortController?.abort();
     displayManager.cleanUp();
 }
 
