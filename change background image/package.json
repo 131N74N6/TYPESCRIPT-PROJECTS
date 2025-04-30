@@ -1,0 +1,13 @@
+{
+  "name": "change-background-image",
+  "version": "1.0.0",
+  "main": "event.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsc --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

@@ -13,7 +13,7 @@ class DataStorage<A extends { id: number }> {
         this.data = item ? JSON.parse(item) : [];
     }
 
-    saveToStorage(): void {
+    private saveToStorage(): void {
         localStorage.setItem(this.key, JSON.stringify(this.data));
     }
 
@@ -25,7 +25,7 @@ class DataStorage<A extends { id: number }> {
         return [...this.data];
     }
 
-    add(info: Omit<A, 'id'>): void {
+    protected add(info: Omit<A, 'id'>): void {
         const data = this.getAllData();
         const newData = { id: Date.now(), ...info } as A;
         data.push(newData);
@@ -43,14 +43,14 @@ class DataStorage<A extends { id: number }> {
         }
     }
 
-    deleteData(id: number): void {
+    protected deleteData(id: number): void {
         const data = this.getAllData();
         const index = data.findIndex(dt => dt.id === id);
         data.splice(index, 1);
         this.saveToStorage();
     }
 
-    deleteAllData(): void {
+    protected deleteAllData(): void {
         this.data = [];
         this.deleteAllFromStorage();
     }

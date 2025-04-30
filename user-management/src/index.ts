@@ -1,6 +1,7 @@
-import { debounce, ThemeChanger } from "./theme.js";
+import ThemeChanger from "./theme.js";
 import { Gender, UserInfo } from "./type.js";
 import DataStorage from "./storage.js";
+import Modal from "./modal.js";
 
 const inputName = document.getElementById("name") as HTMLInputElement;
 const searchInput = document.getElementById("searched-name") as HTMLInputElement;
@@ -12,9 +13,6 @@ const searchForm = document.getElementById("searchForm") as HTMLFormElement;
 
 const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
 const toggleTheme = document.getElementById("dark-mode") as HTMLInputElement;
-
-const notification = document.getElementById("notification") as HTMLElement;
-const notificationMessage = document.getElementById("notification-message") as HTMLElement;
 
 let userManagement : UserManagement;
 let darkTheme : ThemeChanger;
@@ -43,7 +41,6 @@ class UserManagement extends DataStorage<UserInfo> {
             if (target.closest("#delete-all")) this.deleteAllUser();
             if (target.closest("#closeForm")) this.hideForm();
             if (target.closest("#closeFilter")) this.hideSearchFilter();
-            if (target.closest("#hide-message")) this.hideModal();
         }, { signal });
 
         dataForm.addEventListener("submit", (event) => this.handleForm(event), { signal });
@@ -67,7 +64,7 @@ class UserManagement extends DataStorage<UserInfo> {
         const isExist = userData.some(user => user.name.toLowerCase().includes(smallText));
     
         if (!inputName.value.trim() || !selectedGender || selectedHobbies.length === 0) {
-            this.showModal("Isi semua field!");
+            new Modal("Isi semua field!");
             return;
         }
 
@@ -82,9 +79,9 @@ class UserManagement extends DataStorage<UserInfo> {
         } else {
             if (!isExist) {
                 this.add(newUser);
-                this.showModal("Data berhasil ditambahkan");
+                new Modal("Data berhasil ditambahkan");
             } else {
-                this.showModal("Data sudah ada! Masukkan data lain!");
+                new Modal("Data sudah ada! Masukkan data lain!");
             }
         }
     
@@ -142,7 +139,7 @@ class UserManagement extends DataStorage<UserInfo> {
         const userData = this.getAllData();
 
         if (!searchInput.value.trim()) {
-            this.showModal("Masukkan nama yang ingin dicari!");
+            new Modal("Masukkan nama yang ingin dicari!");
             return;
         }
 
@@ -191,7 +188,7 @@ class UserManagement extends DataStorage<UserInfo> {
             this.deleteAllData();
             dataList.replaceChildren();
         } else {
-            this.showModal("Tambahkan data terlebih dahulu!")
+            new Modal("Tambahkan data terlebih dahulu!")
         }
     }
 
@@ -218,33 +215,16 @@ class UserManagement extends DataStorage<UserInfo> {
         searchForm.reset();
     }
 
-    showModal(text: string) {
-        notification.style.display = "block"
-        notificationMessage.textContent = text;
-    }
-
-    hideModal(): void {
-        notification.style.display = "none";
-    }
-
     cleanUp(): void {
         this.abortCtrl.abort();
     }
 }
 
-const setupServices = (): void => {
+const init = (): void => {
     userManagement = new UserManagement();
     darkTheme = new ThemeChanger("dark-mode", "dark-mode");
-}
-
-const setupDataAndTheme = (): void => {
     toggleTheme.checked = darkTheme.isActive;
     userManagement.showAllData();
-}
-
-const init = (): void => {
-    setupServices();
-    setupDataAndTheme();
 }
 
 const cleanUp = (): void => {

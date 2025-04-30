@@ -1,8 +1,7 @@
-const iconElement = document.querySelector('[for="dark-mode"]');
-
 class ThemeChanger {
     private key: string;
     private attrTheme: string;
+    private iconElement = document.querySelector('[for="dark-mode"]') as HTMLLabelElement;
     private currentState: 'active' | 'inactive';
     private currentThemeIcon: '🌙' | '☀️';
 
@@ -33,8 +32,8 @@ class ThemeChanger {
     }
 
     private updateIconElement() {
-        if(iconElement) {
-            iconElement.textContent = this.currentThemeIcon;
+        if(this.iconElement) {
+            this.iconElement.textContent = this.currentThemeIcon;
         }
     }
     
@@ -49,14 +48,14 @@ class ThemeChanger {
     get isActive() {
         return this.currentState === "active";
     }
-}
 
-const debounce = (fn: Function, delay: number) => {
-    let timeoutId: number;
-    return (...args: any[]): void => {
-        window.clearTimeout(timeoutId);
-        timeoutId = window.setTimeout(() => fn(...args), delay);
+    debounce(fn: Function, delay: number): Function {
+        let timeoutId: number;
+        return (...args: any[]): void => {
+            window.clearTimeout(timeoutId);
+            timeoutId = window.setTimeout(() => fn(...args), delay);
+        }
     }
 }
 
-export { debounce, ThemeChanger }
+export default ThemeChanger;
