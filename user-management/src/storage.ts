@@ -26,19 +26,17 @@ class DataStorage<A extends { id: number }> {
     }
 
     protected add(info: Omit<A, 'id'>): void {
-        const data = this.getAllData();
         const newData = { id: Date.now(), ...info } as A;
-        data.push(newData);
+        this.data.push(newData);
         this.saveToStorage();
     }
 
     changeData(id: number, detail: Omit<A, 'id'>): void {
-        const data = this.getAllData();
-        const index = data.findIndex(dt => dt.id === id);
-        const newData = { id: Date.now(), ...detail } as A;
+        const index = this.data.findIndex(dt => dt.id === id);
+        const newData = { id, ...detail } as A;
 
         if (index !== -1) {
-            data[index] = newData;
+            this.data[index] = newData;
             this.saveToStorage();
         }
     }

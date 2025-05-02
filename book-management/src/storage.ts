@@ -1,42 +1,56 @@
-class DataStorage<T extends { id: number }> {
+class DataStorage<S extends { id: number }> {
     private key: string;
+    private data: S[] = [];
+    protected selectedItemId: number | null = null;
 
-    constructor(storageKey: string) {
+    protected constructor(storageKey: string) {
         this.key = storageKey;
+        this.loadFromStorage();
+    }
+    
+    private loadFromStorage(): void {
+        const loadData = localStorage.getItem(this.key);
+        this.data = loadData ? JSON.parse(loadData) : [];
     }
 
-    saveToStorage(data: T[]): void {
-        localStorage.setItem(this.key, JSON.stringify(data));
+    private saveToStorage(): void {
+        localStorage.setItem(this.key, JSON.stringify(this.data));
     }
 
-    private getFromStorage(): T[] {
-        const data = localStorage.getItem(this.key);
-        return data ? JSON.parse(data) : [];
+    getAll(): S[] {
+        return [...this.data];
     }
 
-    private deleteStorage(): void {
+    protected addData(item: Omit<S, 'id'>): void {
+        const newData = { id: Date.now(), ...item } as S;
+        this.data.push(newData);
+        this.saveToStorage();
+    }
+
+    protected changeSelectedData(id: number, item: Omit<S, 'id'>): void {
+        const index = this.data.findIndex(selected => selected.id === id);
+        const newData = { id, ...item } as S;
+        this.data[index] = newData;
+        this.saveToStorage();
+    }
+
+    protected delete(id: number): void {
+        const index = this.data.findIndex(item => item.id === id);
+        this.data.splice(index, 1);
+        this.saveToStorage();
+    }
+
+    protected deleteAll(): void {
+        this.data = [];
         localStorage.removeItem(this.key);
     }
 
-    add(item: T): void {
-        const items = this.getFromStorage();
-        items.push(item);
-        this.saveToStorage(items);
+    protected setSelectedId(selectedItemId: number | null): void {
+        this.selectedItemId = selectedItemId;
     }
 
-    delete(id: number): void {
-        const items = this.getFromStorage();
-        const index = items.findIndex(item => item.id === id);
-        items.splice(index, 1);
-        this.saveToStorage(items);
-    }
-
-    deleteAll(): void {
-        this.deleteStorage();
-    }
-
-    getAll(): T[] {
-        return this.getFromStorage();
+    protected getSelectedId(): number | null {
+        return this.selectedItemId;
     }
 }
 

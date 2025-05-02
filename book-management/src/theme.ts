@@ -47,14 +47,14 @@ class Theme {
     get isActive() {
         return localStorage.getItem(this.keyTheme) === 'active';
     }
-}
 
-function debounce(fn: Function, delay: number): Function {
-    let timeout: number;
-    return(...args: any[]): void => {
-        window.clearTimeout(timeout);
-        timeout = window.setTimeout(() => fn(...args), delay);
+    debounce(fn: Function, delay: number): Function {
+        let timeout: number;
+        return(...args: any[]): void => {
+            window.clearTimeout(timeout);
+            timeout = window.setTimeout(() => fn(...args), delay);
+        }
     }
 }
 
-export { debounce, Theme };
+export default Theme;

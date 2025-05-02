@@ -16,10 +16,11 @@ class Modal {
         this.notificationComponent.className = "content";
         this.notificationMessage.textContent = this.text;
         this.notificationComponent.appendChild(this.notificationMessage);
+        this.notification.appendChild(this.notificationComponent);
     }
 
     protected showModal(): void {
-        setTimeout(() => this.notification.remove(), 3000);
+        setTimeout(() => this.notificationComponent.remove(), 3000);
     }
 }
 

@@ -1,5 +1,5 @@
-import ThemeChanger from "./theme.js";
 import { Gender, UserInfo } from "./type.js";
+import ThemeChanger from "./theme.js";
 import DataStorage from "./storage.js";
 import Modal from "./modal.js";
 
@@ -15,36 +15,43 @@ const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
 const toggleTheme = document.getElementById("dark-mode") as HTMLInputElement;
 
 let userManagement : UserManagement;
-let darkTheme : ThemeChanger;
 
 class UserManagement extends DataStorage<UserInfo> {
-    private abortCtrl: AbortController;
+    private controller: AbortController;
+    private darkTheme = new ThemeChanger("dark-mode", "dark-mode");
+
+    private handleDarkTheme = this.darkTheme.debounce((isActived: boolean) => {
+        this.darkTheme.changeTheme(isActived ? "active" : "inactive");
+        this.darkTheme.changeIcon(isActived ? "☀️" : "🌙");
+    }, 100);
 
     constructor() {
         super("user-data");
-        this.abortCtrl = new AbortController();
+        this.controller = new AbortController();
         this.setupGlobalListeners();
+        toggleTheme.checked = this.darkTheme.isActive;
     }
 
     private setupGlobalListeners() {
-        const { signal } = this.abortCtrl;
-
         document.addEventListener('click', (event) => {
             const target = event.target as HTMLElement;
-            const userId = Number(target.closest('.user-list')?.getAttribute('data-id'));
             
-            if(target.classList.contains('delete-btn')) this.deleteUser(userId);
-            if(target.classList.contains('edit-btn')) this.handleEdit(userId);
-
             if (target.closest("#searchMode")) this.showSearchFilter();
             if (target.closest("#addDataMode")) this.showForm();
             if (target.closest("#delete-all")) this.deleteAllUser();
             if (target.closest("#closeForm")) this.hideForm();
             if (target.closest("#closeFilter")) this.hideSearchFilter();
-        }, { signal });
+        }, { signal: this.controller.signal });
 
-        dataForm.addEventListener("submit", (event) => this.handleForm(event), { signal });
-        searchForm.addEventListener("submit", (event) => this.handleSearch(event), { signal })
+        dataForm.addEventListener("submit", (event) => this.handleForm(event), { 
+            signal: this.controller.signal 
+        });
+        searchForm.addEventListener("submit", (event) => this.handleSearch(event), { 
+            signal: this.controller.signal 
+        });
+        toggleTheme.addEventListener("change", (event) => this.handleToggle(event), { 
+            signal: this.controller.signal 
+        });
     }
 
     private handleForm(event: SubmitEvent): void {
@@ -106,7 +113,6 @@ class UserManagement extends DataStorage<UserInfo> {
     private createUserElement(info: UserInfo): HTMLElement {
         const listWrapper = document.createElement("div");
         listWrapper.className = "user-list";
-        listWrapper.setAttribute('data-id', String(info.id));
 
         const nama = document.createElement("div") as HTMLDivElement;
         nama.textContent = info.name;
@@ -123,10 +129,18 @@ class UserManagement extends DataStorage<UserInfo> {
         const editBtn = document.createElement("button") as HTMLButtonElement;
         editBtn.className = "edit-btn";
         editBtn.textContent = "Edit";
+        editBtn.type = "button";
+        editBtn.addEventListener("click", () => this.handleEdit(info.id), { 
+            signal: this.controller.signal 
+        });
 
         const deleteBtn = document.createElement("button") as HTMLButtonElement;
         deleteBtn.className = "delete-btn";
         deleteBtn.textContent = "Delete";
+        deleteBtn.type = "button";
+        deleteBtn.addEventListener("click", () => this.deleteUser(info.id), { 
+            signal: this.controller.signal 
+        });
 
         buttonWrap.append(editBtn, deleteBtn);
         listWrapper.append(nama, gender, hobbies, buttonWrap);
@@ -179,6 +193,7 @@ class UserManagement extends DataStorage<UserInfo> {
     private deleteUser(id: number): void {
         const element = dataList.querySelector(`[data-id="${id}"]`) as HTMLElement;
         element.remove();
+        element.replaceWith(element.cloneNode(true));
         this.deleteData(id);
     }
 
@@ -190,6 +205,10 @@ class UserManagement extends DataStorage<UserInfo> {
         } else {
             new Modal("Tambahkan data terlebih dahulu!")
         }
+    }
+
+    handleToggle(event: Event): void {
+        this.handleDarkTheme((event.target as HTMLInputElement).checked);
     }
 
     showForm(): void {
@@ -216,14 +235,12 @@ class UserManagement extends DataStorage<UserInfo> {
     }
 
     cleanUp(): void {
-        this.abortCtrl.abort();
+        this.controller.abort();
     }
 }
 
 const init = (): void => {
     userManagement = new UserManagement();
-    darkTheme = new ThemeChanger("dark-mode", "dark-mode");
-    toggleTheme.checked = darkTheme.isActive;
     userManagement.showAllData();
 }
 

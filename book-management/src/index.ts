@@ -1,5 +1,6 @@
-import BookManager from "./book.js";
-import { debounce, Theme } from "./theme.js";
+import DataStorage from "./storage.js";
+import Modal from "./modal.js";
+import Theme from "./theme.js";
 
 interface Book {
     id: number;      
@@ -20,129 +21,231 @@ const searchTitle = document.getElementById("search-title") as HTMLInputElement;
 const submitBtn = document.querySelector(".submit-btn") as HTMLButtonElement;
 const bookList = document.getElementById("book-list") as HTMLElement;
 
-const message = document.getElementById("message") as HTMLElement;
-const messageContent = document.getElementById("text") as HTMLElement;
+class BookManager extends DataStorage<Book> {
+    private controller: AbortController;
+    protected darkTheme: Theme = new Theme("dark-mode", "dark-mode");
 
-let bookManager : BookManager;
-let darkTheme : Theme;
-let abortController : AbortController;
-
-function setupService(): void {
-    bookManager = new BookManager(
-        bookForm, title, author, year, submitBtn, searchForm, bookList, message, messageContent
-    );
-    darkTheme = new Theme("dark-mode", "dark-mode");
-}
-
-function setupDataAndTheme(): void {
-    bookManager.showAllBooks();
-    darkToggle.checked = darkTheme.isActive;
-}
-
-function setupEventListener(): void {
-    abortController = new AbortController();
-    const { signal } = abortController;
-
-    document.addEventListener("click", (event) => {
-        const target = event.target as HTMLElement;
-        if (target.closest(".search-mode")) bookManager.searchMode();
-        if (target.closest(".close-search")) bookManager.closeSearchMode();
-        if (target.closest(".delete-all")) bookManager.deleteAllBooks();
-        if (target.closest(".close-modal")) bookManager.closeModal();
-    }, { signal });
-
-    bookForm.addEventListener("submit", handleForm, { signal });
-    searchForm.addEventListener("submit", handleSearch, { signal });
-    darkToggle.addEventListener("change", handleThemeToggle, { signal });
-}
-
-const handleThemeChange = debounce((isChecked: boolean): void => {
-    darkTheme.changeTheme(isChecked ? 'active' : 'inactive');
-    darkTheme.changeSign(isChecked ? 'Light Mode' : 'Dark Mode');
-}, 100);
-
-const handleThemeToggle = (event: Event): void => {
-    handleThemeChange((event.target as HTMLInputElement).checked);
-}
-
-function handleForm(event: SubmitEvent): void {
-    event.preventDefault();
-
-    const items = bookManager.getAll();
-    const isExist = items.some(item => item.title.toLowerCase() === title.value.toLowerCase());
-
-    if (title.value.trim() === "" || author.value.trim() === "" || year.value.trim() === "") {
-        bookManager.showModal("Lengkapi data terlebih dahulu!");
-        return;
+    constructor() {
+        super("BOOKS_DATA"); 
+        this.controller = new AbortController();
+        this.setEventListeners();
+        darkToggle.checked = this.darkTheme.isActive;
     }
 
-    if (bookManager.selectedId) { 
-        const updatedBook: Book = {
-            id: bookManager.selectedId,
-            title: title.value,
-            author: author.value,
-            year: year.value
-        };
+    private setEventListeners(): void {
+        document.addEventListener('click', (event) => {
+            const target = event.target as HTMLElement;
+            
+            if (target.closest(".search-mode")) bookManager.searchMode();
+            if (target.closest(".close-search")) bookManager.closeSearchMode();
+            if (target.closest(".delete-all")) bookManager.deleteAllBooks();
+        }, { signal: this.controller.signal });
+            
+        bookForm.addEventListener("submit", (event) => this.handleForm(event), { 
+            signal: this.controller.signal 
+        });
+        searchForm.addEventListener("submit", this.handleSearch, { 
+            signal: this.controller.signal 
+        });
+        darkToggle.addEventListener("change", this.handleThemeToggle, { 
+            signal: this.controller.signal 
+        });
+    }
 
-        const selected = document.querySelector(`[book-id="${bookManager.selectedId}"]`) as HTMLElement;
-
-        if (selected) {
-            selected.innerHTML = bookManager.createListBookComponent(updatedBook).innerHTML;
-        }
-        
-        bookManager.editBook(bookManager.selectedId, updatedBook);
-        
-        // Reset mode edit
-        bookManager.selectedId = null;
-        submitBtn.textContent = "Tambah Buku"; // 🆕 Kembalikan teks tombol
-    } else { 
-        // Mode tambah
-        if (isExist) {
-            bookManager.showModal("Buku sudah ada/terdaftar");
+    private handleForm(event: SubmitEvent): void {
+        event.preventDefault();
+        const items = this.getAll();
+        const isExist = items.some(item => item.title.toLowerCase() === title.value.toLowerCase());
+        const isInEditMode = !!this.getSelectedId();
+    
+        if (title.value.trim() === "" || author.value.trim() === "" || year.value.trim() === "") {
+            new Modal("Lengkapi data terlebih dahulu!");
             return;
         }
 
-        const newBook: Book = {
-            id: Date.now(),
+        const newBook: Omit<Book, 'id'> = {
             title: title.value,
             author: author.value,
             year: year.value
         };
-        
-        bookManager.add(newBook);
-        bookList.appendChild(bookManager.createListBookComponent(newBook));
-        bookManager.showModal("Buku berhasil ditambahkan!");
+    
+        if (!isInEditMode) { 
+            this.changeSelectedData(this.getSelectedId() as number, newBook);
+        } else { 
+            if (isExist) {
+                new Modal("Buku sudah ada/terdaftar");
+                return;
+            }
+            this.addData(newBook);
+            new Modal("Buku berhasil ditambahkan!");
+        }
+    
+        this.setSelectedId(null);
+        submitBtn.textContent = "Tambah Buku"; 
+        bookForm.reset();
+        this.showAllBooks();
     }
 
-    bookForm.reset();
+    handleThemeChange = this.darkTheme.debounce((isChecked: boolean): void => {
+        this.darkTheme.changeTheme(isChecked ? 'active' : 'inactive');
+        this.darkTheme.changeSign(isChecked ? 'Light Mode' : 'Dark Mode');
+    }, 100);
+    
+    handleThemeToggle(event: Event): void {
+        this.handleThemeChange((event.target as HTMLInputElement).checked);
+    }
+
+    showAllBooks(): void {
+        const bookFragment = document.createDocumentFragment();
+
+        this.getAll().forEach(book => {
+            const component = this.createListBookComponent(book);
+            bookFragment.appendChild(component);
+        });
+
+        bookList.innerHTML = '';
+        bookList.appendChild(bookFragment);
+    }
+
+    private createListBookComponent(book: Book): HTMLDivElement {
+        const bookElement = document.createElement("div");
+        bookElement.className = "book-item";
+
+        const detailInfo = document.createElement("div") as HTMLDivElement;
+        detailInfo.className = "detail-info";
+
+        const judul = document.createElement("h3") as HTMLHeadingElement;
+        judul.textContent = book.title;
+
+        const penulis = document.createElement("p") as HTMLParagraphElement;
+        penulis.textContent = book.author;
+
+        const tahun = document.createElement("p") as HTMLParagraphElement;
+        tahun.textContent = book.year;
+
+        detailInfo.append(judul, penulis, tahun);
+
+        const buttonWrap = document.createElement("div") as HTMLDivElement;
+        buttonWrap.className = "button-wrap";
+
+        const selectBtn = document.createElement("button");
+        selectBtn.type = "button";
+        selectBtn.textContent = "Select"
+        selectBtn.addEventListener("click", () => this.selectedItem(book.id), {
+            signal: this.controller.signal
+        });
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.addEventListener("click", () => this.deleteBook(book.id), { 
+            signal: this.controller.signal 
+        });
+
+        buttonWrap.append(selectBtn, deleteBtn);
+        bookElement.append(detailInfo, buttonWrap);
+        
+        return bookElement;
+    }
+
+    private selectedItem(id: number): void {
+        this.setSelectedId(id);
+
+        const bookInfo = this.getAll().find(book => book.id === id);
+
+        if (!bookInfo) return;
+        
+        title.value = bookInfo.title;
+        author.value = bookInfo.author;
+        year.value = bookInfo.year;
+        
+        submitBtn.textContent = "Edit Buku";
+    }
+
+    editBook(id: number, book: Book): void {
+        const item = this.getAll();
+        const index = item.findIndex(it => it.id === id);
+
+        item[index] = book;
+    }
+
+    private deleteBook(id: number): void {
+        const element = bookList.querySelector(`[book-id="${id}"]`) as HTMLElement;
+        element.remove();
+        element.replaceWith(element.cloneNode(true));
+        this.delete(id);
+    }
+
+    deleteAllBooks(): void {
+        const data = this.getAll();
+        if (data.length > 0) {
+            this.deleteAll();
+            bookList.replaceChildren();
+        } else {
+            new Modal("Tidak ada buku yang ditambahkan");
+        }
+    }
+
+    private handleSearch(event: SubmitEvent): void {
+        event.preventDefault();
+        const items = this.getAll();
+        const searched = searchTitle.value.toLowerCase();
+    
+        if (searched.trim() === "") {
+            new Modal("Masukkan judul buku yang akan dicari");
+            return;
+        }
+    
+        const filterBooks = items.filter((search) => search.title.toLowerCase().includes(searched));
+        this.showSearchResult(filterBooks);
+    }
+
+    showSearchResult(books: Book[]): void {
+        const filteredBooks = document.createDocumentFragment();
+
+        books.forEach(book => {
+            const searchedComponents = this.createListBookComponent(book);
+            filteredBooks.appendChild(searchedComponents);
+        });
+
+        bookList.innerHTML = '';
+        bookList.appendChild(filteredBooks);
+    }
+
+    searchMode(): void {
+        this.setSelectedId(null);
+        bookForm.style.display = "none";
+        searchForm.style.display = "flex";
+        bookForm.reset();
+    }
+
+    closeSearchMode(): void {
+        this.setSelectedId(null);
+        bookForm.style.display = "flex";
+        searchForm.style.display = "none";
+        searchForm.reset();
+        this.showAllBooks();
+    }
+
+    cleanUp(): void {
+        this.controller.abort();
+    }
 }
 
-function handleSearch(event: SubmitEvent): void {
-    event.preventDefault();
-    const items = bookManager.getAll();
-    const searched = searchTitle.value.toLowerCase();
+let bookManager : BookManager;
 
-    if (searched.trim() === "") {
-        bookManager.showModal("Masukkan judul buku yang akan dicari");
-        return;
-    }
-
-    const filterBooks = items.filter((search) => search.title.toLowerCase().includes(searched));
-    bookManager.showSearchResult(filterBooks);
+function setupService(): void {
+    bookManager = new BookManager();
+    bookManager.showAllBooks();
 }
 
 function init(): void {
     setupService();
-    setupDataAndTheme();
-    setupEventListener();
 }
 
 function cleanUp(): void {
-    abortController?.abort();
     bookManager.cleanUp();
 }
 
 document.addEventListener("DOMContentLoaded", init);
 window.addEventListener("beforeunload", cleanUp);
-
-export default Book;
