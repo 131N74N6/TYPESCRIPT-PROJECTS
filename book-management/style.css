@@ -79,12 +79,12 @@ form#book-form .delete-all {
     align-items: center;
 }
 
-#book-list .book-item .control {
+#book-list .book-item .button-wrap {
     display: flex;
     gap: 0.5rem;
 }
 
-#book-list .book-item .control .edit-btn {
+#book-list .book-item .button-wrap .select-btn {
     border: none;
     font-family: Arial;
     font-size: 0.9rem;
@@ -97,7 +97,7 @@ form#book-form .delete-all {
     cursor: pointer;
 }
 
-#book-list .book-item .control .delete-btn {
+#book-list .book-item .button-wrap .delete-btn {
     border: none;
     font-family: Arial;
     font-size: 0.9rem;

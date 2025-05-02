@@ -1,0 +1,68 @@
+body {
+    background-color: rgb(37, 37, 37);
+    padding: 0;
+    margin: 0;
+}
+
+main {
+    background-color: #000000;
+    min-height: 100dvh;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+#star-widgets {
+    position: fixed;
+    padding: 1.1rem;
+    background-color: #000000;
+    bottom: 0;
+    z-index: 10;
+}
+
+#star-widgets input[type="radio"] {
+    display: none;
+}
+
+#star-widgets input[type="text"] {
+    outline: none;
+    background-color: #000000;
+    color: #CDD3F4;
+    border: 1px solid #E1D6F8;
+    padding: 0.5rem;
+    font-size: 1rem;
+}
+
+#star-widgets .stars {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+#star-widgets .stars label {
+    cursor: pointer;
+    font-size: 3rem;
+    color: #052A6A;
+    float: right;
+    transition: all 0.2s ease-in-out;
+}
+
+#star-widgets .stars input:not(:checked) ~ label:hover,
+#star-widgets .stars input:not(:checked) ~ label:hover ~ label {
+    color: #CDD3F4;
+}
+
+#star-widgets .stars input:checked ~ label {
+    color: #CDD3F4;
+}
+
+#star-widgets .stars input#rate-4:checked ~ label {
+    color: #CDD3F4;
+    text-shadow: 0 0 20px #CDD3F4;
+}
+
+#star-widgets .stars input#rate-5:checked ~ label {
+    color: #CDD3F4;
+    text-shadow: 0 0 20px #E1D6F8;
+}

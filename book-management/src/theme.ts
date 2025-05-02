@@ -1,16 +1,15 @@
-const signElement = document.querySelector('[for="dark-mode"]') as HTMLLabelElement;
-
 class Theme {
     private keyTheme: string;
     private attrTheme: string;
+    private signElement = document.querySelector('[for="dark-mode"]') as HTMLLabelElement;
     private currentStatus: 'active' | 'inactive';
-    private signTheme: 'Dark Mode' | 'Light Mode';
+    private signTheme: '🌙' | '☀️';
 
     constructor(keyTheme: string, attrTheme: string) {
         this.keyTheme = keyTheme;
         this.attrTheme = attrTheme;
         this.currentStatus = (localStorage.getItem(this.keyTheme) as 'active' | 'inactive') || 'inactive';
-        this.signTheme = (localStorage.getItem("sign-theme") as 'Dark Mode' | 'Light Mode') || 'Dark Mode';
+        this.signTheme = (localStorage.getItem("sign-theme") as '🌙' | '☀️') || '🌙';
         this.applyTheme();
         this.applySign();
     }
@@ -33,10 +32,10 @@ class Theme {
     }
 
     applySign(): void {
-        if (signElement) signElement.textContent = this.signTheme;
+        if (this.signElement) this.signElement.textContent = this.signTheme;
     }
 
-    changeSign(sign: 'Dark Mode' | 'Light Mode') {
+    changeSign(sign: '🌙' | '☀️') {
         if (this.signTheme !== sign) {
             this.signTheme = sign;
             localStorage.setItem("sign-theme", sign);

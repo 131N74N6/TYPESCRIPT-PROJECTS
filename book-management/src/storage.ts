@@ -1,6 +1,6 @@
 class DataStorage<S extends { id: number }> {
     private key: string;
-    private data: S[] = [];
+    protected data: S[] = [];
     protected selectedItemId: number | null = null;
 
     protected constructor(storageKey: string) {

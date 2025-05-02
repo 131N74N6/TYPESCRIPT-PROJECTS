@@ -25,6 +25,11 @@ class BookManager extends DataStorage<Book> {
     private controller: AbortController;
     protected darkTheme: Theme = new Theme("dark-mode", "dark-mode");
 
+    private handleDarkTheme = this.darkTheme.debounce((isActived: boolean) => {
+        this.darkTheme.changeTheme(isActived ? "active" : "inactive");
+        this.darkTheme.changeSign(isActived ? "☀️" : "🌙");
+    }, 100);
+
     constructor() {
         super("BOOKS_DATA"); 
         this.controller = new AbortController();
@@ -69,7 +74,7 @@ class BookManager extends DataStorage<Book> {
             year: year.value
         };
     
-        if (!isInEditMode) { 
+        if (isInEditMode) { 
             this.changeSelectedData(this.getSelectedId() as number, newBook);
         } else { 
             if (isExist) {
@@ -85,14 +90,9 @@ class BookManager extends DataStorage<Book> {
         bookForm.reset();
         this.showAllBooks();
     }
-
-    handleThemeChange = this.darkTheme.debounce((isChecked: boolean): void => {
-        this.darkTheme.changeTheme(isChecked ? 'active' : 'inactive');
-        this.darkTheme.changeSign(isChecked ? 'Light Mode' : 'Dark Mode');
-    }, 100);
     
     handleThemeToggle(event: Event): void {
-        this.handleThemeChange((event.target as HTMLInputElement).checked);
+        this.handleDarkTheme((event.target as HTMLInputElement).checked);
     }
 
     showAllBooks(): void {
@@ -130,6 +130,7 @@ class BookManager extends DataStorage<Book> {
 
         const selectBtn = document.createElement("button");
         selectBtn.type = "button";
+        selectBtn.className = "select-btn";
         selectBtn.textContent = "Select"
         selectBtn.addEventListener("click", () => this.selectedItem(book.id), {
             signal: this.controller.signal
@@ -137,6 +138,7 @@ class BookManager extends DataStorage<Book> {
 
         const deleteBtn = document.createElement("button");
         deleteBtn.type = "button";
+        deleteBtn.className = "delete-btn";
         deleteBtn.textContent = "Delete";
         deleteBtn.addEventListener("click", () => this.deleteBook(book.id), { 
             signal: this.controller.signal 
@@ -170,10 +172,9 @@ class BookManager extends DataStorage<Book> {
     }
 
     private deleteBook(id: number): void {
-        const element = bookList.querySelector(`[book-id="${id}"]`) as HTMLElement;
-        element.remove();
-        element.replaceWith(element.cloneNode(true));
-        this.delete(id);
+        this.getAll().forEach(book => {
+            if (book.id === id) this.delete(id);
+        });
     }
 
     deleteAllBooks(): void {
@@ -229,6 +230,8 @@ class BookManager extends DataStorage<Book> {
 
     cleanUp(): void {
         this.controller.abort();
+        this.controller = new AbortController();
+        this.setEventListeners();
     }
 }
 
