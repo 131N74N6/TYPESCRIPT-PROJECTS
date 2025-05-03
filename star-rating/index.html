@@ -9,27 +9,30 @@
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" 
         crossorigin="anonymous" 
         referrerpolicy="no-referrer" 
-        />
+    />
 </head>
 <body>
     <main class="rating-stars">
-        <section id="ratingsList"></section>
+        <section id="ratings-list"></section>
         <form title="rating-fields" id="star-widgets">
             <section class="stars">
-                <input type="radio" name="rate" id="rate-5"/>
+                <input type="radio" name="rate" id="rate-5" value="5" title="rating-radio"/>
                 <label for="rate-5"><i class="fa-solid fa-star"></i></label>
-                <input type="radio" name="rate" id="rate-4"/>
+                <input type="radio" name="rate" id="rate-4" value="4" title="rating-radio"/>
                 <label for="rate-4"><i class="fa-solid fa-star"></i></label>
-                <input type="radio" name="rate" id="rate-3"/>
+                <input type="radio" name="rate" id="rate-3" value="3" title="rating-radio"/>
                 <label for="rate-3"><i class="fa-solid fa-star"></i></label>
-                <input type="radio" name="rate" id="rate-2"/>
+                <input type="radio" name="rate" id="rate-2" value="2" title="rating-radio"/>
                 <label for="rate-2"><i class="fa-solid fa-star"></i></label>
-                <input type="radio" name="rate" id="rate-1"/>
+                <input type="radio" name="rate" id="rate-1" value="1" title="rating-radio"/>
                 <label for="rate-1"><i class="fa-solid fa-star"></i></label>
             </section>
             <section class="writing">
-                <input type="text" placeholder="insert text" id="comment"/>
-                <button type="submit">Send</button>
+                <input type="text" placeholder="insert-your-opinion" id="comment"/>
+                <input type="text" placeholder="insert-name" id="username"/>
+                <div>
+                    <button type="submit" id="save-btn">Send</button>
+                </div>
             </section>
         </form>
     </main>

@@ -66,3 +66,17 @@ main {
     color: #CDD3F4;
     text-shadow: 0 0 20px #E1D6F8;
 }
+
+#ratings-list {
+    padding: 1rem;
+    color: #E1D6F8;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+#ratings-list .opinion {
+    border: 1.3px solid #E1D6F8;
+    padding: 0.5rem;
+    font-family: Arial;
+}

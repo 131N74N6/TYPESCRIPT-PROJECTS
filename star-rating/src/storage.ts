@@ -16,7 +16,7 @@ class DataManager <V extends { id: string }> {
         localStorage.setItem(this.key, JSON.stringify(this.data));
     }
 
-    getAllData(): V[] {
+    protected getAllData(): V[] {
         return [...this.data]
     }
 
