@@ -1,3 +1,4 @@
+import Modal from "./modal.js";
 import DataManager from "./storage.js";
 
 interface Rating {
@@ -9,9 +10,10 @@ interface Rating {
 
 const starWidgets = document.getElementById("star-widgets") as HTMLFormElement;
 const username = document.getElementById("username") as HTMLInputElement;
-const comment = document.getElementById("comment") as HTMLInputElement;
+const comment = document.getElementById("comment") as HTMLTextAreaElement;
 const ratingsList = document.getElementById("ratings-list") as HTMLElement;
 const saveButton = document.getElementById("save-btn") as HTMLButtonElement;
+const clearForm = document.getElementById("clear-form") as HTMLButtonElement;
 
 class User extends DataManager<Rating> {
     private controllers: AbortController;
@@ -26,13 +28,13 @@ class User extends DataManager<Rating> {
     private setupEventListeners(): void {
         ratingsList.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
+            const allOpinions = Array.from(document.querySelectorAll(".opinion"));
             const selectButton = target.closest(".select-btn");
             const selectedOpinion = selectButton?.closest(".opinion");
 
             const deleteButton = target.closest(".delete-btn");
             const deleteOneOpinion = deleteButton?.closest(".opinion");
 
-            const allOpinions = Array.from(document.querySelectorAll(".opinion"));
             const selectingOpinionIndex = allOpinions.indexOf(selectedOpinion as Element);
             const deletingOneOpinionIndex = allOpinions.indexOf(deleteOneOpinion as Element);
 
@@ -46,6 +48,10 @@ class User extends DataManager<Rating> {
                 this.deleteRating(opinionData.id);
             }
         }, { signal: this.controllers.signal });
+
+        clearForm.addEventListener("click", () => this.resetOpinionForm(), { 
+            signal: this.controllers.signal
+        });
 
         starWidgets.addEventListener("submit", (event) => this.submitRating(event), {
             signal: this.controllers.signal
@@ -70,13 +76,6 @@ class User extends DataManager<Rating> {
         username.className = "username";
         username.textContent = content.name;
 
-        const rating = document.createElement("div") as HTMLDivElement;
-        rating.className = "rating";
-        rating.textContent = String(content.rating);
-
-        const star = document.createElement("i") as HTMLElement;
-        star.className = "fa-solid fa-star";
-
         const comment = document.createElement("div") as HTMLDivElement;
         comment.className = "comment";
         comment.textContent = content.comment;
@@ -100,47 +99,87 @@ class User extends DataManager<Rating> {
 
         buttonWrapper.append(selectBtn, deleteBtn);
 
-        opinion.append(username, rating, comment, buttonWrapper);
+        opinion.append(username, this.makeStar(content.rating), comment, buttonWrapper);
         return opinion;
     }
 
     private submitRating(event: SubmitEvent): void {
         event.preventDefault();
-        const createRating = document.querySelector('input[name="rate"]:checked') as HTMLInputElement;
-        const createdRate = Number(createRating.value);
         const isInEditMode = !!this.selectedId;
+        const createRating = document.querySelector('input[name="rate"]:checked') as HTMLInputElement;
 
-        const newRating: Omit<Rating, 'id'> = {
-            name: username.value,
-            rating: createdRate,
-            comment: comment.value
+        if (!username.value.trim()) {
+            new Modal("Masukkan nama yang valid!");
+            return;
+        }
+
+        const newRating: Partial<Rating> = {
+            name: username.value.trim(),
+            rating: Number(createRating.value.trim()),
+            comment: comment.value.trim()
         }
 
         if (!isInEditMode) {
-            this.addNewData(newRating);
+            this.addNewData(newRating as Omit<Rating, 'id'>);
         } else {
-            this.changeSelectedData(this.selectedId as string, newRating);
+            try {
+                const existingData = this.getAllData().find(data => data.id === this.selectedId);
+
+                if (!existingData) { throw new Error('Data tidak ditemukan'); }
+                
+                this.changeSelectedData(this.selectedId as string, newRating);
+            } catch (error) {
+                new Modal("Opini belum ada atau sudah dihapus");
+                this.resetOpinionForm();
+            }
         }
 
+        this.resetOpinionForm();
+        this.showAllRatings();
+    }
+
+    private resetOpinionForm(): void {
         starWidgets.reset();
         this.selectedId = null;
-        this.showAllRatings();
         saveButton.textContent = "Send";
     }
 
-    selectedRating(id: string): void {
+    private makeStar(starTotal: number): HTMLDivElement {
+        const starToNumber: number = starTotal * 2;
+        const starWrap = document.createElement("div") as HTMLDivElement;
+        const starValue = document.createElement("div") as HTMLDivElement;
+        starWrap.className = "star-wrap";
+        starValue.className = "star-value";
+        let x: number;
+
+        for (x = 1; x <= starTotal; x++) {
+            const star = document.createElement("i") as HTMLElement;
+            star.className = "fa-solid fa-star";
+            star.style.color = "#CDD3F4";
+            starWrap.appendChild(star);
+        }
+
+        starValue.textContent = `(${starToNumber}/10)`;
+        starWrap.appendChild(starValue);
+        starWrap.style.display = "flex";
+        starWrap.style.gap = "0.3rem";
+
+        return starWrap;
+    }
+
+    private selectedRating(id: string): void {
         this.selectedId = id;
         const index = this.getAllData().findIndex(data => data.id === id);
         const getRatingData = this.getAllData();
         const starTotal = String(getRatingData[index].rating);
 
         username.value = getRatingData[index].name;
-        (document.querySelector(`input[value=${starTotal}]`) as HTMLInputElement).checked = true;
+        (document.querySelector(`input[value="${starTotal}"]`) as HTMLInputElement).checked = true;
         comment.value = getRatingData[index].comment;
         saveButton.textContent = "Edit Data";
     }
 
-    deleteRating(id: string): void {
+    private deleteRating(id: string): void {
         this.deleteSelectedData(id);
         this.showAllRatings();
     }

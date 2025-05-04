@@ -13,6 +13,7 @@
 </head>
 <body>
     <main class="rating-stars">
+        <section id="notification"></section>
         <section id="ratings-list"></section>
         <form title="rating-fields" id="star-widgets">
             <section class="stars">
@@ -27,11 +28,12 @@
                 <input type="radio" name="rate" id="rate-1" value="1" title="rating-radio"/>
                 <label for="rate-1"><i class="fa-solid fa-star"></i></label>
             </section>
-            <section class="writing">
-                <input type="text" placeholder="insert-your-opinion" id="comment"/>
+            <section id="writing">
                 <input type="text" placeholder="insert-name" id="username"/>
+                <textarea placeholder="insert-your-opinion" id="comment"></textarea>
                 <div>
                     <button type="submit" id="save-btn">Send</button>
+                    <button type="button" id="clear-form">Clear</button>
                 </div>
             </section>
         </form>

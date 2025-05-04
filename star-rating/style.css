@@ -7,25 +7,45 @@ body {
 main {
     background-color: #000000;
     min-height: 100dvh;
-    max-width: 880px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 0;
 }
 
 #star-widgets {
-    position: fixed;
+    position: sticky;
     padding: 1.1rem;
     background-color: #000000;
     bottom: 0;
     z-index: 10;
 }
 
+#writing {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
 #star-widgets input[type="radio"] {
     display: none;
 }
 
-#star-widgets input[type="text"] {
+#star-widgets #username {
+    font-family: Arial;
     outline: none;
+    resize: none;
+    background-color: #000000;
+    color: #CDD3F4;
+    border: 1px solid #E1D6F8;
+    padding: 0.5rem;
+    font-size: 1rem;
+}
+
+#star-widgets #comment {
+    font-family: Arial;
+    outline: none;
+    resize: none;
+    height: 150px;
     background-color: #000000;
     color: #CDD3F4;
     border: 1px solid #E1D6F8;
@@ -48,12 +68,12 @@ main {
     transition: all 0.2s ease-in-out;
 }
 
-#star-widgets .stars input:not(:checked) ~ label:hover,
-#star-widgets .stars input:not(:checked) ~ label:hover ~ label {
+#star-widgets .stars input:checked ~ label {
     color: #CDD3F4;
 }
 
-#star-widgets .stars input:checked ~ label {
+#star-widgets .stars input:not(:checked) ~ label:hover,
+#star-widgets .stars input:not(:checked) ~ label:hover ~ label {
     color: #CDD3F4;
 }
 
@@ -67,6 +87,28 @@ main {
     text-shadow: 0 0 20px #E1D6F8;
 }
 
+#star-widgets #save-btn {
+    border: 1px solid #CDD3F4;
+    border-radius: 0.4rem;
+    background-color: #210D30;
+    color: #CDD3F4;
+    font-size: 0.9rem;
+    padding: 0.4rem;
+    width: 100px;
+    cursor: pointer;
+}
+
+#star-widgets #clear-form {
+    border: none;
+    border-radius: 0.4rem;
+    background-color: #DC7D68;
+    color: #FFFFFF;
+    font-size: 0.9rem;
+    padding: 0.4rem;
+    width: 100px;
+    cursor: pointer;
+}
+
 #ratings-list {
     padding: 1rem;
     color: #E1D6F8;
@@ -76,7 +118,54 @@ main {
 }
 
 #ratings-list .opinion {
-    border: 1.3px solid #E1D6F8;
+    border-bottom: 1.3px solid #E1D6F8;
     padding: 0.5rem;
     font-family: Arial;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+#ratings-list .opinion .select-btn {
+    border: none;
+    border-radius: 0.4rem;
+    background-color: #25629B;
+    color: #FFFFFF;
+    font-size: 0.9rem;
+    padding: 0.4rem;
+    width: 100px;
+    cursor: pointer;
+}
+
+#ratings-list .opinion .delete-btn {
+    border: none;
+    border-radius: 0.4rem;
+    background-color: #EC7744;
+    color: #FFFFFF;
+    font-size: 0.9rem;
+    padding: 0.4rem;
+    width: 100px;
+    cursor: pointer;
+}
+
+#notification {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 0.5rem;
+}
+
+#notification > .content {
+    box-shadow: 0 0 6px #CDD3F4;
+    padding: 0.5rem;
+    color: #CDD3F4;
+    font-family: Arial;
+    font-size: 1rem;
+    background-color: #000000;
+    animation: slide-in 0.3s ease-in-out;
+}
+
+@keyframes slide-in {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0%); }
 }

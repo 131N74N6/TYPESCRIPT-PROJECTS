@@ -26,9 +26,11 @@ class DataManager <V extends { id: string }> {
         this.saveToStorage();
     }
 
-    protected changeSelectedData(id: string, item: Omit<V, 'id'>): void {
+    protected changeSelectedData(id: string, item: Partial<V>): void {
+        const allData = this.getAllData();
         const index = this.data.findIndex(dt => dt.id === id);
-        const newData = { id: Date.now().toString(), ...item } as V;
+        const newData = { ...allData[index], ...item } as V;
+        
         this.data[index] = newData;
         this.saveToStorage();
     }
