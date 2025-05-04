@@ -13,7 +13,6 @@ const username = document.getElementById("username") as HTMLInputElement;
 const comment = document.getElementById("comment") as HTMLTextAreaElement;
 const ratingsList = document.getElementById("ratings-list") as HTMLElement;
 const saveButton = document.getElementById("save-btn") as HTMLButtonElement;
-const clearForm = document.getElementById("clear-form") as HTMLButtonElement;
 
 class User extends DataManager<Rating> {
     private controllers: AbortController;
@@ -26,7 +25,7 @@ class User extends DataManager<Rating> {
     }
 
     private setupEventListeners(): void {
-        ratingsList.addEventListener("click", (event) => {
+        document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
             const allOpinions = Array.from(document.querySelectorAll(".opinion"));
             const selectButton = target.closest(".select-btn");
@@ -47,11 +46,9 @@ class User extends DataManager<Rating> {
                 const opinionData = this.getAllData()[deletingOneOpinionIndex];
                 this.deleteRating(opinionData.id);
             }
-        }, { signal: this.controllers.signal });
 
-        clearForm.addEventListener("click", () => this.resetOpinionForm(), { 
-            signal: this.controllers.signal
-        });
+            if (target.closest("#clear-form")) this.resetOpinionForm();
+        }, { signal: this.controllers.signal });
 
         starWidgets.addEventListener("submit", (event) => this.submitRating(event), {
             signal: this.controllers.signal
@@ -152,11 +149,17 @@ class User extends DataManager<Rating> {
         starValue.className = "star-value";
         let x: number;
 
-        for (x = 1; x <= starTotal; x++) {
+        for (x = 1; x <= 5; x++) {
             const star = document.createElement("i") as HTMLElement;
-            star.className = "fa-solid fa-star";
-            star.style.color = "#CDD3F4";
-            starWrap.appendChild(star);
+            if (x <= starTotal) {
+                star.className = "fa-solid fa-star";
+                star.style.color = "#CDD3F4";
+                starWrap.appendChild(star);
+            } else {
+                star.className = "fa-solid fa-star";
+                star.style.color = "#052A6A";
+                starWrap.appendChild(star);
+            }
         }
 
         starValue.textContent = `(${starToNumber}/10)`;
