@@ -40,7 +40,25 @@ class BookManager extends DataStorage<Book> {
     private setEventListeners(): void {
         document.addEventListener('click', (event) => {
             const target = event.target as HTMLElement;
-            
+            const getAllBooks = Array.from(document.querySelectorAll(".book-item"));
+
+            const selectButton = target.closest(".select-btn");
+            const deleteButton = target.closest(".delete-btn");
+
+            const getComponentToSelect = selectButton?.closest(".book-item");
+            const getComponentToDelete = deleteButton?.closest(".book-item");
+
+            const getSelectedIndex = getAllBooks.indexOf(getComponentToSelect as Element);
+            const getIndexToRemove = getAllBooks.indexOf(getComponentToDelete as Element);
+
+            if (getSelectedIndex > -1) {
+                const bookData = this.getAll()[getSelectedIndex];
+                this.selectedItem(bookData.id);
+            }
+            if (getIndexToRemove > -1) {
+                const bookData = this.getAll()[getIndexToRemove];
+                this.deleteBook(bookData.id);
+            }
             if (target.closest(".search-mode")) bookManager.searchMode();
             if (target.closest(".close-search")) bookManager.closeSearchMode();
             if (target.closest(".delete-all")) bookManager.deleteAllBooks();
@@ -49,10 +67,12 @@ class BookManager extends DataStorage<Book> {
         bookForm.addEventListener("submit", (event) => this.handleForm(event), { 
             signal: this.controller.signal 
         });
-        searchForm.addEventListener("submit", this.handleSearch, { 
+
+        searchForm.addEventListener("submit", (event) => this.handleSearch(event), { 
             signal: this.controller.signal 
         });
-        darkToggle.addEventListener("change", this.handleThemeToggle, { 
+
+        darkToggle.addEventListener("change", (event) => this.handleThemeToggle(event), { 
             signal: this.controller.signal 
         });
     }
@@ -68,11 +88,11 @@ class BookManager extends DataStorage<Book> {
             return;
         }
 
-        const newBook: Omit<Book, 'id'> = {
+        const newBook: Partial<Book> = {
             title: title.value,
             author: author.value,
             year: year.value
-        };
+        }
     
         if (isInEditMode) { 
             this.changeSelectedData(this.getSelectedId() as number, newBook);
@@ -81,17 +101,21 @@ class BookManager extends DataStorage<Book> {
                 new Modal("Buku sudah ada/terdaftar");
                 return;
             }
-            this.addData(newBook);
+            this.addData(newBook as Omit<Book, 'id'>);
             new Modal("Buku berhasil ditambahkan!");
         }
-    
+
+        this.resetForm();
+        this.showAllBooks();
+    }
+
+    private resetForm(): void {
         this.setSelectedId(null);
         submitBtn.textContent = "Tambah Buku"; 
         bookForm.reset();
-        this.showAllBooks();
     }
     
-    handleThemeToggle(event: Event): void {
+    private handleThemeToggle(event: Event): void {
         this.handleDarkTheme((event.target as HTMLInputElement).checked);
     }
 
@@ -115,13 +139,13 @@ class BookManager extends DataStorage<Book> {
         detailInfo.className = "detail-info";
 
         const judul = document.createElement("h3") as HTMLHeadingElement;
-        judul.textContent = book.title;
+        judul.textContent = `Judul : ${book.title}`;
 
         const penulis = document.createElement("p") as HTMLParagraphElement;
-        penulis.textContent = book.author;
+        penulis.textContent = `Penulis : ${book.author}`;
 
         const tahun = document.createElement("p") as HTMLParagraphElement;
-        tahun.textContent = book.year;
+        tahun.textContent = `Tahun Terbit : ${book.year}`;
 
         detailInfo.append(judul, penulis, tahun);
 
@@ -131,18 +155,12 @@ class BookManager extends DataStorage<Book> {
         const selectBtn = document.createElement("button");
         selectBtn.type = "button";
         selectBtn.className = "select-btn";
-        selectBtn.textContent = "Select"
-        selectBtn.addEventListener("click", () => this.selectedItem(book.id), {
-            signal: this.controller.signal
-        });
+        selectBtn.textContent = "Select";
 
         const deleteBtn = document.createElement("button");
         deleteBtn.type = "button";
         deleteBtn.className = "delete-btn";
         deleteBtn.textContent = "Delete";
-        deleteBtn.addEventListener("click", () => this.deleteBook(book.id), { 
-            signal: this.controller.signal 
-        });
 
         buttonWrap.append(selectBtn, deleteBtn);
         bookElement.append(detailInfo, buttonWrap);
@@ -164,17 +182,12 @@ class BookManager extends DataStorage<Book> {
         submitBtn.textContent = "Edit Buku";
     }
 
-    editBook(id: number, book: Book): void {
-        const item = this.getAll();
-        const index = item.findIndex(it => it.id === id);
-
-        item[index] = book;
-    }
-
     private deleteBook(id: number): void {
-        this.getAll().forEach(book => {
-            if (book.id === id) this.delete(id);
-        });
+        this.delete(id);
+        
+        if (this.getSelectedId() === id) this.resetForm();
+        
+        this.showAllBooks();
     }
 
     deleteAllBooks(): void {

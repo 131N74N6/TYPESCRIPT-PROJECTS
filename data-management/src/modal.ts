@@ -1,8 +1,8 @@
-const modalMsg = document.getElementById("modal-msg") as HTMLElement;
-
 class Modal {
+    private modalMessage: HTMLElement = document.getElementById("modal-msg") as HTMLElement;
     private message: string;
     private modal: HTMLDivElement;
+    private timeout: number | null = null;
 
     constructor(message: string) {
         this.message = message;
@@ -16,11 +16,16 @@ class Modal {
         const text = document.createElement("p");
         text.textContent = this.message;
         this.modal.appendChild(text);
+        this.modalMessage.appendChild(this.modal);
     }
 
     public showModal(): void {
-        modalMsg.appendChild(this.modal);
-        setTimeout(() => this.modal.remove(), 3000);
+        this.timeout = setTimeout(() => this.teardownModal(), 3000);
+    }
+
+    private teardownModal(): void {
+        if (this.timeout) clearTimeout(this.timeout);
+        this.modal.remove()
     }
 }
 

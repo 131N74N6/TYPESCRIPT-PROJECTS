@@ -71,10 +71,19 @@ button:hover {
     font-family: Arial;
 }
 
+#data-list .user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid #1A1A1A;
+}
+
 #notification .content {
     position: sticky;
     top: 0;
-    background-color: #CDD3F4;
+    background-color: #FFFFFF;
+    color: #1A1A1A;
     box-shadow: 0 0 4px rgba(0,0,0,0.1);
     padding: 0.3rem;
     animation: slide-in 0.3s ease-in-out;
@@ -113,11 +122,11 @@ body[dark-mode="active"] #notification {
     box-shadow: 0 0 6px #CDD3F4;
 }
 
-body[dark-mode="active"] #notification button {
+body[dark-mode="active"] #notification  {
     background-color: #CDD3F4;
-    color: black;
+    color: #1A1A1A;
 }
 
-body[dark-mode="active"] #notification button:hover {
-    background-color: #b3bdf6;
+body[dark-mode="active"] #data-list .user-list {
+    border-bottom: 2px solid #CDD3F4;
 }

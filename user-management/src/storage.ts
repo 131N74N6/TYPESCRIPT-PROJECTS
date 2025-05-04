@@ -31,9 +31,10 @@ class DataStorage<A extends { id: number }> {
         this.saveToStorage();
     }
 
-    changeData(id: number, detail: Omit<A, 'id'>): void {
+    changeData(id: number, detail: Partial<A>): void {
+        const allData = this.getAllData();
         const index = this.data.findIndex(dt => dt.id === id);
-        const newData = { id, ...detail } as A;
+        const newData = { ...allData[index], ...detail } as A;
 
         if (index !== -1) {
             this.data[index] = newData;
@@ -42,9 +43,8 @@ class DataStorage<A extends { id: number }> {
     }
 
     protected deleteData(id: number): void {
-        const data = this.getAllData();
-        const index = data.findIndex(dt => dt.id === id);
-        data.splice(index, 1);
+        const index = this.data.findIndex(dt => dt.id === id);
+        this.data.splice(index, 1);
         this.saveToStorage();
     }
 

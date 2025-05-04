@@ -3,6 +3,7 @@ const modal = document.getElementById("modal") as HTMLElement;
 class Modal {
     private message: string;
     private modalComponent: HTMLDivElement;
+    private timeout: number | null = null
 
     constructor(message: string) {
         this.message = message;
@@ -17,11 +18,16 @@ class Modal {
         p.textContent = this.message;
         p.className = "message";
         this.modalComponent.appendChild(p);
+        modal.appendChild(this.modalComponent);
     }
 
     showModal(): void {
-        modal.appendChild(this.modalComponent)
-        setTimeout(() => this.modalComponent.remove(), 3000);
+        this.timeout = setTimeout(() => this.teardownModal(), 3000);
+    }
+
+    private teardownModal(): void {
+        if (this.timeout) clearTimeout(this.timeout);
+        this.modalComponent.remove()
     }
 }
 

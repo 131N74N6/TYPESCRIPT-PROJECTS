@@ -3,6 +3,7 @@ class Modal {
     private notification = document.getElementById("notification") as HTMLElement;
     private notificationComponent: HTMLDivElement;
     private notificationMessage: HTMLParagraphElement;
+    private timeout: number | null = null;
 
     constructor(text: string) {
         this.text = text;
@@ -20,7 +21,12 @@ class Modal {
     }
 
     protected showModal(): void {
-        setTimeout(() => this.notificationComponent.remove(), 3000);
+        this.timeout = setTimeout(() => this.teardownModal(), 3000);
+    }
+
+    private teardownModal(): void {
+        if (this.timeout) clearTimeout(this.timeout);
+        this.notificationComponent.remove();
     }
 }
 

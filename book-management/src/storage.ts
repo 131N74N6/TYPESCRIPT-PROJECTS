@@ -27,9 +27,9 @@ class DataStorage<S extends { id: number }> {
         this.saveToStorage();
     }
 
-    protected changeSelectedData(id: number, item: Omit<S, 'id'>): void {
+    protected changeSelectedData(id: number, item: Partial<S>): void {
         const index = this.data.findIndex(selected => selected.id === id);
-        const newData = { id, ...item } as S;
+        const newData = { ...this.data[index], ...item } as S;
         this.data[index] = newData;
         this.saveToStorage();
     }

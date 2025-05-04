@@ -11,34 +11,51 @@ const searchData = document.getElementById("searchData") as HTMLInputElement;
 const itemsList = document.getElementById("itemsList") as HTMLElement;
 
 class DisplayManager extends DataManager {
-    private abortCtrl: AbortController;
+    private controller: AbortController;
 
     constructor() {
         super("items");
-        this.abortCtrl = new AbortController();
+        this.controller = new AbortController();
         this.setEventListeners();
     }
 
     private setEventListeners(): void {
-        const { signal } = this.abortCtrl;
-
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
-            const cardId = Number(target.closest(".item-card")?.getAttribute("card-id"));
-            
-            if (target.classList.contains("edit-btn") && cardId) this.selectedData(cardId);
-            if (target.classList.contains("delete-btn") && cardId) this.deleteData(cardId);
-    
+            const getAllData = Array.from(document.querySelectorAll(".item-card"));
+
+            const selectButton = target.closest(".edit-btn");
+            const deleteButton = target.closest(".delete-btn");
+
+            const getSelectedData = selectButton?.closest(".item-card");
+            const deleteOneData = deleteButton?.closest(".item-card");
+
+            const getSelectedIndex = getAllData.indexOf(getSelectedData as Element);
+            const getIndexToRemove = getAllData.indexOf(deleteOneData as Element);
+
+            if (getSelectedIndex > -1) {
+                const dataDetail = this.getAllItems()[getSelectedIndex];
+                this.selectedData(dataDetail.id);
+            }
+            if (getIndexToRemove > -1) {
+                const dataDetail = this.getAllItems()[getIndexToRemove];
+                this.deleteData(dataDetail.id);
+            }
             if (target.closest("#addFieldBtn")) this.addNewField();
             if (target.closest("#openForm")) this.openFormData();
             if (target.closest("#closeForm")) this.closeFormData();
             if (target.closest("#openSearch")) this.openSearchData();
             if (target.closest("#closeSearch")) this.closeSearchData();
             if (target.closest("#delete-all")) this.deleteAllData();
-        }, { signal });
+        }, { signal: this.controller.signal });
 
-        inputSection.addEventListener("submit", (event) => this.submitData(event), { signal });
-        searchSection.addEventListener("submit", (event) => this.filterData(event), { signal });
+        inputSection.addEventListener("submit", (event) => this.submitData(event), { 
+            signal: this.controller.signal
+        });
+
+        searchSection.addEventListener("submit", (event) => this.filterData(event), { 
+            signal: this.controller.signal
+        });
     }
 
     private createInputField(value?: string): HTMLInputElement {
@@ -81,9 +98,13 @@ class DisplayManager extends DataManager {
                 new Modal("Data sudah ada");
             }
         }
-        
-        this.setEditingId(null);
+
         this.showAllData();
+        this.resetForm();
+    }
+
+    private resetForm(): void {
+        this.setEditingId(null);
         inputSection.style.display = "none";
         inputSection.reset();
     }
@@ -104,7 +125,6 @@ class DisplayManager extends DataManager {
     private createCardItem(data: DataItem): HTMLDivElement {
         const card = document.createElement('div');
         card.className = 'item-card';
-        card.setAttribute("card-id", String(data.id));
 
         const h3 = document.createElement("h3") as HTMLHeadingElement;
         h3.textContent = data.name;
@@ -178,12 +198,12 @@ class DisplayManager extends DataManager {
         itemsList.appendChild(filteredCard);
     }
 
-    protected deleteData(id: number): void {
+    private deleteData(id: number): void {
         this.deleteItem(id); 
-        const itemElement = document.querySelector(`[card-id="${id}"]`);
 
-        if (itemElement) itemElement.remove();
+        if (this.getEditingId() === id) this.resetForm();
         
+        this.showAllData();
         new Modal("Data berhasil dihapus");
     }
 
@@ -225,7 +245,9 @@ class DisplayManager extends DataManager {
     }
 
     public cleanUp(): void {
-        this.abortCtrl.abort();
+        this.controller.abort();
+        this.controller = new AbortController();
+        this.setEventListeners();
     }
 }
 

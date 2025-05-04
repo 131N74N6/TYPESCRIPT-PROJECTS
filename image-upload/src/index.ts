@@ -28,10 +28,25 @@ class Displayer extends DataStorage {
         
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
-            const imageId = target.closest(".image-data")?.getAttribute("image-id");
+            const getAllImages = Array.from(document.querySelectorAll(".image-data"));
 
-            if (target.classList.contains("edit-btn") && imageId) this.selectedItem(imageId);
-            if (target.classList.contains("delete-btn") && imageId) this.deleteImage(imageId);
+            const selectButton = target.closest(".edit-btn");
+            const selectedImage = selectButton?.closest(".image-data");
+
+            const deleteButton = target.closest(".delete-btn");
+            const deleteOneImage = deleteButton?.closest(".image-data");
+
+            const getSelectedItemIndex = getAllImages.indexOf(selectedImage as Element);
+            const getIndexToDelete = getAllImages.indexOf(deleteOneImage as Element);
+
+            if (getSelectedItemIndex > -1) {
+                const imageData = this.getAllData()[getSelectedItemIndex];
+                this.selectedItem(imageData.id);
+            }
+            if (getIndexToDelete > -1) {
+                const imageData = this.getAllData()[getIndexToDelete];
+                this.deleteImage(imageData.id);
+            }
             if (target.closest("#delete-all")) this.deleteAllImage();
             if (target.closest("#add-data")) this.openForm();
             if (target.closest("#close-form")) this.closeForm();
@@ -124,9 +139,9 @@ class Displayer extends DataStorage {
     createImageComponent(item: Item): HTMLElement {
         const div = document.createElement("div") as HTMLDivElement;
         div.className = "image-data";
-        div.setAttribute("image-id", item.id);
 
         const h3 = document.createElement("h3") as HTMLHeadingElement;
+        h3.className = "image-name"
         h3.textContent = `${item.imgName}`;
         
         const imageWrap = document.createElement("div") as HTMLDivElement;
@@ -175,11 +190,11 @@ class Displayer extends DataStorage {
     }
 
     deleteImage(id: string): void {
-        const selectedItem = document.querySelector(`[image-id="${id}"]`);
-        if (selectedItem) {
-            selectedItem.remove();
-            this.deleteFromStorages(id);
-        }
+        this.deleteFromStorages(id);
+
+        if (this.getSelectedId() === id) this.resetForm();
+        
+        this.showAllData();
     }
 
     deleteAllImage(): void {

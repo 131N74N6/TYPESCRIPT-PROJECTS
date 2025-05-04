@@ -3,6 +3,7 @@ class Modal {
     private modalComponent = document.createElement("div") as HTMLDivElement;
     private p = document.createElement("p") as HTMLParagraphElement
     private text: string;
+    private timeout: number | null  = null;
 
     constructor(text: string) {
         this.text = text;
@@ -17,7 +18,12 @@ class Modal {
     }
 
     showModal(): void {
-        setTimeout(() => this.modalComponent.remove(), 3000);
+        setTimeout(() => this.teardownModal(), 3000);
+    }
+
+    private teardownModal(): void {
+        if (this.timeout) clearInterval(this.timeout);
+        this.modalComponent.remove();
     }
 }
 

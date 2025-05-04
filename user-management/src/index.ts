@@ -35,7 +35,25 @@ class UserManagement extends DataStorage<UserInfo> {
     private setupGlobalListeners() {
         document.addEventListener('click', (event) => {
             const target = event.target as HTMLElement;
+            const getAllUserData = Array.from(document.querySelectorAll(".user-list"));
             
+            const selectButton = target.closest(".edit-btn");
+            const deleteButton = target.closest(".delete-btn");
+
+            const selectUserData = selectButton?.closest(".user-list");
+            const deleteUserData = deleteButton?.closest(".user-list");
+
+            const getSelectedIndex = getAllUserData.indexOf(selectUserData as Element);
+            const getIndexToRemove = getAllUserData.indexOf(deleteUserData as Element);
+
+            if (getSelectedIndex > -1) {
+                const userData = this.getAllData()[getSelectedIndex];
+                this.handleEdit(userData.id);
+            }
+            if (getIndexToRemove > -1) {
+                const userData = this.getAllData()[getIndexToRemove]; 
+                this.deleteUser(userData.id);
+            }
             if (target.closest("#searchMode")) this.showSearchFilter();
             if (target.closest("#addDataMode")) this.showForm();
             if (target.closest("#delete-all")) this.deleteAllUser();
@@ -46,9 +64,11 @@ class UserManagement extends DataStorage<UserInfo> {
         dataForm.addEventListener("submit", (event) => this.handleForm(event), { 
             signal: this.controller.signal 
         });
+
         searchForm.addEventListener("submit", (event) => this.handleSearch(event), { 
             signal: this.controller.signal 
         });
+
         toggleTheme.addEventListener("change", (event) => this.handleToggle(event), { 
             signal: this.controller.signal 
         });
@@ -75,23 +95,29 @@ class UserManagement extends DataStorage<UserInfo> {
             return;
         }
 
-        const newUser: Omit<UserInfo, 'id'> = {
+        const newUser: Partial<UserInfo> = {
             name: inputName.value,
             gender: selectedGender,
             hobbies: selectedHobbies
         }
     
         if (isInEditMode) {
-            this.changeData(this.getSelectedId() as number, newUser);
+            this.changeData(this.selectedId as number, newUser);
         } else {
             if (!isExist) {
-                this.add(newUser);
+                this.add(newUser as Omit<UserInfo, 'id'>);
                 new Modal("Data berhasil ditambahkan");
             } else {
                 new Modal("Data sudah ada! Masukkan data lain!");
+                this.resetForm();
             }
         }
     
+        this.showAllData();
+        this.resetForm();
+    }
+
+    private resetForm(): void {
         dataForm.reset();
         this.showAllData();
         dataForm.style.display = "none";
@@ -115,13 +141,13 @@ class UserManagement extends DataStorage<UserInfo> {
         listWrapper.className = "user-list";
 
         const nama = document.createElement("div") as HTMLDivElement;
-        nama.textContent = info.name;
+        nama.textContent = `Nama: ${info.name}`;
 
         const gender = document.createElement("div") as HTMLDivElement;
-        gender.textContent = info.gender;
+        gender.textContent = `Gender: ${info.gender}`;
 
         const hobbies = document.createElement("div") as HTMLDivElement;
-        hobbies.textContent = info.hobbies.join(', ');
+        hobbies.textContent = `Hobi: ${info.hobbies.join(', ')}`;
 
         const buttonWrap = document.createElement("div") as HTMLDivElement;
         buttonWrap.className = "button-wrap";
@@ -130,17 +156,11 @@ class UserManagement extends DataStorage<UserInfo> {
         editBtn.className = "edit-btn";
         editBtn.textContent = "Edit";
         editBtn.type = "button";
-        editBtn.addEventListener("click", () => this.handleEdit(info.id), { 
-            signal: this.controller.signal 
-        });
 
         const deleteBtn = document.createElement("button") as HTMLButtonElement;
         deleteBtn.className = "delete-btn";
         deleteBtn.textContent = "Delete";
         deleteBtn.type = "button";
-        deleteBtn.addEventListener("click", () => this.deleteUser(info.id), { 
-            signal: this.controller.signal 
-        });
 
         buttonWrap.append(editBtn, deleteBtn);
         listWrapper.append(nama, gender, hobbies, buttonWrap);
@@ -191,10 +211,11 @@ class UserManagement extends DataStorage<UserInfo> {
     }
 
     private deleteUser(id: number): void {
-        const element = dataList.querySelector(`[data-id="${id}"]`) as HTMLElement;
-        element.remove();
-        element.replaceWith(element.cloneNode(true));
         this.deleteData(id);
+
+        if (this.getSelectedId() === id) this.resetForm();
+
+        this.showAllData();
     }
 
     private deleteAllUser(): void {
