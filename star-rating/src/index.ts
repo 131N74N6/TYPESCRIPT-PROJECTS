@@ -190,6 +190,7 @@ class User extends DataManager<Rating> {
     protected deleteAllRatings(): void {
         this.deleteAllData();
         ratingsList.replaceChildren();
+        this.resetOpinionForm();
     }
 
     cleanUp(): void {

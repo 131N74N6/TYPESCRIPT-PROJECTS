@@ -202,6 +202,7 @@ class Displayer extends DataStorage {
         if (data.length > 0) {
             itemsContainer.replaceChildren();
             this.deleteAllFromStorages();
+            this.resetForm();
         } else {
             new Modal("Tambahkan minimal 1 gambar");
         }
@@ -223,6 +224,8 @@ class Displayer extends DataStorage {
 
     cleanUpListeners(): void {
         this.abortCtrl.abort();
+        this.abortCtrl = new AbortController();
+        this.eventListenersSetup();
     }
     
     private handleThemeChange = this.getInstanceFromTheme.debounce((isChecked: boolean) => {

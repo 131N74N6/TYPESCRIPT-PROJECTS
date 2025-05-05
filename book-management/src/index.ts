@@ -195,6 +195,7 @@ class BookManager extends DataStorage<Book> {
         if (data.length > 0) {
             this.deleteAll();
             bookList.replaceChildren();
+            this.resetForm();
         } else {
             new Modal("Tidak ada buku yang ditambahkan");
         }

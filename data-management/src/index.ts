@@ -212,6 +212,7 @@ class DisplayManager extends DataManager {
         if (data.length > 0) {
             this.deleteAllItems();
             itemsList.replaceChildren();
+            this.resetForm();
             new Modal("Data berhasil dihapus");
         } else {
             new Modal("Tambahkan minimal 1 data")

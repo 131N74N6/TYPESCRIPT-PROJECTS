@@ -1,170 +1,245 @@
-type ToDo = {
+type Activity = {
     id: number;
     activity: string;
     createdAt: string;
 }
 
-let actList: ToDo[] = [];
-const actListItem = new Map<number, HTMLElement>();
+const activityForm = document.getElementById("activity-form") as HTMLFormElement;
+const toDoInput = document.getElementById("todo-name") as HTMLTextAreaElement;
+const activityList = document.querySelector("#activity-list") as HTMLElement;
+const submitButton = document.getElementById("submit-btn") as HTMLButtonElement;
+const notification = document.getElementById("notification") as HTMLElement;
 
-const ToDoListProject = {
-    isEditing: false,
-    currentId: null as number | null,
+let controller: AbortController = new AbortController();
 
-    init(): void {
-        const storedActs = localStorage.getItem("list-act");
-        if (storedActs) {
-            actList = JSON.parse(storedActs);
-            actList.forEach(act => this.showAct(act));
-        }
+const ActivityDataManager = {
+    actList: [] as Activity[],
+
+    loadFromStorage(): void {
+        const data = localStorage.getItem("list-activity");
+        this.actList = data ? JSON.parse(data) : [];
     },
 
-    addAct(): void {
-        const toDoInput = document.getElementById("todo-name") as HTMLInputElement;
-        const inputValue = toDoInput.value.trim();
+    saveToStorage(): void {
+        localStorage.setItem("list-activity", JSON.stringify(this.actList));
+    },
 
-        // Validasi input
+    getAllData(): Activity[] {
+        return [...this.actList];
+    },
+
+    addNewData(data: Omit<Activity, 'id'>): void {
+        const newData = { id: Date.now(), ...data } as Activity;
+        this.actList.push(newData);
+        this.saveToStorage();
+    },
+
+    changeSelectedData(id: number, data: Partial<Activity>): void {
+        const index = this.actList.findIndex(list => list.id === id);
+        const newData = { ...this.actList[index], ...data } as Activity;
+        this.actList[index] = newData;
+        this.saveToStorage();
+    },
+
+    deleteSelectedData(id: number): void {
+        const index = this.actList.findIndex(list => list.id === id);
+        this.actList.splice(index, 1);
+        this.saveToStorage();
+    },
+
+    deleteAllData(): void {
+        this.actList = [];
+        localStorage.removeItem("list-activity");
+    }
+}
+
+function eventListeners(): void {
+    document.addEventListener("click", (event) => {
+        const target = event.target as HTMLElement;
+        const getAllAct = Array.from(document.querySelectorAll(".list-component"));
+
+        const selectButton = target.closest(".select-btn");
+        const deleteButton = target.closest(".delete-btn");
+
+        const getSelectedComponent = selectButton?.closest(".list-component");
+        const deleteOneComponent = deleteButton?.closest(".list-component");
+
+        const getSelectedIndex = getAllAct.indexOf(getSelectedComponent as Element);
+        const getIndexToRemove = getAllAct.indexOf(deleteOneComponent as Element);
+
+        if (getSelectedIndex > -1) {
+            const actData = ActivityDataManager.actList[getSelectedIndex];
+            ActivityList.selectActivity(actData.id);
+        }
+        if (getIndexToRemove > -1) {
+            const actData = ActivityDataManager.actList[getIndexToRemove];
+            ActivityList.deleteAct(actData.id);
+        }
+        if (target.closest("#delete-all")) ActivityList.deleteAllActivities();
+        if (target.closest("#reset-form")) ActivityList.resetActivityForm();
+    }, { signal: controller.signal });
+
+    activityForm.addEventListener("submit", (event) => ActivityList.submitActivity(event), { 
+        signal: controller.signal 
+    });
+}
+
+const ActivityList = {
+    selectedActId: null as number | null,
+    timeout: null as number | null,
+    modal: document.createElement("div") as HTMLDivElement,
+    modalText: document.createElement("p") as HTMLParagraphElement,
+
+    showAllActivities(): void {
+        const activityFragment = document.createDocumentFragment();
+        const activityData = ActivityDataManager.getAllData();
+
+        if (activityData.length > 0) {
+            activityData.forEach(act => activityFragment.appendChild(this.createActivityComponent(act)));
+        } else {
+            const empty = document.createElement("div") as HTMLDivElement;
+            empty.className = "empty-list";
+            
+            const message = document.createElement("div");
+            message.className = "message";
+            message.textContent = "....Daftar aktifitas kosong....";
+
+            empty.appendChild(message);
+            activityFragment.appendChild(empty);
+        }
+
+        activityList.innerHTML = '';
+        activityList.appendChild(activityFragment);
+    },
+
+    submitActivity(event: SubmitEvent): void {
+        event.preventDefault();
+        const inputValue = toDoInput.value.trim();
+        const currentDate = new Date();
+        const isExist = ActivityDataManager.actList.some(
+            act => act.activity.toLowerCase() === inputValue.toLowerCase()
+        );
+
         if (!inputValue) {
-            this.showModal("Input tidak boleh kosong");
+            this.createModalComponent("Input tidak boleh kosong");
             return;
         }
 
-        // Mode edit
-        if (this.isEditing && this.currentId !== null) {
-            const index = actList.findIndex(act => act.id === this.currentId);
-            if (index > -1) {
-                // Update data
-                actList[index].activity = inputValue;
-                
-                // Update DOM
-                const listComponent = actListItem.get(this.currentId);
-                if (listComponent) {
-                    listComponent.querySelector('.activity-text')!.textContent = inputValue;
-                }
-                
-                this.exitEditMode();
-            }
-        } else { // Mode tambah
-            // Cek duplikasi
-            if (actList.some(act => act.activity === inputValue)) {
-                this.showModal("Aktivitas sudah ada");
-                return;
-            }
-
-            const currentDate = new Date();
-
-            // Buat objek baru
-            const newAct: ToDo = {
-                id: Date.now(),
-                activity: inputValue,
-                createdAt: currentDate.toISOString().slice(0,10)
-            };
-
-            actList.push(newAct);
-            this.showAct(newAct);
+        const newActivity: Partial<Activity> = {
+            activity: inputValue,
+            createdAt: currentDate.toISOString().slice(0,10)
         }
 
-        // Update storage dan reset input
-        this.syncLocalStorage();
-        toDoInput.value = '';
+        if (this.selectedActId === null) {
+            if (!isExist) {
+                ActivityDataManager.addNewData(newActivity as Omit<Activity, 'id'>);
+            } else {
+                this.createModalComponent("Aktivitas sudah ada");
+            }
+        } else {
+            ActivityDataManager.changeSelectedData(this.selectedActId as number, newActivity);
+        }
+
+        this.showAllActivities();
+        this.resetActivityForm();
     },
 
-    showAct(act: ToDo): void {
-        const toDoList = document.querySelector(".todo-list")!;
-        const listComponent = document.createElement("div");
-        
-        listComponent.className = "list-component";
-        listComponent.innerHTML = `
-            <div class="activity-text">${act.activity}</div>
-            <div>${act.createdAt}</div>
-            <div>
-                <button class="edit-list">Edit</button>
-                <button class="delete-list">Hapus</button>
-            </div>
-        `;
+    createActivityComponent(act: Activity): HTMLDivElement {
+        const activityComponent = document.createElement("div") as HTMLDivElement;
+        activityComponent.className = "list-component";
 
-        toDoList.appendChild(listComponent);
-        actListItem.set(act.id, listComponent);
+        const activityName = document.createElement("div") as HTMLDivElement;
+        activityName.className = "activity-name";
+        activityName.textContent = act.activity;
+        activityName.style.fontWeight = "600";
 
-        // Event listeners untuk tombol
-        listComponent.querySelector('.edit-list')!.addEventListener('click', () => this.selectAct(act.id));
-        listComponent.querySelector('.delete-list')!.addEventListener('click', () => this.deleteAct(act.id));
+        const date = document.createElement("div") as HTMLDivElement;
+        date.className = "created-at";
+        date.textContent = `created at: ${act.createdAt}`;
+
+        const buttonWrap = document.createElement("div") as HTMLDivElement;
+        buttonWrap.className = "button-wrap";
+
+        const selectBtn = document.createElement("button") as HTMLButtonElement;
+        selectBtn.type = "button";
+        selectBtn.textContent = "Select";
+        selectBtn.className = "select-btn";
+
+        const deleteBtn = document.createElement("button") as HTMLButtonElement;
+        deleteBtn.type = "button";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.className = "delete-btn";
+
+        buttonWrap.append(selectBtn, deleteBtn);
+        activityComponent.append(activityName, date, buttonWrap);
+
+        return activityComponent;
     },
 
-    selectAct(id: number): void {
-        const act = actList.find(act => act.id === id);
-        if (!act) return;
+    selectActivity(id: number): void {
+        const activityData = ActivityDataManager.actList.find(act => act.id === id);
+        if (!activityData) return;
 
-        const toDoInput = document.getElementById("todo-name") as HTMLInputElement;
-        toDoInput.value = act.activity;
+        toDoInput.value = activityData.activity;
         
-        // Masuk mode edit
-        this.isEditing = true;
-        this.currentId = id;
-        document.querySelector('.submit-btn')!.textContent = 'Simpan Perubahan';
+        this.selectedActId = id;
+        submitButton.textContent = 'Edit Activity';
     },
 
     deleteAct(id: number): void {
-        const index = actList.findIndex(act => act.id === id);
-        if (index === -1) return;
+        ActivityDataManager.deleteSelectedData(id);
 
-        actList.splice(index, 1);
-        actListItem.get(id)?.remove();
-        actListItem.delete(id);
-        this.syncLocalStorage();
+        if (this.selectedActId === id) this.resetActivityForm();
+
+        this.showAllActivities();
     },
 
-    deleteAll(): void {
-        actList = [];
-        actListItem.forEach(component => component.remove());
-        actListItem.clear();
-        localStorage.removeItem("list-act");
-    },
-
-    // Fitur bantuan
-    syncLocalStorage(): void {
-        localStorage.setItem("list-act", JSON.stringify(actList));
-    },
-
-    exitEditMode(): void {
-        this.isEditing = false;
-        this.currentId = null;
-        document.querySelector('.submit-btn')!.textContent = 'Tambah Aktivitas';
-    },
-
-    showModal(message: string): void {
-        const modal = document.createElement("div");
-        modal.className = "modal-overlay";
-        modal.innerHTML = `
-            <div class="modal">
-                <p>${message}</p>
-                <button class="close-modal">Tutup</button>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        modal.querySelector('.close-modal')!.addEventListener('click', () => modal.remove());
-    }
-};
-
-// Inisialisasi aplikasi
-document.addEventListener("DOMContentLoaded", () => {
-    ToDoListProject.init();
-    
-    // Tambahkan event listener ke form bukan button
-    const todoForm = document.querySelector('#todo-form') as HTMLFormElement;
-    todoForm.addEventListener('submit', (event) => {
-        event.preventDefault(); 
-        ToDoListProject.addAct();
-    });
-
-    document.querySelector('.delete-all')!.addEventListener('click', (event) => {
-        event.preventDefault(); 
-        if (actList.length > 0) {
-            ToDoListProject.deleteAll();
-            ToDoListProject.showModal("Semua aktivitas telah dihapus");
+    deleteAllActivities(): void {
+        if (ActivityDataManager.actList.length > 0) {
+            ActivityDataManager.deleteAllData();
+            activityList.replaceChildren();
+            this.resetActivityForm();
         } else {
-            ToDoListProject.showModal("Kamu belum membuat aktivitas apapun");
+            this.createModalComponent("Daftar aktivitas masih kosong!");
         }
-    });
-});
+    },
+
+    resetActivityForm(): void {
+        this.selectedActId = null;
+        submitButton.textContent = 'Add Activity';
+        activityForm.reset();
+    },
+
+    showModal(): void {
+        this.timeout = setTimeout(() => this.teardownModal(), 3000);
+    },
+
+    createModalComponent(message: string) {
+        this.modal.className = "content";
+        this.modalText.className = "message";
+        this.modalText.textContent = message;
+        this.modal.appendChild(this.modalText);
+        notification.appendChild(this.modal);
+    },
+
+    teardownModal(): void {
+        if (this.timeout) clearTimeout(this.timeout);
+        this.modal.remove();
+    }
+}
+
+function init(): void {
+    ActivityDataManager.loadFromStorage();
+    ActivityList.showAllActivities();
+    ActivityList.showModal();
+    eventListeners();
+}
+
+function teardown(): void {
+    controller.abort();
+    controller = new AbortController();
+    eventListeners();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("beforeunload", teardown);
