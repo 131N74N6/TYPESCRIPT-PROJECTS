@@ -121,7 +121,7 @@ const ActivityList = {
         );
 
         if (!inputValue) {
-            this.createModalComponent("Input tidak boleh kosong");
+            this.showAndCreateModal("Input tidak boleh kosong");
             return;
         }
 
@@ -134,7 +134,7 @@ const ActivityList = {
             if (!isExist) {
                 ActivityDataManager.addNewData(newActivity as Omit<Activity, 'id'>);
             } else {
-                this.createModalComponent("Aktivitas sudah ada");
+                this.showAndCreateModal("Aktivitas sudah ada");
             }
         } else {
             ActivityDataManager.changeSelectedData(this.selectedActId as number, newActivity);
@@ -200,7 +200,7 @@ const ActivityList = {
             activityList.replaceChildren();
             this.resetActivityForm();
         } else {
-            this.createModalComponent("Daftar aktivitas masih kosong!");
+            this.showAndCreateModal("Daftar aktivitas masih kosong!");
         }
         this.showAllActivities();
     },
@@ -211,16 +211,14 @@ const ActivityList = {
         activityForm.reset();
     },
 
-    showModal(): void {
-        this.timeout = setTimeout(() => this.teardownModal(), 3000);
-    },
-
-    createModalComponent(message: string) {
+    showAndCreateModal(message: string) {
         this.modal.className = "content";
         this.modalText.className = "message";
         this.modalText.textContent = message;
         this.modal.appendChild(this.modalText);
         notification.appendChild(this.modal);
+
+        this.timeout = setTimeout(() => this.teardownModal(), 3000);
     },
 
     teardownModal(): void {
@@ -238,7 +236,6 @@ const ActivityList = {
 function init(): void {
     ActivityDataManager.loadFromStorage();
     ActivityList.showAllActivities();
-    ActivityList.showModal();
     eventListeners();
 }
 
