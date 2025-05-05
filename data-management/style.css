@@ -103,3 +103,14 @@ button:hover {
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
 }
+
+.empty-list {
+    color: #C7FBA5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100dvh;
+    font-family: Arial;
+    font-size: 2rem;
+    font-weight: 650;
+}

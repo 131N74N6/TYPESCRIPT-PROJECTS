@@ -92,7 +92,7 @@ input#dark-mode:checked+label[for="dark-mode"] {
     cursor: pointer;
 }
 
-main.content {
+main.content, #empty-message {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -245,6 +245,17 @@ main.content {
     to { transform: translateX(0); }
 }
 
+#empty-message > .empty-list {
+    display: flex;
+    background-color: #ffffff;
+    justify-content: center;
+    align-items: center;
+    min-height: 100dvh;
+    color: #1A1A1A;
+    font-family: Arial;
+    font-weight: 680;
+}
+
 @media (max-width: 600px) {
     header {
         flex-direction: column;
@@ -312,6 +323,11 @@ body[dark-theme="active"] #filters label {
 }
 
 body[dark-theme="active"] #filters input[type="checkbox"]:checked+label {
+    color: #00BFFF;
+    background-color: #000000;
+}
+
+body[dark-theme="active"] .empty-list {
     color: #00BFFF;
     background-color: #000000;
 }

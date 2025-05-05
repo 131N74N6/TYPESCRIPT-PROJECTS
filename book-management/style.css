@@ -168,6 +168,16 @@ input#dark-mode {
     display: none;
 }
 
+.empty-list {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100dvh;
+    font-family: Arial;
+    font-size: 2rem;
+    color: #1A1A1A;
+}
+
 #message {
     display: none; 
     font-family: Arial;
@@ -233,4 +243,8 @@ body[dark-mode="active"] form#search-form input {
     color: #b182ce;
     background-color: black;
     border: 1px solid #b182ce;
+}
+
+body[dark-mode="active"] .empty-list {
+    color: #b182ce;
 }

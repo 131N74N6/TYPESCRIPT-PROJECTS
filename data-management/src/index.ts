@@ -113,10 +113,22 @@ class DisplayManager extends DataManager {
         const cardFragment = document.createDocumentFragment();
         const data = this.getAllItems();
 
-        data.forEach(dt => {
-            const getCardItem = this.createCardItem(dt);
-            cardFragment.appendChild(getCardItem);
-        });
+        if (data.length > 0) {
+            data.forEach(dt => {
+                const getCardItem = this.createCardItem(dt);
+                cardFragment.appendChild(getCardItem);
+            });
+        } else {
+            const empty = document.createElement("div") as HTMLDivElement;
+            empty.className = "empty-list";
+            
+            const message = document.createElement("div");
+            message.className = "message";
+            message.textContent = "Daftar data kosong";
+    
+            empty.appendChild(message);
+            cardFragment.appendChild(empty);
+        }
 
         itemsList.innerHTML = '';
         itemsList.appendChild(cardFragment);
@@ -217,6 +229,7 @@ class DisplayManager extends DataManager {
         } else {
             new Modal("Tambahkan minimal 1 data")
         }
+        this.showAllData();
     }
 
     public openFormData(): void {
@@ -247,8 +260,6 @@ class DisplayManager extends DataManager {
 
     public cleanUp(): void {
         this.controller.abort();
-        this.controller = new AbortController();
-        this.setEventListeners();
     }
 }
 

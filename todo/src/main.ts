@@ -202,6 +202,7 @@ const ActivityList = {
         } else {
             this.createModalComponent("Daftar aktivitas masih kosong!");
         }
+        this.showAllActivities();
     },
 
     resetActivityForm(): void {
@@ -223,8 +224,14 @@ const ActivityList = {
     },
 
     teardownModal(): void {
-        if (this.timeout) clearTimeout(this.timeout);
-        this.modal.remove();
+        if (this.modal.parentElement) {
+            this.modal.parentElement.removeChild(this.modal);
+        }
+        
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
     }
 }
 
@@ -237,8 +244,6 @@ function init(): void {
 
 function teardown(): void {
     controller.abort();
-    controller = new AbortController();
-    eventListeners();
 }
 
 document.addEventListener("DOMContentLoaded", init);

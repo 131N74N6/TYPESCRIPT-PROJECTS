@@ -206,6 +206,7 @@ class Displayer extends DataStorage {
         } else {
             new Modal("Tambahkan minimal 1 gambar");
         }
+        this.showAllData();
     }
 
     openForm(): void {
@@ -224,8 +225,6 @@ class Displayer extends DataStorage {
 
     cleanUpListeners(): void {
         this.abortCtrl.abort();
-        this.abortCtrl = new AbortController();
-        this.eventListenersSetup();
     }
     
     private handleThemeChange = this.getInstanceFromTheme.debounce((isChecked: boolean) => {

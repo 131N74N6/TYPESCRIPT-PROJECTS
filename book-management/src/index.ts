@@ -122,10 +122,22 @@ class BookManager extends DataStorage<Book> {
     showAllBooks(): void {
         const bookFragment = document.createDocumentFragment();
 
-        this.getAll().forEach(book => {
-            const component = this.createListBookComponent(book);
-            bookFragment.appendChild(component);
-        });
+        if (this.getAll().length > 0) {
+            this.getAll().forEach(book => {
+                const component = this.createListBookComponent(book);
+                bookFragment.appendChild(component);
+            });
+        } else {
+            const empty = document.createElement("div") as HTMLDivElement;
+            empty.className = "empty-list";
+            
+            const message = document.createElement("div");
+            message.className = "message";
+            message.textContent = "Daftar buku kosong";
+
+            empty.appendChild(message);
+            bookFragment.appendChild(empty);
+        }
 
         bookList.innerHTML = '';
         bookList.appendChild(bookFragment);
@@ -199,6 +211,7 @@ class BookManager extends DataStorage<Book> {
         } else {
             new Modal("Tidak ada buku yang ditambahkan");
         }
+        this.showAllBooks();
     }
 
     private handleSearch(event: SubmitEvent): void {
@@ -244,8 +257,6 @@ class BookManager extends DataStorage<Book> {
 
     cleanUp(): void {
         this.controller.abort();
-        this.controller = new AbortController();
-        this.setEventListeners();
     }
 }
 

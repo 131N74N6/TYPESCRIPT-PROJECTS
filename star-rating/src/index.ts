@@ -195,8 +195,6 @@ class User extends DataManager<Rating> {
 
     cleanUp(): void {
         this.controllers.abort();
-        this.controllers = new AbortController();
-        this.setupEventListeners();
     }
 }
 

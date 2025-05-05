@@ -127,10 +127,22 @@ class UserManagement extends DataStorage<UserInfo> {
     showAllData(): void {
         const fragment = document.createDocumentFragment();
 
-        this.getAllData().forEach(dt => {
-            const element = this.createUserElement(dt);
-            fragment.appendChild(element);
-        });
+        if (this.getAllData().length > 1) {
+            this.getAllData().forEach(dt => {
+                const element = this.createUserElement(dt);
+                fragment.appendChild(element);
+            });
+        } else {
+            const empty = document.createElement("div") as HTMLDivElement;
+            empty.className = "empty-list";
+            
+            const message = document.createElement("div");
+            message.className = "message";
+            message.textContent = "....Daftar aktifitas kosong....";
+    
+            empty.appendChild(message);
+            fragment.appendChild(empty);
+        }
         
         dataList.innerHTML = '';
         dataList.appendChild(fragment);
@@ -220,12 +232,15 @@ class UserManagement extends DataStorage<UserInfo> {
 
     private deleteAllUser(): void {
         const data = this.getAllData();
+        
         if (data.length > 0) {
             this.deleteAllData();
             dataList.replaceChildren();
+            this.resetForm();
         } else {
             new Modal("Tambahkan data terlebih dahulu!")
         }
+        this.showAllData();
     }
 
     handleToggle(event: Event): void {
