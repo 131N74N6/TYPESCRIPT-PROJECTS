@@ -48,7 +48,6 @@ function DataStorages<N extends { id: string }>(storageKey: string): DataManager
         }
     }
 
-    manager.loadFromStorage();
     return manager;
 }
 

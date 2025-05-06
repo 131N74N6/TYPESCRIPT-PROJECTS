@@ -1,10 +1,12 @@
 import DataStorages from "./storage.js";
+import * as pdfjsLib from "pdfjs-dist";
 
 type DocumentItem = {
     id: string;
     name: string;
     content: string;
     type:string;
+    thumbnail: string;
 }
 
 const dataStorages = DataStorages<DocumentItem>("docx-item");
@@ -66,32 +68,91 @@ const DocxDisplayer = {
         documentsList.appendChild(docxFragment);
     },
     
-    fileProcessing(event: Event): void {
+    async fileProcessing(event: Event): Promise<void> {
         const input = event.target as HTMLInputElement;
         const file = input.files?.[0];
+        
+        if (!file) return;
 
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = (event) => preview.src = event.target?.result as string;
-            reader.readAsDataURL(file);
+        // Cek ukuran file
+        if (file.size > this.maxSize) {
+            alert('File terlalu besar (Maksimal 5MB)');
+            return;
         }
+
+        // Generate preview berdasarkan tipe file
+        if (file.type.startsWith('image/')) {
+            this.generateImagePreview(file);
+        } else if (file.type === 'application/pdf') {
+            await this.generatePDFPreview(file);
+        } else if (file.type.includes('document') || file.name.endsWith('.doc') || 
+                 file.name.endsWith('.docx')) {
+            this.generateDocPreview();
+        }
+    },
+
+    generateImagePreview(file: File): void {
+        const reader = new FileReader();
+        reader.onloadend = (event) => {
+            preview.src = event.target?.result as string;
+            preview.style.display = "block";
+        }
+        reader.readAsDataURL(file)
+    },
+
+    async generatePDFPreview(file: File): Promise<void> {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+        const page = await pdf.getPage(1);
+        
+        const viewport = page.getViewport({ scale: 0.5 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({ canvasContext: context!, viewport: viewport }).promise;
+
+        preview.src = canvas.toDataURL();
+        preview.style.display = 'block';
+    },
+
+    generateDocPreview(): void {
+        preview.src = 'placeholder-doc.png'; 
+        preview.style.display = 'block';
     },
 
     submitDocument(event: SubmitEvent): void {
         event.preventDefault();
-
-        const newData = {}
-
-        if (this.selectedDocxId === null) {
-            dataStorages.addToStorage(newData as Omit<DocumentItem, 'id'>);
-        } else {
-            dataStorages.changeSelectedData(this.selectedDocxId, newData);
+        const file = fileInput.files?.[0];
+        
+        if (!file) {
+            alert('Pilih file terlebih dahulu!');
+            return;
         }
 
-        this.resetForm();
-    },
+        const reader = new FileReader();
+        reader.onload = async () => {
+            const newData: Partial<DocumentItem> = {
+                name: file.name,
+                type: file.type,
+                content: reader.result as string,
+                thumbnail: preview.src
+            };
 
-    showPreviewDocs(id: string): void {},
+            if (this.selectedDocxId === null) {
+                dataStorages.addToStorage(newData as Omit<DocumentItem, 'id'>);
+            } else {
+                dataStorages.changeSelectedData(this.selectedDocxId, newData);
+            }
+
+            this.displayAllDocuments();
+            this.resetForm();
+        };
+        
+        reader.readAsDataURL(file);
+    },
 
     createDocxComponent(docx: DocumentItem): HTMLDivElement {
         const doc = document.createElement("div") as HTMLDivElement;
@@ -153,6 +214,7 @@ const DocxDisplayer = {
 
 function init(): void {
     DocxDisplayer.displayAllDocuments();
+    dataStorages.loadFromStorage();
     initEventListeners();
 }
 

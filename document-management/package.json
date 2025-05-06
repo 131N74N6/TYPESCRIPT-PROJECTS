@@ -9,5 +9,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "@types/pdfjs-dist": "^2.10.377",
+    "pdfjs-dist": "^5.2.133"
+  }
 }

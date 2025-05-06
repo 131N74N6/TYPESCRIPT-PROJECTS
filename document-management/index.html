@@ -13,16 +13,17 @@
     </header>
     <main class="container">
         <form class="upload-doc-section">
-            <h2>Upload Document</h2>
-            <div class="file-input-wrapper">
-                <input type="file" class="file-input" id="file-input" accept=".pdf,.doc,.docx,.jpg,.png">
-                <img src="" id="preview"/>
-                <button class="upload-btn" id="uploadBtn">Choose File</button>
-            </div>
+            <input type="text" id="username" placeholder="masukkan username..."/>
+            <input type="file" class="file-input" id="file-input" accept=".pdf,.doc,.docx,.jpg,.png">
+            <img src="" id="preview"/>
             <span id="fileName"></span>
+            <div class="button-wrap">
+                <button class="upload-btn" id="uploadBtn">Choose File</button>
+                <button type="submit" id="submit-btn">Add File</button>
+            </div>
         </form>
         <section class="documents-list" id="documents-list"></section>
     </main>
-    <script src="./dist/index.js"></script>
+    <script type="module" src="./dist/index.js"></script>
 </body>
 </html>

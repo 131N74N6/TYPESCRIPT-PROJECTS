@@ -143,11 +143,11 @@ function init(): void {
     setupEventListeners();
 }
 
-function cleanUp(): void {
+function teardown(): void {
     abortController.abort();
     secondCarousel.stopAutoSlide?.();
     thirdCarousel.stopAutoSlide?.();
 }
 
 document.addEventListener("DOMContentLoaded", init);
-window.addEventListener("beforeunload", cleanUp);
+window.addEventListener("beforeunload", teardown);
