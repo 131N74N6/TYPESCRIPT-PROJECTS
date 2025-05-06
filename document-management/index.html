@@ -3,10 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Document Management</title>
     <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    
+    <section id="modal"></section>
+    <header id="header">
+        <button type="button" id="delete-all-docxs">Delete-All</button>
+    </header>
+    <main class="container">
+        <form class="upload-doc-section">
+            <h2>Upload Document</h2>
+            <div class="file-input-wrapper">
+                <input type="file" class="file-input" id="file-input" accept=".pdf,.doc,.docx,.jpg,.png">
+                <img src="" id="preview"/>
+                <button class="upload-btn" id="uploadBtn">Choose File</button>
+            </div>
+            <span id="fileName"></span>
+        </form>
+        <section class="documents-list" id="documents-list"></section>
+    </main>
+    <script src="./dist/index.js"></script>
 </body>
 </html>

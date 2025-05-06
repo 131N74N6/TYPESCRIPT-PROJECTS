@@ -1,3 +1,11 @@
+.disabled {
+    display: none;
+}
+
+.enabled {
+    display: block;
+}
+
 body {
     margin: 0;
     padding: 0;
