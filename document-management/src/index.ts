@@ -1,226 +1,168 @@
 import DataStorages from "./storage.js";
-import * as pdfjsLib from "pdfjs-dist";
 
 type DocumentItem = {
     id: string;
-    name: string;
-    content: string;
-    type:string;
-    thumbnail: string;
+    fileName: string;
+    uploaderName: string;
+    file: File | string;
+    uploadDate: Date;
 }
 
 const dataStorages = DataStorages<DocumentItem>("docx-item");
 let controller: AbortController = new AbortController();
 
 const uploadDocxSection = document.getElementById("upload-doc-section") as HTMLFormElement;
-const documentsList = document.getElementById("documents-list") as HTMLElement;
 const fileInput = document.getElementById("file-input") as HTMLInputElement;
-const preview = document.getElementById("preview") as HTMLImageElement;
+const username = document.getElementById("username") as HTMLInputElement;
+const preview = document.getElementById("preview") as HTMLDivElement;
+const documentsList = document.getElementById("documents-list") as HTMLElement;
 
 function initEventListeners(): void {
     document.addEventListener("click", (event) => {
-        const target = event.target as HTMLElement
-        const getAllDocxData = Array.from(document.querySelectorAll(".document-list"));
-        const selectButton = target.closest(".select-button");
-        const deleteButton = target.closest(".delete-button");
+        const target = event.target as HTMLElement;
 
-        const getSelectedComponent = selectButton?.closest(".document-list");
-        const deleteSelectedComponents = deleteButton?.closest(".document-list");
-
-        const getSelectedIndex = getAllDocxData.indexOf(getSelectedComponent as Element);
-        const getIndexToRemove = getAllDocxData.indexOf(deleteSelectedComponents as Element);
-
-        if (getSelectedIndex > -1) {
-            const docxDetail = dataStorages.data[getSelectedIndex];
-            DocxDisplayer.selectDocument(docxDetail.id);
-        }
-        if (getIndexToRemove > -1) {
-            const docxDetail = dataStorages.data[getIndexToRemove];
-            DocxDisplayer.deleteSelectedDocument(docxDetail.id);
-        }
-        if (target.closest("#delete-all-docxs")) DocxDisplayer.deleteAllDocuments();
+        if (target.closest("#delete-all-docxs")) Displayer.deleteAllFiles();
     }, { signal: controller.signal });
 
-    fileInput.addEventListener("change", (event) => DocxDisplayer.fileProcessing(event), {
-        signal: controller.signal
-    });
-
-    uploadDocxSection.addEventListener("submit", (event) => DocxDisplayer.submitDocument(event), {
+    uploadDocxSection.addEventListener("submit", (event) => Displayer.handleSubmit(event), {
         signal: controller.signal
     });
 }
 
-const DocxDisplayer = {
-    maxSize: 5 * 1024 * 1024 as number,
-    selectedDocxId: null as string | null,
+const Displayer = {
+    selectedFileId: null as string | null,
 
-    displayAllDocuments(): void {
-        const docxFragment = document.createDocumentFragment();
-        const data = dataStorages.data;
+    showAllFiles(): void {
+        const listOfileData = dataStorages.data;
+        const fileDataFragment = document.createDocumentFragment();
 
-        if (data.length > 0) {
-            data.forEach(dt => docxFragment.appendChild(this.createDocxComponent(dt)));
-        } else {
-            console.log("Dokumen kosog");
-        }
+        listOfileData.forEach(data => fileDataFragment.appendChild(this.createFileListComponents(data)));
 
         documentsList.innerHTML = '';
-        documentsList.appendChild(docxFragment);
-    },
-    
-    async fileProcessing(event: Event): Promise<void> {
-        const input = event.target as HTMLInputElement;
-        const file = input.files?.[0];
-        
-        if (!file) return;
-
-        // Cek ukuran file
-        if (file.size > this.maxSize) {
-            alert('File terlalu besar (Maksimal 5MB)');
-            return;
-        }
-
-        // Generate preview berdasarkan tipe file
-        if (file.type.startsWith('image/')) {
-            this.generateImagePreview(file);
-        } else if (file.type === 'application/pdf') {
-            await this.generatePDFPreview(file);
-        } else if (file.type.includes('document') || file.name.endsWith('.doc') || 
-                 file.name.endsWith('.docx')) {
-            this.generateDocPreview();
-        }
+        documentsList.appendChild(fileDataFragment);
     },
 
-    generateImagePreview(file: File): void {
-        const reader = new FileReader();
-        reader.onloadend = (event) => {
-            preview.src = event.target?.result as string;
-            preview.style.display = "block";
-        }
-        reader.readAsDataURL(file)
-    },
-
-    async generatePDFPreview(file: File): Promise<void> {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-        const page = await pdf.getPage(1);
-        
-        const viewport = page.getViewport({ scale: 0.5 });
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        await page.render({ canvasContext: context!, viewport: viewport }).promise;
-
-        preview.src = canvas.toDataURL();
-        preview.style.display = 'block';
-    },
-
-    generateDocPreview(): void {
-        preview.src = 'placeholder-doc.png'; 
-        preview.style.display = 'block';
-    },
-
-    submitDocument(event: SubmitEvent): void {
+    handleSubmit(event: SubmitEvent): void {
         event.preventDefault();
+        
+        const newFile: Partial<DocumentItem> = {
+            fileName: fileInput.files?.[0]?.name || '',
+            uploaderName: username.value || `user_${Date.now()}`,
+            file: fileInput.files?.[0] as File,
+            uploadDate: new Date()
+        }
+
+        if (this.selectedFileId !== null) {
+            dataStorages.changeSelectedData(this.selectedFileId, newFile);
+        } else {
+            dataStorages.addToStorage(newFile as Omit<DocumentItem, 'id'>);
+        }
+
+        this.showAllFiles();
+        this.resetForm();
+    },
+
+    createFileListComponents(detail: DocumentItem): HTMLDivElement {
+        const card = document.createElement('div');
+        card.className = 'document-card';
+        card.innerHTML = `
+            <h3>${detail.fileName}</h3>
+            <div class="document-meta">
+                <p>Uploaded by: ${detail.uploaderName}</p>
+                <p>${new Date(detail.uploadDate).toLocaleDateString()}</p>
+            </div>
+            <div class="document-actions">
+                <button class="select-button">Edit</button>
+                <button class="delete-button">Delete</button>
+            </div>
+        `;
+
+        card.addEventListener('click', (event) => {
+            if (!(event.target instanceof HTMLButtonElement)) {
+                this.openDocument(detail);
+            }
+        }, { signal: controller.signal });
+
+        return card;
+    },
+
+    selectFile(id: string): void {
+        this.selectedFileId = id;
+        const fileData = dataStorages.data.find(DATA => DATA.id === this.selectedFileId as string);
+
+        if(!fileData) return;
+
+        username.value = fileData?.uploaderName;
+        const file = new File([], fileData.uploaderName, { 
+            type: typeof fileData.file === 'string' ? 'application/octet-stream' : fileData.file.type 
+        });
+        
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+
+        const fileNameElement = fileInput.nextElementSibling?.querySelector('#file-name');
+        if (fileNameElement) {
+            fileNameElement.textContent = fileData.fileName;
+        }
+
+        this.showPreview();
+    },
+
+    async showPreview(): Promise<void> {
+        preview.innerHTML = '';
         const file = fileInput.files?.[0];
         
-        if (!file) {
-            alert('Pilih file terlebih dahulu!');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = async () => {
-            const newData: Partial<DocumentItem> = {
-                name: file.name,
-                type: file.type,
-                content: reader.result as string,
-                thumbnail: preview.src
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const showPreview = file.type.startsWith('image/') 
+                    ? `<img src="${event.target?.result}" alt="Preview">`
+                    : `<div class="file-preview">${file.name}</div>`;
+                preview.innerHTML = showPreview;
             };
-
-            if (this.selectedDocxId === null) {
-                dataStorages.addToStorage(newData as Omit<DocumentItem, 'id'>);
-            } else {
-                dataStorages.changeSelectedData(this.selectedDocxId, newData);
-            }
-
-            this.displayAllDocuments();
-            this.resetForm();
-        };
-        
-        reader.readAsDataURL(file);
+            reader.readAsDataURL(file);
+        }
     },
 
-    createDocxComponent(docx: DocumentItem): HTMLDivElement {
-        const doc = document.createElement("div") as HTMLDivElement;
-        doc.className = "document-list";
+    openDocument(doc: DocumentItem): void {
+        const url = typeof doc.file === 'string' ? doc.file : URL.createObjectURL(doc.file);
+        window.open(url, '_blank');
+    },
 
-        const docxName = document.createElement("div") as HTMLDivElement;
-        docxName.className = "document-name";
-        docxName.textContent = docx.name;
+    deleteSelectedFile(id: string): void {
+        if (this.selectedFileId === id) this.resetForm();
 
-        const deleteBtn = document.createElement("button") as HTMLButtonElement;
-        deleteBtn.type = "button";
-        deleteBtn.className = "delete-button";
-        deleteBtn.textContent = "Delete";
+        dataStorages.deleteSelectedData(id);
+        this.showAllFiles();
+    },
 
-        const selectBtn = document.createElement("button") as HTMLButtonElement;
-        selectBtn.className = "select-button";
-        selectBtn.className = "select-button";
-        selectBtn.textContent = "Select";
-
-        const previewBtn = document.createElement("button") as HTMLButtonElement;
-        previewBtn.className = "preview-button";
-        deleteBtn.className = "preview-button";
-        deleteBtn.textContent = "Preview";
-
-        const buttonWrap = document.createElement("div") as HTMLDivElement;
-        buttonWrap.className = "button-wrap";
-        buttonWrap.append(selectBtn, deleteBtn, previewBtn);
-
-        doc.append(docxName, buttonWrap);
-        return doc;
+    deleteAllFiles(): void {
+        if (dataStorages.data.length > 0) {
+            this.resetForm();
+            dataStorages.deleteAllData();
+            documentsList.replaceChildren();
+        } else {
+            alert("There's no file uploaded!");
+        }
+        this.showAllFiles();
     },
 
     resetForm(): void {
+        this.selectedFileId = null;
         uploadDocxSection.reset();
-        this.selectedDocxId = null;
-    },
-
-    selectDocument(id: string): void {},
-
-    deleteSelectedDocument(id: string): void {
-        dataStorages.deleteSelectedData(id);
-
-        if (this.selectedDocxId === id) this.resetForm();
-
-        this.displayAllDocuments();
-    },
-
-    deleteAllDocuments(): void {
-        if (dataStorages.data.length > 0) {
-            dataStorages.deleteAllData();
-            documentsList.replaceChildren();
-            this.resetForm();
-        } else {
-            alert("Data masih kosong");
-        }
-        this.displayAllDocuments();
-    },
+    }
 }
 
 function init(): void {
-    DocxDisplayer.displayAllDocuments();
-    dataStorages.loadFromStorage();
     initEventListeners();
+    dataStorages.loadFromStorage();
+    Displayer.showAllFiles();
 }
 
 function teardown(): void {
-    DocxDisplayer.resetForm();
     controller.abort();
+    Displayer.resetForm();
 }
 
 document.addEventListener("DOMContentLoaded", init);

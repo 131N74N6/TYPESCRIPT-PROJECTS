@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Management</title>
+    <title>File Management</title>
     <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
@@ -12,13 +12,13 @@
         <button type="button" id="delete-all-docxs">Delete-All</button>
     </header>
     <main class="container">
-        <form class="upload-doc-section">
-            <input type="text" id="username" placeholder="masukkan username..."/>
-            <input type="file" class="file-input" id="file-input" accept=".pdf,.doc,.docx,.jpg,.png">
-            <img src="" id="preview"/>
-            <span id="fileName"></span>
+        <form id="upload-doc-section" title="upload-section">
+            <input type="text" id="username" placeholder="input your username..."/>
+            <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt,.jpg,.png,.jpeg" required>
+            <div id="preview"></div>
+            <div id="fileName"></div>
             <div class="button-wrap">
-                <button class="upload-btn" id="uploadBtn">Choose File</button>
+                <button type="button" id="reset-form">Reset</button>
                 <button type="submit" id="submit-btn">Add File</button>
             </div>
         </form>
