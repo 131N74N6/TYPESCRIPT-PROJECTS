@@ -44,6 +44,11 @@ main.container {
     border-radius: 0.4rem;
 }
 
+#preview {
+    color: var(--accent);
+    font-size: 1rem;
+}
+
 #upload-doc-section .button-wrap {
     display: flex;
     justify-content: center;

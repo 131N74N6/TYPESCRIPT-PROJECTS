@@ -16,7 +16,7 @@ const Modal = {
     },
 
     showMessage(): void {
-        this.timeout = setTimeout(() => this.teardown(), 3000);
+        this.timeout = window.setTimeout(() => this.teardown(), 3000);
     },
 
     teardown(): void {

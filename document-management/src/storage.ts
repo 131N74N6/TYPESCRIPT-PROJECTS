@@ -1,54 +1,39 @@
-type DataManager <N extends { id: string }> = {
-    data: N[];
-    loadFromStorage: () => void;
-    saveToStorage: () => void;
-    addToStorage: (new_info: Omit<N, 'id'>) => void;
-    changeSelectedData: (id: string, new_info: Partial<N>) => void;
-    deleteSelectedData: (id: string) => void;
-    deleteAllData: () => void;
-}
+import db from "./firebase-config.js";
+import { 
+    collection, addDoc, getDocs, updateDoc, 
+    deleteDoc, doc, onSnapshot, Firestore 
+} from 'firebase/firestore';
 
-function DataStorages<N extends { id: string }>(storageKey: string): DataManager<N> {
-    const manager = {
-        data: [] as N[],
+const DataStorages = <N extends { id: string }>(collectionName: string) => ({
+    async addToStorage(newItem: Omit<N, 'id'>): Promise<string> {
+        const docRef = await addDoc(collection(db as Firestore, collectionName), newItem);
+        return docRef.id;
+    },
 
-        loadFromStorage(): void {
-            const savedData = localStorage.getItem(storageKey);
-            this.data = savedData ? JSON.parse(savedData) : []
-        },
+    async loadFromStorage(): Promise<N[]> {
+        const snapshot = await getDocs(collection(db as Firestore, collectionName));
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }) as N);
+    },
 
-        saveToStorage(): void {
-            localStorage.setItem(storageKey, JSON.stringify(this.data))
-        },
+    async changeSelectedData(id: string, newData: Partial<Omit<N, 'id'>>): Promise<void> {
+        await updateDoc(doc(db as Firestore, collectionName, id), newData);
+    },
 
-        addToStorage(new_info: Omit<N, 'id'>): void {
-            const newData = { id: crypto.randomUUID(), ...new_info } as N;
-            this.data.push(newData);
-            this.saveToStorage();
-        },
+    async deleteSelectedData(id: string): Promise<void> {
+        await deleteDoc(doc(db as Firestore, collectionName, id));
+    },
 
-        changeSelectedData(id: string, new_info: Partial<N>) {
-            const index = this.data.findIndex(data => data.id === id);
-            const newData = { ...this.data[index], ...new_info } as N;
+    async deleteAllData(): Promise<void> {
+        const querySnapshot = await getDocs(collection(db as Firestore, collectionName));
+        const deletePromises = querySnapshot.docs.map(d => deleteDoc(d.ref));
+        await Promise.all(deletePromises);
+    }, 
 
-            if (index > -1) {
-                this.data[index] = newData;
-                this.saveToStorage();
-            }
-        },
-
-        deleteSelectedData(id: string): void {
-            this.data = this.data.filter(dt => dt.id !== id);
-            this.saveToStorage();
-        },
-
-        deleteAllData(): void {
-            this.data = [];
-            localStorage.removeItem(storageKey);
-        }
+    subscribe(callback: (data: N[]) => void) {
+        return onSnapshot(collection(db as Firestore, collectionName), (snapshot) => {
+            callback(snapshot.docs.map(dt => ({ id: dt.id, ...dt.data() }) as N));
+        });
     }
-
-    return manager;
-}
+});
 
 export default DataStorages;

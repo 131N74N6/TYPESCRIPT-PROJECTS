@@ -1,15 +1,18 @@
 import DataStorages from "./storage.js";
 import Modal from "./modal.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 type FileItem = {
     id: string;
     fileName: string;
     uploaderName: string;
-    file: File;
+    fileUrl: string;
     uploadDate: Date;
+    fileType: string;
 }
 
-const dataStorages = DataStorages<FileItem>("docx-item");
+const dataStorages = DataStorages<FileItem>("file-item");
+const storage = getStorage(); // Inisialisasi Firebase Storage
 let controller: AbortController = new AbortController();
 
 const uploadDocxSection = document.getElementById("upload-doc-section") as HTMLFormElement;
@@ -20,29 +23,28 @@ const documentsList = document.getElementById("documents-list") as HTMLElement;
 const submitButton = document.getElementById("submit-btn") as HTMLButtonElement;
 
 function initEventListeners(): void {
-    document.addEventListener("click", (event) => {
+    document.addEventListener("click", async (event) => {
         const target = event.target as HTMLElement;
-        const getAllFilesData = Array.from(document.querySelectorAll(".document-card"));
-
-        const select_button = target.closest(".select-button");
-        const selectedComponent = select_button?.closest(".document-card");
-        const selectedIndex = getAllFilesData.indexOf(selectedComponent as Element);
-
-        const delete_button = target.closest(".delete-button");
-        const deleteComponent = delete_button?.closest(".document-card");
-        const deleteIndex = getAllFilesData.indexOf(deleteComponent as Element);
-
-        if (selectedIndex > -1) {
-            const detail = dataStorages.data[selectedIndex];
-            Displayer.selectFile(detail.id);
+        
+        if (target.closest(".select-button")) {
+            const card = target.closest(".document-card");
+            const id = card?.getAttribute("data-id");
+            if (id) Displayer.selectFile(id);
         }
-        if (deleteIndex > -1) {
-            const detail = dataStorages.data[deleteIndex];
-            Displayer.deleteSelectedFile(detail.id);
+        
+        if (target.closest(".delete-button")) {
+            const card = target.closest(".document-card");
+            const id = card?.getAttribute("data-id");
+            if (id) await Displayer.deleteSelectedFile(id);
         }
-        if (target.closest("#delete-all-docxs")) Displayer.deleteAllFiles();
+        
+        if (target.closest("#delete-all-docxs")) await Displayer.deleteAllFiles();
         if (target.closest("#reset-form")) Displayer.resetForm();
     }, { signal: controller.signal });
+
+    fileInput.addEventListener("change", (event) => Displayer.changeFileToUrl(event), {
+        signal: controller.signal
+    });
 
     uploadDocxSection.addEventListener("submit", (event) => Displayer.handleSubmit(event), {
         signal: controller.signal
@@ -51,81 +53,108 @@ function initEventListeners(): void {
 
 const Displayer = {
     selectedFileId: null as string | null,
+    currentFile: null as File | null,
+    currentFileDataUrl: "",
 
-    showAllFiles(): void {
-        const listOfileData = dataStorages.data;
-        const fileDataFragment = document.createDocumentFragment();
-
-        if (listOfileData.length > 0) {
-            listOfileData.forEach(data => fileDataFragment.appendChild(this.createFileListComponents(data)));
-        } else {
-            Modal.createModal("Masih kosong");
+    async showAllFiles(): Promise<void> {
+        try {
+            const files = await dataStorages.loadFromStorage();
+            const fileDataFragment = document.createDocumentFragment();
+        
+            files.forEach(data => {
+                fileDataFragment.appendChild(this.createFileListComponents(data));
+            });
+        
+            documentsList.innerHTML = '';
+            documentsList.appendChild(fileDataFragment);
+        } catch (error) {
+            Modal.createModal("Error loading files");
         }
-
-        documentsList.innerHTML = '';
-        documentsList.appendChild(fileDataFragment);
     },
 
-    handleSubmit(event: SubmitEvent): void {
+    changeFileToUrl(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const file = input.files?.[0] || null; 
+        this.currentFile = file;
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = (event) => {
+                this.currentFileDataUrl = event.target?.result as string;
+                if (file.type.startsWith('image/')) {
+                    preview.innerHTML = `<img src="${this.currentFileDataUrl}" alt="Preview">`;
+                } else {
+                    preview.textContent = file.name;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    },
+
+    async handleSubmit(event: SubmitEvent): Promise<void> {
         event.preventDefault();
-        const fileData = fileInput.files?.[0];
-        const imageType = ["image/jpg", "image/jpeg", "image/png"];
-        const documentType = ["document/pdf", "document/doc", "document/docx"];
-
-        if (!fileData) {
-            alert("Kamu belum memilih file yang akan diunggah!");
-            return;
-        }
-
-        if (imageType.includes(fileData.type) || documentType.includes(fileData.type)) {
-            alert("File ini tidak didukung!");
-            return;
-        }
         
-        const newFile: Partial<FileItem> = {
-            fileName: fileInput.files?.[0]?.name || '',
-            uploaderName: username.value || `user_${Date.now()}`,
-            file: fileInput.files?.[0] as File,
-            uploadDate: new Date()
+        if (!this.currentFile) {
+            Modal.createModal("Please select a file!");
+            return;
         }
 
-        if (this.selectedFileId !== null) {
-            dataStorages.changeSelectedData(this.selectedFileId, newFile);
-        } else {
-            dataStorages.addToStorage(newFile as Omit<FileItem, 'id'>);
-        }
+        try {
+            // Upload file ke Firebase Storage
+            const storageRef = ref(storage, `documents/${Date.now()}_${this.currentFile.name}`);
+            const snapshot = await uploadBytes(storageRef, this.currentFile);
+            const downloadURL = await getDownloadURL(snapshot.ref);
 
-        this.showAllFiles();
-        this.resetForm();
+            // Membuat objek FileItem
+            const newFile: Omit<FileItem, 'id'> = {
+                fileName: this.currentFile.name,
+                uploaderName: username.value || `user_${Date.now()}`,
+                fileUrl: downloadURL,
+                uploadDate: new Date(),
+                fileType: this.currentFile.type
+            };
+
+            if (this.selectedFileId) {
+                await dataStorages.changeSelectedData(this.selectedFileId, newFile);
+            } else {
+                await dataStorages.addToStorage(newFile);
+            }
+
+            await this.showAllFiles();
+            this.resetForm();
+        } catch (error) {
+            Modal.createModal("Error uploading file");
+        }
     },
 
     createFileListComponents(detail: FileItem): HTMLDivElement {
-        const card = document.createElement('div') as HTMLDivElement;
+        const card = document.createElement('div');
         card.className = 'document-card';
+        card.setAttribute('data-id', detail.id);
 
-        const fileName = document.createElement("h3") as HTMLHeadingElement;
+        const fileName = document.createElement("h3");
         fileName.className = "file-name";
         fileName.textContent = `File: ${detail.fileName}`;
 
-        const documentMeta = document.createElement('div') as HTMLDivElement;
+        const documentMeta = document.createElement('div');
         documentMeta.className = "document-meta";
 
-        const uploaderName = document.createElement("p") as HTMLParagraphElement;
+        const uploaderName = document.createElement("p");
         uploaderName.className = "uploader-name";
         uploaderName.textContent = `Uploaded by: ${detail.uploaderName}`;
 
-        const uploadTime = document.createElement("p") as HTMLParagraphElement;
+        const uploadTime = document.createElement("p");
         uploadTime.className = "date-time";
-        uploadTime.textContent = new Date(detail.uploadDate).toLocaleDateString();
+        uploadTime.textContent = detail.uploadDate.toLocaleDateString();
 
-        const documentAction = document.createElement('div') as HTMLDivElement;
+        const documentAction = document.createElement('div');
         documentAction.className = "document-action";
 
-        const selectButton = document.createElement("button") as HTMLButtonElement;
+        const selectButton = document.createElement("button");
         selectButton.className = "select-button";
         selectButton.textContent = "Select";
 
-        const deleteButton = document.createElement("button") as HTMLButtonElement;
+        const deleteButton = document.createElement("button");
         deleteButton.className = "delete-button";
         deleteButton.textContent = "Delete";
 
@@ -133,33 +162,17 @@ const Displayer = {
         documentAction.append(selectButton, deleteButton);
 
         card.append(this.fileIcon(detail), fileName, documentMeta, documentAction);
-        card.addEventListener("click", () => this.openDocument(detail), { signal: controller.signal });
+        card.addEventListener("click", (e) => {
+            if (!(e.target as Element).closest('.document-action button')) {
+                this.openDocument(detail);
+            }
+        });
 
         return card;
     },
-
-    selectFile(id: string): void {
-        this.selectedFileId = id;
-        const fileData = dataStorages.data.find(DATA => DATA.id === this.selectedFileId as string);
-
-        if(!fileData) return;
-
-        username.value = fileData?.uploaderName;
-        const file = new File([], fileData.uploaderName, { 
-            type: typeof fileData.file === 'string' ? 'application/octet-stream' : fileData.file.type 
-        });
-        
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
-
-        const fileNameElement = fileInput.nextElementSibling?.querySelector('#file-name');
-        if (fileNameElement) {
-            fileNameElement.textContent = fileData.fileName;
-        }
-
-        this.showPreview();
-        submitButton.textContent = "Edit Data";
+    
+    openDocument(selectedData: FileItem): void {
+        window.open(selectedData.fileUrl, '_blank');
     },
 
     fileIcon(file: FileItem): HTMLElement {
@@ -175,59 +188,61 @@ const Displayer = {
         return icon;
     },
 
-    async showPreview(): Promise<void> {
-        preview.innerHTML = '';
-        const file = fileInput.files?.[0];
+    async selectFile(id: string): Promise<void> {
+        this.selectedFileId = id;
+        const files = await dataStorages.loadFromStorage();
+        const fileData = files.find(f => f.id === id);
         
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const showPreview = file.type.startsWith('image/') 
-                    ? `<img src="${event.target?.result}" alt="Preview">`
-                    : `<div class="file-preview">${file.name}</div>`;
-                preview.innerHTML = showPreview;
-            };
-            reader.readAsDataURL(file);
+        if (!fileData) return;
+        
+        username.value = fileData.uploaderName;
+        this.showPreview(fileData); 
+        submitButton.textContent = "Edit Data";
+    },
+
+    showPreview(detail: FileItem): void {
+        preview.innerHTML = detail.fileType.startsWith('image/') ? 
+            `<img src="${detail.fileUrl}" alt="${detail.fileName}">` : 
+            `<div class="file-preview">${detail.fileName}</div>`;
+    },
+
+    async deleteSelectedFile(id: string): Promise<void> {
+        try {
+            await dataStorages.deleteSelectedData(id);
+            if (this.selectedFileId === id) this.resetForm();
+            await this.showAllFiles();
+        } catch (error) {
+            Modal.createModal("Error deleting file");
         }
     },
 
-    openDocument(doc: FileItem): void {
-        const url = typeof doc.file === 'string' ? doc.file : URL.createObjectURL(doc.file);
-        window.open(url, '_blank');
-    },
-
-    deleteSelectedFile(id: string): void {
-        dataStorages.deleteSelectedData(id);
-
-        if (this.selectedFileId === id) this.resetForm();
-
-        this.showAllFiles();
-    },
-
-    deleteAllFiles(): void {
-        if (dataStorages.data.length > 0) {
-            this.resetForm();
-            dataStorages.deleteAllData();
+    async deleteAllFiles(): Promise<void> {
+        try {
+            await dataStorages.deleteAllData();
             documentsList.replaceChildren();
-        } else {
-            alert("There's no file uploaded!");
+            this.resetForm();
+        } catch (error) {
+            Modal.createModal("Error deleting files");
         }
-        this.showAllFiles();
     },
 
     resetForm(): void {
         this.selectedFileId = null;
-        fileInput.files = null;
-        uploadDocxSection.reset();
+        this.currentFile = null;
+        this.currentFileDataUrl = "";
+        fileInput.value = "";
+        username.value = "";
+        preview.innerHTML = "";
         submitButton.textContent = "Add Data";
     }
-}
+};
 
 function init(): void {
     initEventListeners();
-    dataStorages.loadFromStorage();
-    Modal.showMessage();
     Displayer.showAllFiles();
+    dataStorages.subscribe((files) => {
+        Displayer.showAllFiles();
+    });
 }
 
 function teardown(): void {
