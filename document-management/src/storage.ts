@@ -29,7 +29,7 @@ function DataStorages<N extends { id: string }>(storageKey: string): DataManager
 
         changeSelectedData(id: string, new_info: Partial<N>) {
             const index = this.data.findIndex(data => data.id === id);
-            const newData = { ...this.data[index], new_info } as N;
+            const newData = { ...this.data[index], ...new_info } as N;
 
             if (index > -1) {
                 this.data[index] = newData;
@@ -38,7 +38,7 @@ function DataStorages<N extends { id: string }>(storageKey: string): DataManager
         },
 
         deleteSelectedData(id: string): void {
-            this.data.filter(dt => dt.id !== id);
+            this.data = this.data.filter(dt => dt.id !== id);
             this.saveToStorage();
         },
 

@@ -4,7 +4,7 @@ type DocumentItem = {
     id: string;
     fileName: string;
     uploaderName: string;
-    file: File | string;
+    file: File;
     uploadDate: Date;
 }
 
@@ -16,11 +16,29 @@ const fileInput = document.getElementById("file-input") as HTMLInputElement;
 const username = document.getElementById("username") as HTMLInputElement;
 const preview = document.getElementById("preview") as HTMLDivElement;
 const documentsList = document.getElementById("documents-list") as HTMLElement;
+const submitButton = document.getElementById("submit-btn") as HTMLButtonElement;
 
 function initEventListeners(): void {
     document.addEventListener("click", (event) => {
         const target = event.target as HTMLElement;
+        const getAllFilesData = Array.from(document.querySelectorAll(".document-card"));
 
+        const select_button = target.closest(".select-button");
+        const selectedComponent = select_button?.closest(".document-card");
+        const selectedIndex = getAllFilesData.indexOf(selectedComponent as Element);
+
+        const delete_button = target.closest(".delete-button");
+        const deleteComponent = delete_button?.closest(".document-card");
+        const deleteIndex = getAllFilesData.indexOf(deleteComponent as Element);
+
+        if (selectedIndex > -1) {
+            const detail = dataStorages.data[selectedIndex];
+            Displayer.selectFile(detail.id);
+        }
+        if (deleteIndex > -1) {
+            const detail = dataStorages.data[deleteIndex];
+            Displayer.deleteSelectedFile(detail.id);
+        }
         if (target.closest("#delete-all-docxs")) Displayer.deleteAllFiles();
     }, { signal: controller.signal });
 
@@ -63,25 +81,39 @@ const Displayer = {
     },
 
     createFileListComponents(detail: DocumentItem): HTMLDivElement {
-        const card = document.createElement('div');
+        const card = document.createElement('div') as HTMLDivElement;
         card.className = 'document-card';
-        card.innerHTML = `
-            <h3>${detail.fileName}</h3>
-            <div class="document-meta">
-                <p>Uploaded by: ${detail.uploaderName}</p>
-                <p>${new Date(detail.uploadDate).toLocaleDateString()}</p>
-            </div>
-            <div class="document-actions">
-                <button class="select-button">Edit</button>
-                <button class="delete-button">Delete</button>
-            </div>
-        `;
 
-        card.addEventListener('click', (event) => {
-            if (!(event.target instanceof HTMLButtonElement)) {
-                this.openDocument(detail);
-            }
-        }, { signal: controller.signal });
+        const fileName = document.createElement("h3") as HTMLHeadingElement;
+        fileName.className = "file-name";
+        fileName.textContent = `File: ${detail.fileName}`;
+
+        const documentMeta = document.createElement('div') as HTMLDivElement;
+        documentMeta.className = "document-meta";
+
+        const uploaderName = document.createElement("p") as HTMLParagraphElement;
+        uploaderName.className = "uploader-name";
+        uploaderName.textContent = `Uploaded by: ${detail.uploaderName}`;
+
+        const uploadTime = document.createElement("p") as HTMLParagraphElement;
+        uploadTime.className = "date-time";
+        uploadTime.textContent = new Date(detail.uploadDate).toLocaleDateString();
+
+        const documentAction = document.createElement('div') as HTMLDivElement;
+        documentAction.className = "document-action";
+
+        const selectButton = document.createElement("button") as HTMLButtonElement;
+        selectButton.className = "select-button";
+        selectButton.textContent = "Select";
+
+        const deleteButton = document.createElement("button") as HTMLButtonElement;
+        deleteButton.className = "delete-button";
+        deleteButton.textContent = "Delete";
+
+        documentMeta.append(uploaderName, uploadTime);
+        documentAction.append(selectButton, deleteButton);
+
+        card.append(fileName, documentMeta, documentAction);
 
         return card;
     },
@@ -107,6 +139,7 @@ const Displayer = {
         }
 
         this.showPreview();
+        submitButton.textContent = "Edit Data";
     },
 
     async showPreview(): Promise<void> {
@@ -131,9 +164,10 @@ const Displayer = {
     },
 
     deleteSelectedFile(id: string): void {
+        dataStorages.deleteSelectedData(id);
+
         if (this.selectedFileId === id) this.resetForm();
 
-        dataStorages.deleteSelectedData(id);
         this.showAllFiles();
     },
 
@@ -151,6 +185,7 @@ const Displayer = {
     resetForm(): void {
         this.selectedFileId = null;
         uploadDocxSection.reset();
+        submitButton.textContent = "Add Data";
     }
 }
 
