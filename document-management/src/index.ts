@@ -1,6 +1,7 @@
 import DataStorages from "./storage.js";
+import Modal from "./modal.js";
 
-type DocumentItem = {
+type FileItem = {
     id: string;
     fileName: string;
     uploaderName: string;
@@ -8,7 +9,7 @@ type DocumentItem = {
     uploadDate: Date;
 }
 
-const dataStorages = DataStorages<DocumentItem>("docx-item");
+const dataStorages = DataStorages<FileItem>("docx-item");
 let controller: AbortController = new AbortController();
 
 const uploadDocxSection = document.getElementById("upload-doc-section") as HTMLFormElement;
@@ -40,6 +41,7 @@ function initEventListeners(): void {
             Displayer.deleteSelectedFile(detail.id);
         }
         if (target.closest("#delete-all-docxs")) Displayer.deleteAllFiles();
+        if (target.closest("#reset-form")) Displayer.resetForm();
     }, { signal: controller.signal });
 
     uploadDocxSection.addEventListener("submit", (event) => Displayer.handleSubmit(event), {
@@ -54,7 +56,11 @@ const Displayer = {
         const listOfileData = dataStorages.data;
         const fileDataFragment = document.createDocumentFragment();
 
-        listOfileData.forEach(data => fileDataFragment.appendChild(this.createFileListComponents(data)));
+        if (listOfileData.length > 0) {
+            listOfileData.forEach(data => fileDataFragment.appendChild(this.createFileListComponents(data)));
+        } else {
+            Modal.createModal("Masih kosong");
+        }
 
         documentsList.innerHTML = '';
         documentsList.appendChild(fileDataFragment);
@@ -62,8 +68,21 @@ const Displayer = {
 
     handleSubmit(event: SubmitEvent): void {
         event.preventDefault();
+        const fileData = fileInput.files?.[0];
+        const imageType = ["image/jpg", "image/jpeg", "image/png"];
+        const documentType = ["document/pdf", "document/doc", "document/docx"];
+
+        if (!fileData) {
+            alert("Kamu belum memilih file yang akan diunggah!");
+            return;
+        }
+
+        if (imageType.includes(fileData.type) || documentType.includes(fileData.type)) {
+            alert("File ini tidak didukung!");
+            return;
+        }
         
-        const newFile: Partial<DocumentItem> = {
+        const newFile: Partial<FileItem> = {
             fileName: fileInput.files?.[0]?.name || '',
             uploaderName: username.value || `user_${Date.now()}`,
             file: fileInput.files?.[0] as File,
@@ -73,14 +92,14 @@ const Displayer = {
         if (this.selectedFileId !== null) {
             dataStorages.changeSelectedData(this.selectedFileId, newFile);
         } else {
-            dataStorages.addToStorage(newFile as Omit<DocumentItem, 'id'>);
+            dataStorages.addToStorage(newFile as Omit<FileItem, 'id'>);
         }
 
         this.showAllFiles();
         this.resetForm();
     },
 
-    createFileListComponents(detail: DocumentItem): HTMLDivElement {
+    createFileListComponents(detail: FileItem): HTMLDivElement {
         const card = document.createElement('div') as HTMLDivElement;
         card.className = 'document-card';
 
@@ -113,7 +132,8 @@ const Displayer = {
         documentMeta.append(uploaderName, uploadTime);
         documentAction.append(selectButton, deleteButton);
 
-        card.append(fileName, documentMeta, documentAction);
+        card.append(this.fileIcon(detail), fileName, documentMeta, documentAction);
+        card.addEventListener("click", () => this.openDocument(detail), { signal: controller.signal });
 
         return card;
     },
@@ -142,6 +162,19 @@ const Displayer = {
         submitButton.textContent = "Edit Data";
     },
 
+    fileIcon(file: FileItem): HTMLElement {
+        const icon = document.createElement("i") as HTMLElement;
+        if (file.fileName.includes(".pdf")) icon.className = "fa-solid fa-file-pdf";
+        else if (file.fileName.includes(".txt")) icon.className = "fa-solid fa-file-lines";
+        else if (file.fileName.includes(".doc")) icon.className = "fa-solid fa-file-word";
+        else if (file.fileName.includes(".docx")) icon.className = "fa-solid fa-file-word";
+        else if (file.fileName.includes(".jpg")) icon.className = "fa-solid fa-image";
+        else if (file.fileName.includes(".jpeg")) icon.className = "fa-solid fa-image";
+        else if (file.fileName.includes(".png")) icon.className = "fa-solid fa-image";
+
+        return icon;
+    },
+
     async showPreview(): Promise<void> {
         preview.innerHTML = '';
         const file = fileInput.files?.[0];
@@ -158,7 +191,7 @@ const Displayer = {
         }
     },
 
-    openDocument(doc: DocumentItem): void {
+    openDocument(doc: FileItem): void {
         const url = typeof doc.file === 'string' ? doc.file : URL.createObjectURL(doc.file);
         window.open(url, '_blank');
     },
@@ -184,6 +217,7 @@ const Displayer = {
 
     resetForm(): void {
         this.selectedFileId = null;
+        fileInput.files = null;
         uploadDocxSection.reset();
         submitButton.textContent = "Add Data";
     }
@@ -192,11 +226,13 @@ const Displayer = {
 function init(): void {
     initEventListeners();
     dataStorages.loadFromStorage();
+    Modal.showMessage();
     Displayer.showAllFiles();
 }
 
 function teardown(): void {
     controller.abort();
+    Modal.teardown();
     Displayer.resetForm();
 }
 
