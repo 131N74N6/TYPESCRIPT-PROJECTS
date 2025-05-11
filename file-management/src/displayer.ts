@@ -1,6 +1,6 @@
 import DataStorages from "./storage.js";
 import Modal from "./modal.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import uploadToCloudinary from "./utilities/cloudinary-saver.js";
 
 type FileItem = {
     id: string;
@@ -9,66 +9,69 @@ type FileItem = {
     fileUrl: string;
     uploadDate: Date;
     fileType: string;
+    publicId?: string;
 }
 
-const dataStorages = DataStorages<FileItem>("file-item");
-const storage = getStorage(); // Inisialisasi Firebase Storage
-let controller: AbortController = new AbortController();
+const dataStorages = DataStorages<FileItem>("file and users");
 
-const uploadDocxSection = document.getElementById("upload-doc-section") as HTMLFormElement;
-const fileInput = document.getElementById("file-input") as HTMLInputElement;
-const username = document.getElementById("username") as HTMLInputElement;
-const preview = document.getElementById("preview") as HTMLDivElement;
-const documentsList = document.getElementById("documents-list") as HTMLElement;
-const submitButton = document.getElementById("submit-btn") as HTMLButtonElement;
-
-function initEventListeners(): void {
-    document.addEventListener("click", async (event) => {
-        const target = event.target as HTMLElement;
-        
-        if (target.closest(".select-button")) {
-            const card = target.closest(".document-card");
-            const id = card?.getAttribute("data-id");
-            if (id) Displayer.selectFile(id);
-        }
-        
-        if (target.closest(".delete-button")) {
-            const card = target.closest(".document-card");
-            const id = card?.getAttribute("data-id");
-            if (id) await Displayer.deleteSelectedFile(id);
-        }
-        
-        if (target.closest("#delete-all-docxs")) await Displayer.deleteAllFiles();
-        if (target.closest("#reset-form")) Displayer.resetForm();
-    }, { signal: controller.signal });
-
-    fileInput.addEventListener("change", (event) => Displayer.changeFileToUrl(event), {
-        signal: controller.signal
-    });
-
-    uploadDocxSection.addEventListener("submit", (event) => Displayer.handleSubmit(event), {
-        signal: controller.signal
-    });
-}
-
-const Displayer = {
+const Displayer = (
+    errorMessage: HTMLDivElement, fileUploaderForm: HTMLFormElement, fileInput: HTMLInputElement, 
+    documentsList: HTMLElement, preview: HTMLDivElement, submitButton: HTMLButtonElement, 
+    username: HTMLInputElement, modal: HTMLElement
+) => ({
+    setModal: Modal(modal),
+    controller: new AbortController() as  AbortController,
     selectedFileId: null as string | null,
     currentFile: null as File | null,
     currentFileDataUrl: "",
 
+    initEventListeners(): void {
+        document.addEventListener("click", async (event) => {
+            const target = event.target as HTMLElement;
+            
+            if (target.closest("#delete-all-files")) await this.deleteAllFiles();
+            if (target.closest("#reset-form")) this.resetForm();
+        }, { signal: this.controller.signal });
+
+        fileInput.addEventListener("change", (event) => this.changeFileToUrl(event), {
+            signal: this.controller.signal
+        });
+
+        fileUploaderForm.addEventListener("submit", (event) => this.handleSubmit(event), {
+            signal: this.controller.signal
+        });
+    },
+
     async showAllFiles(): Promise<void> {
+        const fileDataFragment = document.createDocumentFragment();
+
         try {
             const files = await dataStorages.loadFromStorage();
-            const fileDataFragment = document.createDocumentFragment();
+            
+            if (files.length > 0) {
+                files.forEach(data => {
+                    fileDataFragment.appendChild(this.createFileListComponents(data));
+                });
         
-            files.forEach(data => {
-                fileDataFragment.appendChild(this.createFileListComponents(data));
-            });
-        
-            documentsList.innerHTML = '';
-            documentsList.appendChild(fileDataFragment);
+                documentsList.innerHTML = '';
+                documentsList.appendChild(fileDataFragment);
+            } else {
+                const emptyMsg = document.createElement("div") as HTMLDivElement;
+                emptyMsg.className = "empty-data";
+                emptyMsg.textContent = "No file added..";
+                fileDataFragment.appendChild(emptyMsg);
+
+                errorMessage.innerHTML = '';
+                errorMessage.appendChild(fileDataFragment);
+            }
         } catch (error) {
-            Modal.createModal("Error loading files");
+            const errorMsg = document.createElement("div") as HTMLDivElement;
+            errorMsg.className = "internal-error";
+            errorMsg.textContent = "Internal server error";
+            fileDataFragment.appendChild(errorMsg);
+
+            errorMessage.innerHTML = '';
+            errorMessage.appendChild(fileDataFragment);
         }
     },
 
@@ -86,7 +89,7 @@ const Displayer = {
                 } else {
                     preview.textContent = file.name;
                 }
-            };
+            }
             reader.readAsDataURL(file);
         }
     },
@@ -95,24 +98,21 @@ const Displayer = {
         event.preventDefault();
         
         if (!this.currentFile) {
-            Modal.createModal("Please select a file!");
+            this.setModal.createModal("Please select a file!");
             return;
         }
 
         try {
-            // Upload file ke Firebase Storage
-            const storageRef = ref(storage, `documents/${Date.now()}_${this.currentFile.name}`);
-            const snapshot = await uploadBytes(storageRef, this.currentFile);
-            const downloadURL = await getDownloadURL(snapshot.ref);
+            const cloudinaryResponse = await uploadToCloudinary(this.currentFile);
 
-            // Membuat objek FileItem
             const newFile: Omit<FileItem, 'id'> = {
                 fileName: this.currentFile.name,
                 uploaderName: username.value || `user_${Date.now()}`,
-                fileUrl: downloadURL,
+                fileUrl: cloudinaryResponse.secure_url,
                 uploadDate: new Date(),
-                fileType: this.currentFile.type
-            };
+                fileType: this.currentFile.type,
+                publicId: cloudinaryResponse.public_id
+            }
 
             if (this.selectedFileId) {
                 await dataStorages.changeSelectedData(this.selectedFileId, newFile);
@@ -123,14 +123,15 @@ const Displayer = {
             await this.showAllFiles();
             this.resetForm();
         } catch (error) {
-            Modal.createModal("Error uploading file");
+            this.setModal.createModal("Error uploading file");
+            this.setModal.showMessage();
+            this.resetForm();
         }
     },
 
     createFileListComponents(detail: FileItem): HTMLDivElement {
         const card = document.createElement('div');
-        card.className = 'document-card';
-        card.setAttribute('data-id', detail.id);
+        card.className = 'file-card';
 
         const fileName = document.createElement("h3");
         fileName.className = "file-name";
@@ -212,7 +213,7 @@ const Displayer = {
             if (this.selectedFileId === id) this.resetForm();
             await this.showAllFiles();
         } catch (error) {
-            Modal.createModal("Error deleting file");
+            this.setModal.createModal("Error deleting file");
         }
     },
 
@@ -222,7 +223,7 @@ const Displayer = {
             documentsList.replaceChildren();
             this.resetForm();
         } catch (error) {
-            Modal.createModal("Error deleting files");
+            this.setModal.createModal("Error deleting files");
         }
     },
 
@@ -234,22 +235,13 @@ const Displayer = {
         username.value = "";
         preview.innerHTML = "";
         submitButton.textContent = "Add Data";
+    },
+
+    cleanUpListener(): void {
+        this.controller.abort;
+        this.setModal.teardown();
+        this.resetForm();
     }
-};
+});
 
-function init(): void {
-    initEventListeners();
-    Displayer.showAllFiles();
-    dataStorages.subscribe((files) => {
-        Displayer.showAllFiles();
-    });
-}
-
-function teardown(): void {
-    controller.abort();
-    Modal.teardown();
-    Displayer.resetForm();
-}
-
-document.addEventListener("DOMContentLoaded", init);
-window.addEventListener("beforeunload", teardown);
+export default Displayer;
