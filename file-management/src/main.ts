@@ -3,6 +3,7 @@ import './style.css';
 
 const app = document.querySelector("#app") as HTMLElement;
 
+// header
 const header = document.createElement("header") as HTMLElement;
 header.id = "header";
 
@@ -10,24 +11,60 @@ const deleteAllButton = document.createElement("button") as HTMLButtonElement;
 deleteAllButton.type = "button";
 deleteAllButton.id = "delete-all-files";
 deleteAllButton.textContent = "Delete All";
+deleteAllButton.style.display = "flex";
+deleteAllButton.style.gap = "0.5rem";
 
 const deleteAllIcon = document.createElement("i") as HTMLElement;
 deleteAllIcon.className = "fa-solid fa-trash";
-deleteAllIcon.style.transform = "translateX(15px)";
 
-deleteAllButton.appendChild(deleteAllIcon);
+deleteAllButton.prepend(deleteAllIcon);
 
-const ascSortingButton = document.createElement("button") as HTMLButtonElement;
-ascSortingButton.className = "asc-sorting";
-ascSortingButton.textContent = "Sorting Up";
+// <div class="sorting-container"></div>
+const sortingContainer = document.createElement("div");
+sortingContainer.className = "sorting-container";
+sortingContainer.style.display = "flex";
+sortingContainer.style.gap = "1rem";
 
-const ascSortingIcon = document.createElement("i") as HTMLElement;
-ascSortingIcon.className = "fa-solid fa-sort-up";
-ascSortingIcon.style.transform = "translateX(15px)";
+const ascSortingLabel = document.createElement("label");
+ascSortingLabel.style.display = "flex";
+ascSortingLabel.style.gap = "0.5rem";
+ascSortingLabel.style.alignItems = "center";
 
-ascSortingButton.appendChild(ascSortingIcon);
+const ascSortingCheckbox = document.createElement("input");
+ascSortingCheckbox.type = "checkbox";
+ascSortingCheckbox.id = "asc-sorting";
+ascSortingCheckbox.className = "sorting-checkbox";
 
-header.append(deleteAllButton, ascSortingButton);
+const ascSortingText = document.createElement("span");
+ascSortingText.textContent = "A-Z";
+
+const ascIcon = document.createElement("i") as HTMLElement;
+ascIcon.className = "fa-solid fa-sort-up";
+
+ascSortingLabel.prepend(ascIcon);
+ascSortingLabel.append(ascSortingCheckbox, ascSortingText);
+
+const dscSortingLabel = document.createElement("label");
+dscSortingLabel.style.display = "flex";
+dscSortingLabel.style.gap = "0.5rem";
+dscSortingLabel.style.alignItems = "center";
+
+const dscSortingCheckbox = document.createElement("input");
+dscSortingCheckbox.type = "checkbox";
+dscSortingCheckbox.id = "dsc-sorting";
+dscSortingCheckbox.className = "sorting-checkbox";
+
+const dscSortingText = document.createElement("span");
+dscSortingText.textContent = "Z-A";
+
+const dscIcon = document.createElement("i") as HTMLElement;
+dscIcon.className = "fa-solid fa-sort-down";
+
+dscSortingLabel.prepend(dscIcon)
+dscSortingLabel.append(dscSortingCheckbox, dscSortingText);
+
+sortingContainer.append(ascSortingLabel, dscSortingLabel);
+header.append(deleteAllButton, sortingContainer);
 
 const modal = document.createElement("section") as HTMLElement;
 modal.id = "modal";
@@ -53,6 +90,7 @@ fileInput.accept = ".pdf,.doc,.docx,.txt,.jpg,.png,.jpeg";
 
 const preview = document.createElement("div") as HTMLDivElement;
 preview.id = "preview";
+preview.textContent = "Click here to upload your file";
 
 const fileName = document.createElement("div") as HTMLDivElement;
 fileName.id = "fileName";
@@ -84,7 +122,8 @@ container.append(modal, fileUploaderForm, documentsList, errorMessages);
 app.append(header, container);
 
 const fileDataDisplayer = Displayer(
-    errorMessages, fileUploaderForm, fileInput, documentsList, preview, submitButton, username, modal
+    errorMessages, fileUploaderForm, fileInput, documentsList, preview, submitButton, username, 
+    modal, ascSortingCheckbox, dscSortingCheckbox
 );
 
 function init(): void {

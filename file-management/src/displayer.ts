@@ -17,13 +17,18 @@ const dataStorages = DataStorages<FileItem>("file and users");
 const Displayer = (
     errorMessage: HTMLDivElement, fileUploaderForm: HTMLFormElement, fileInput: HTMLInputElement, 
     documentsList: HTMLElement, preview: HTMLDivElement, submitButton: HTMLButtonElement, 
-    username: HTMLInputElement, modal: HTMLElement
+    username: HTMLInputElement, modal: HTMLElement, ascSortingCheckbox: HTMLInputElement, 
+    dscSortingCheckbox: HTMLInputElement
 ) => ({
     setModal: Modal(modal),
     controller: new AbortController() as  AbortController,
     selectedFileId: null as string | null,
     currentFile: null as File | null,
     currentFileDataUrl: "",
+    selectedCategories: [
+        "application/pdf", "image/jpg", "image/jpeg", "image/png", "text/plain",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ] as string[],
 
     initEventListeners(): void {
         document.addEventListener("click", async (event) => {
@@ -40,6 +45,18 @@ const Displayer = (
         fileUploaderForm.addEventListener("submit", (event) => this.handleSubmit(event), {
             signal: this.controller.signal
         });
+
+        preview.addEventListener("click", () => fileInput.click(), { signal: this.controller.signal });
+
+        ascSortingCheckbox.addEventListener("change", () => {
+            dscSortingCheckbox.checked = false;
+            this.showAllFiles();
+        }, { signal: this.controller.signal });
+
+        dscSortingCheckbox.addEventListener("change", () => {
+            ascSortingCheckbox.checked = false;
+            this.showAllFiles();
+        }, { signal: this.controller.signal });
     },
 
     async showAllFiles(): Promise<void> {
@@ -49,9 +66,26 @@ const Displayer = (
             const files = await dataStorages.loadFromStorage();
             
             if (files.length > 0) {
-                files.forEach(data => {
-                    fileDataFragment.appendChild(this.createFileListComponents(data));
-                });
+                const filteredData = files.filter(data => this.selectedCategories.includes(data.fileType));
+                const ascendChecked = ascSortingCheckbox.checked;
+                const descendChecked = dscSortingCheckbox.checked;
+                let sortedData = filteredData;
+
+                if (ascendChecked) {
+                    sortedData = [...filteredData].sort(
+                        (a: FileItem, b: FileItem) => a.fileName.localeCompare(b.fileName)
+                    );
+                }
+
+                if (descendChecked) {
+                    sortedData = [...filteredData].sort(
+                        (a: FileItem, b: FileItem) => b.fileName.localeCompare(a.fileName)
+                    );
+                }
+
+                sortedData.forEach(
+                    data => fileDataFragment.appendChild(this.createFileListComponents(data))
+                );
         
                 documentsList.innerHTML = '';
                 documentsList.appendChild(fileDataFragment);
@@ -154,17 +188,23 @@ const Displayer = (
         const selectButton = document.createElement("button");
         selectButton.className = "select-button";
         selectButton.textContent = "Select";
+        selectButton.addEventListener("click", async () => this.selectFile(detail.id), { 
+            signal: this.controller.signal 
+        });
 
         const deleteButton = document.createElement("button");
         deleteButton.className = "delete-button";
         deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", async () => this.deleteSelectedFile(detail.id), { 
+            signal: this.controller.signal 
+        });
 
         documentMeta.append(uploaderName, uploadTime);
         documentAction.append(selectButton, deleteButton);
 
         card.append(this.fileIcon(detail), fileName, documentMeta, documentAction);
-        card.addEventListener("click", (e) => {
-            if (!(e.target as Element).closest('.document-action button')) {
+        card.addEventListener("click", (event) => {
+            if (!(event.target as Element).closest('.document-action button')) {
                 this.openDocument(detail);
             }
         });
@@ -233,7 +273,7 @@ const Displayer = (
         this.currentFileDataUrl = "";
         fileInput.value = "";
         username.value = "";
-        preview.innerHTML = "";
+        preview.innerHTML = "Click here to upload your file";
         submitButton.textContent = "Add Data";
     },
 
@@ -241,6 +281,8 @@ const Displayer = (
         this.controller.abort;
         this.setModal.teardown();
         this.resetForm();
+        ascSortingCheckbox.checked = false;
+        dscSortingCheckbox.checked = false;
     }
 });
 
