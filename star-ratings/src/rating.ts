@@ -1,4 +1,3 @@
-import Modal from "./modal.js";
 import DataManager from "./storage.js";
 
 interface Rating {
@@ -8,33 +7,29 @@ interface Rating {
     comment: string;
 }
 
-const starWidgets = document.getElementById("star-widgets") as HTMLFormElement;
-const username = document.getElementById("username") as HTMLInputElement;
-const comment = document.getElementById("comment") as HTMLTextAreaElement;
-const ratingsList = document.getElementById("ratings-list") as HTMLElement;
-const saveButton = document.getElementById("save-btn") as HTMLButtonElement;
-
 class UserRating extends DataManager<Rating> {
     starWidgets: HTMLFormElement;
     username: HTMLInputElement;
     comment: HTMLTextAreaElement;
-    ratingsList: HTMLElement;
     saveButton: HTMLButtonElement;
+    ratingsList: HTMLElement;
+    notification: HTMLElement;
     private controllers: AbortController;
     private selectedId: string | null = null;
 
     constructor(
         starWidgets: HTMLFormElement, username: HTMLInputElement, comment: HTMLTextAreaElement, 
-        ratingsList: HTMLElement, saveButton: HTMLButtonElement
+        ratingsList: HTMLElement, saveButton: HTMLButtonElement, notification: HTMLElement
     ) {
         super("star ratings");
-        this.controllers = new AbortController();
-        this.setupEventListeners();
         this.starWidgets = starWidgets;
         this.username = username;
         this.comment = comment;
         this.ratingsList = ratingsList;
         this.saveButton = saveButton;
+        this.notification = notification;
+        this.controllers = new AbortController();
+        this.setupEventListeners();
     }
 
     private setupEventListeners(): void {
@@ -45,7 +40,7 @@ class UserRating extends DataManager<Rating> {
             if (target.closest("#clear-form")) this.resetOpinionForm();
         }, { signal: this.controllers.signal });
 
-        starWidgets.addEventListener("submit", async (event) => await this.submitRating(event), {
+        this.starWidgets.addEventListener("submit", async (event) => await this.submitRating(event), {
             signal: this.controllers.signal
         });
     }
@@ -58,8 +53,8 @@ class UserRating extends DataManager<Rating> {
             if (ratingsData.length > 0) {
                 const opinionComponent = document.createDocumentFragment();
                 ratingsData.forEach(data => opinionComponent.appendChild(this.makeRatingList(data)));
-                ratingsList.innerHTML = '';
-                ratingsList.appendChild(opinionComponent);
+                this.ratingsList.innerHTML = '';
+                this.ratingsList.appendChild(opinionComponent);
             }
         } catch (error) {
             console.log(error);
@@ -114,15 +109,15 @@ class UserRating extends DataManager<Rating> {
         const isInEditMode = !!this.selectedId;
         const createRating = document.querySelector('input[name="rate"]:checked') as HTMLInputElement;
 
-        if (!username.value.trim()) {
-            new Modal("Masukkan nama yang valid!");
+        if (!this.username.value.trim()) {
+            //new Modal("Masukkan nama yang valid!");
             return;
         }
 
         const newRating: Omit<Rating, 'id'> = {
-            name: username.value.trim(),
+            name: this.username.value.trim(),
             rating: Number(createRating.value.trim()),
-            comment: comment.value.trim()
+            comment: this.comment.value.trim()
         }
 
         if (!isInEditMode) {
@@ -136,9 +131,9 @@ class UserRating extends DataManager<Rating> {
     }
 
     private resetOpinionForm(): void {
-        starWidgets.reset();
+        this.starWidgets.reset();
         this.selectedId = null;
-        saveButton.textContent = "Send";
+        this.saveButton.textContent = "Send";
     }
 
     private makeStar(starTotal: number): HTMLDivElement {
@@ -176,10 +171,10 @@ class UserRating extends DataManager<Rating> {
         const index = getRatingData.findIndex(data => data.id === id);
         const starTotal = String(getRatingData[index].rating);
 
-        username.value = getRatingData[index].name;
+        this.username.value = getRatingData[index].name;
         (document.querySelector(`input[value="${starTotal}"]`) as HTMLInputElement).checked = true;
-        comment.value = getRatingData[index].comment;
-        saveButton.textContent = "Edit Data";
+        this.comment.value = getRatingData[index].comment;
+        this.saveButton.textContent = "Edit Data";
     }
 
     private async deleteRating(id: string): Promise<void> {
@@ -188,17 +183,17 @@ class UserRating extends DataManager<Rating> {
             if (this.selectedId === id) this.resetOpinionForm();
             this.showAllRatings();
         } catch (error) {
-            new Modal("Error when deleting rates");
+            //new Modal("Error when deleting rates");
         }
     }
 
     private async deleteAllRatings(): Promise<void> {
         try {    
-            this.deleteAllData();
-            ratingsList.replaceChildren();
+            await this.deleteAllData();
+            this.ratingsList.replaceChildren();
             this.resetOpinionForm();
         } catch (error) {
-            new Modal("Error when deleting rates");
+            //new Modal("Error when deleting rates");
         }
     }
 

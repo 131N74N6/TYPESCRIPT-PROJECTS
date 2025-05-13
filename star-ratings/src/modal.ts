@@ -1,17 +1,17 @@
 class Modal {
-    private notification = document.getElementById("notification") as HTMLElement;
+    private notification: HTMLElement;
     private content = document.createElement("div") as HTMLDivElement;
     private p = document.createElement("p") as HTMLParagraphElement;
-    private message: string;
+    private message!: string;
     private timeout: number | null = null;
 
-    constructor(message: string) {
-        this.message = message;
-        this.createModalComponent();
+    constructor(notification: HTMLElement) {
         this.showModal();
+        this.notification = notification
     }
 
-    createModalComponent(): void {
+    createModalComponent(message: string): void {
+        this.message = message;
         this.p.textContent = this.message;
         this.p.className = "message";
         this.content.className = "content";

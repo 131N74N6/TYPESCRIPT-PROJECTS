@@ -4,12 +4,30 @@ body {
     margin: 0;
 }
 
+#app {
+    display: flex;
+    min-height: 40dvh;
+}
+
+#app > header {
+    max-width: 240px;
+    flex-shrink: 0;
+    padding: 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
 main {
     background-color: #000000;
-    min-height: 100dvh;
-    max-width: 900px;
+    flex-grow: 1;
+    padding: 20px;
+    max-width: calc(100% - 350px);
     margin: 0 auto;
-    padding: 0;
+    min-height: auto;
 }
 
 #star-widgets {
