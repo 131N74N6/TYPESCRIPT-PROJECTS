@@ -24,8 +24,13 @@ class Modal {
     }
 
     teardownModal(): void {
-        if (this.timeout) clearTimeout(this.timeout);
-        this.content.remove();
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+        if (this.content.parentElement) {
+            this.content.parentElement.removeChild(this.content);
+        }
     }
 }
 

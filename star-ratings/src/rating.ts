@@ -1,4 +1,5 @@
 import DataManager from "./storage.js";
+import Modal from "./modal.js";
 
 interface Rating {
     id: string;
@@ -13,7 +14,7 @@ class UserRating extends DataManager<Rating> {
     comment: HTMLTextAreaElement;
     saveButton: HTMLButtonElement;
     ratingsList: HTMLElement;
-    notification: HTMLElement;
+    modalComponent: Modal;
     private controllers: AbortController;
     private selectedId: string | null = null;
 
@@ -27,8 +28,8 @@ class UserRating extends DataManager<Rating> {
         this.comment = comment;
         this.ratingsList = ratingsList;
         this.saveButton = saveButton;
-        this.notification = notification;
         this.controllers = new AbortController();
+        this.modalComponent = new Modal(notification);
         this.setupEventListeners();
     }
 
@@ -110,7 +111,8 @@ class UserRating extends DataManager<Rating> {
         const createRating = document.querySelector('input[name="rate"]:checked') as HTMLInputElement;
 
         if (!this.username.value.trim()) {
-            //new Modal("Masukkan nama yang valid!");
+            this.modalComponent.createModalComponent("Masukkan nama yang valid!");
+            this.modalComponent.showModal();
             return;
         }
 
@@ -183,7 +185,8 @@ class UserRating extends DataManager<Rating> {
             if (this.selectedId === id) this.resetOpinionForm();
             this.showAllRatings();
         } catch (error) {
-            //new Modal("Error when deleting rates");
+            this.modalComponent.createModalComponent("Error when deleting rates");
+            this.modalComponent.showModal();
         }
     }
 
@@ -193,12 +196,14 @@ class UserRating extends DataManager<Rating> {
             this.ratingsList.replaceChildren();
             this.resetOpinionForm();
         } catch (error) {
-            //new Modal("Error when deleting rates");
+            this.modalComponent.createModalComponent("Error when deleting rates");
+            this.modalComponent.showModal();
         }
     }
 
     cleanUp(): void {
         this.controllers.abort();
+        this.modalComponent.teardownModal();
         this.resetOpinionForm();
     }
 }

@@ -133,6 +133,7 @@ main {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-height: auto;
 }
 
 #ratings-list .opinion {
