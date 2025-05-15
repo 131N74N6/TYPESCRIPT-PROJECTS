@@ -1,0 +1,50 @@
+import './style.css';
+
+const notification = document.createElement("section") as HTMLElement;
+notification.id = "notification";
+
+const activityList = document.createElement("section") as HTMLElement;
+activityList.id = "activity-list";
+
+const activityForm = document.createElement("form") as HTMLFormElement;
+activityForm.id = "activity-form";
+activityForm.title = "activity-form";
+
+const activityName = document.createElement("textarea") as HTMLTextAreaElement;
+activityName.id = "activity-name";
+
+
+
+/*
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css"/>
+    <title>TODO-List</title>
+</head>
+<body>
+    <main>
+        <!-- Notifikasi -->
+        <section id="notification"></section>
+    
+        <!-- daftar aktivitas -->
+        <section id="activity-list"></section>
+    
+        <!-- input aktivitas -->
+         <section id="activity-field">
+            <form title="todo-form" id="activity-form">
+                <textarea id="todo-name" placeholder="masukkan list..."></textarea>
+                <div id="button-wrap">
+                    <button type="submit" id="submit-btn">Add Activity</button>
+                    <button type="button" id="delete-all">Delete All</button>
+                    <button type="button" id="reset-form">Clear</button>
+                </div>
+            </form>
+        </section>
+    </main>
+    <script src="./dist/main.js"></script>
+</body>
+</html>
+*/

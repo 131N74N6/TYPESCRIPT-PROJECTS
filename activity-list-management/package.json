@@ -1,5 +1,5 @@
 {
-  "name": "tomato-ripeness",
+  "name": "activity-list-management",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,7 +13,7 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
-    "firebase": "^11.7.1",
+    "firebase": "^11.7.3",
     "firebase-tools": "^14.3.1"
   }
 }
