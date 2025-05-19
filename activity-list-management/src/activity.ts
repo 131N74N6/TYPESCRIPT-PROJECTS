@@ -106,11 +106,17 @@ const ActivityManagement = async (
         selectBtn.type = "button";
         selectBtn.textContent = "Select";
         selectBtn.className = "select-btn";
+        selectBtn.addEventListener('click', () => this.selectActivity(act.id), { 
+            signal: this.controller.signal 
+        });
 
         const deleteBtn = document.createElement("button") as HTMLButtonElement;
         deleteBtn.type = "button";
         deleteBtn.textContent = "Delete";
         deleteBtn.className = "delete-btn";
+        deleteBtn.addEventListener('click', () => this.deleteAct(act.id), { 
+            signal: this.controller.signal 
+        });
 
         buttonWrap.append(selectBtn, deleteBtn);
         activityComponent.append(activityName, date, buttonWrap);
