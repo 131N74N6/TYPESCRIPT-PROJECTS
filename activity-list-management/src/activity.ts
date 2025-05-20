@@ -1,4 +1,4 @@
-import StorageManager from "./storage";
+import StorageManager from "./storage.js";
 
 type Activity = {
     id: string;
@@ -8,12 +8,11 @@ type Activity = {
 
 const dataStorage = StorageManager<Activity>("activity list");
 
-const ActivityManagement = async (
+const ActivityManagement = (
     notification: HTMLElement, activityForm: HTMLFormElement, activityList: HTMLElement, 
     activityName: HTMLTextAreaElement, submitButton: HTMLButtonElement
 ) => ({
     controller: new AbortController() as AbortController,
-    getAllActivities: await dataStorage.loadFromStorage(),
     selectedActId: null as string | null,
     timeout: null as number | null,
     modal: document.createElement("div") as HTMLDivElement,
@@ -32,11 +31,12 @@ const ActivityManagement = async (
         });
     },
 
-    showAllActivities(): void {
+    async showAllActivities(): Promise<void> {
         const activityFragment = document.createDocumentFragment();
+        const getAllActivities = await dataStorage.loadFromStorage();
 
-        if (this.getAllActivities.length > 0) {
-            this.getAllActivities.forEach(act => activityFragment.appendChild(
+        if (getAllActivities.length > 0) {
+                getAllActivities.forEach(act => activityFragment.appendChild(
                 this.createActivityComponent(act)
             ));
         } else {
@@ -57,8 +57,9 @@ const ActivityManagement = async (
 
     async submitActivity(event: SubmitEvent): Promise<void> {
         event.preventDefault();
+        const getAllActivities = await dataStorage.loadFromStorage();
         const inputValue = activityName.value.trim();
-        const isExist = this.getAllActivities.some(
+        const isExist = getAllActivities.some(
             act => act.act_name.toLowerCase() === inputValue.toLowerCase()
         );
 
@@ -97,7 +98,7 @@ const ActivityManagement = async (
 
         const date = document.createElement("div") as HTMLDivElement;
         date.className = "created-at";
-        date.textContent = `created at: ${act.created_at}`;
+        date.textContent = `created at: ${act.created_at.toLocaleString()}`;
 
         const buttonWrap = document.createElement("div") as HTMLDivElement;
         buttonWrap.className = "button-wrap";
@@ -126,7 +127,8 @@ const ActivityManagement = async (
 
     async selectActivity(id: string) {
         this.selectedActId = id;
-        const activityData = this.getAllActivities.find(act => act.id === id);
+        const getAllActivities = await dataStorage.loadFromStorage();
+        const activityData = getAllActivities.find(act => act.id === id);
         if (!activityData) return;
 
         activityName.value = activityData.act_name;
@@ -142,7 +144,8 @@ const ActivityManagement = async (
     },
 
     async deleteAllActivities(): Promise<void> {
-        if (this.getAllActivities.length > 0) {
+        const getAllActivities = await dataStorage.loadFromStorage()
+        if (getAllActivities.length > 0) {
             await dataStorage.deleteAllData();
             activityList.replaceChildren();
             this.resetActivityForm();

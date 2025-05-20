@@ -1,10 +1,11 @@
-import db from "./config/firebase-config";
+import db from "./config/firebase-config.js";
 import { addDoc, collection, deleteDoc, doc, getDocs, Timestamp, updateDoc } from "firebase/firestore";
 import type { DocumentData } from "firebase/firestore";
 
 const StorageManager = <X extends { id: string }>(collectionName: string) => ({
     async loadFromStorage(): Promise<X[]> {
         const snapshot = await getDocs(collection(db, collectionName));
+        console.log(snapshot);
         return snapshot.docs.map(d => {
             const convertedData = this.convertTimestamps(d.data());
             return { id: d.id, ...convertedData } as X;
@@ -17,7 +18,8 @@ const StorageManager = <X extends { id: string }>(collectionName: string) => ({
     },
 
     async changeSelectedData(id: string, newData: Partial<Omit<X, 'id'>>): Promise<void> {
-        await updateDoc(doc(db, collectionName, id), newData);
+        const convertedData = this.convertTimestamps(newData); 
+        await updateDoc(doc(db, collectionName, id), convertedData);
     },
 
     async deleteSelectedData(id: string): Promise<void> {

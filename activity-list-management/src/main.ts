@@ -1,5 +1,5 @@
 import './style.css';
-import ActivityManagement from './activity';
+import ActivityManagement from './activity.js';
 
 const app = document.getElementById("app") as HTMLDivElement;
 
@@ -46,14 +46,14 @@ formWrap.append(activityForm);
 
 app.append(notification, activityList, formWrap);
 
-const activitManagement = await ActivityManagement(notification, activityForm, activityList, activityName, submitButton);
+const activitManagement = ActivityManagement(notification, activityForm, activityList, activityName, submitButton);
 
-async function init(): Promise<void> {
+function init(): void {
     activitManagement.showAllActivities();
     activitManagement.eventListeners();
 }
 
-async function teardown(): Promise<void> {
+function teardown(): void {
     activitManagement.controller.abort();
     activitManagement.teardownModal();
     activitManagement.resetActivityForm();

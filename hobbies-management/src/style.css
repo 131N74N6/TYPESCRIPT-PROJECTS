@@ -1,0 +1,147 @@
+body[dark-mode="inactive"]  {
+    margin: 0;
+    background-color: #FFFF;
+}
+
+main {
+    max-width: 1000px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    background-color: #F0F0F0;
+    padding: 1.2rem;
+    position: relative;
+}
+
+#form-controller {
+    background-color: #F0F0F0;
+    display: flex;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 35;
+    align-items: center;
+    gap: 1rem;
+}
+
+form#dataForm {
+    display: none;
+    padding: 1rem 0;
+    position: sticky;
+    top: 4.5%;
+    z-index: 35;
+}
+
+input#dark-mode {
+    display: none;
+}
+
+label[for="dark-mode"] {
+    background-color: #1d1d1d;
+    padding: 0.5px;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+
+form#searchForm {
+    display: none;
+    padding: 1rem 0;
+}
+
+.button-wrap {
+    display: flex;
+    gap: 0.5rem;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#data-list {
+    padding: 1rem 0;
+    text-transform: capitalize;
+    font-family: Arial;
+}
+
+#data-list .user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid #1A1A1A;
+}
+
+.empty-list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    font-family: Arial;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+
+#notification .content {
+    position: sticky;
+    top: 0;
+    background-color: #FFFFFF;
+    color: #1A1A1A;
+    box-shadow: 0 0 4px rgba(0,0,0,0.1);
+    padding: 0.3rem;
+    animation: slide-in 0.3s ease-in-out;
+}
+
+@keyframes slide-in {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0%); }
+}
+
+/*Dark Mode*/
+body[dark-mode="active"] {
+    margin: 0;
+    background-color: #000000;
+}
+
+body[dark-mode="active"] main {
+    background-color: #1d1d1d;
+}
+
+body[dark-mode="active"] form#dataForm {
+    color: #CDD3F4;
+}
+
+body[dark-mode="active"] form#searchForm {
+    color: #CDD3F4;
+}
+
+body[dark-mode="active"] #data-list {
+    color: #CDD3F4;
+}
+
+body[dark-mode="active"] #notification {
+    background-color: #000000;
+    color: #CDD3F4;
+    box-shadow: 0 0 6px #CDD3F4;
+}
+
+body[dark-mode="active"] #notification  {
+    background-color: #CDD3F4;
+    color: #1A1A1A;
+}
+
+body[dark-mode="active"] #data-list .user-list {
+    border-bottom: 2px solid #CDD3F4;
+}
+
+body[dark-mode="active"] .empty-list {
+    color: #CDD3F4;
+}
