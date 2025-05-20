@@ -22,7 +22,7 @@ class Modal {
         this.timeout = window.setTimeout(() => this.teardownModal(), 3000);
     }
 
-    private teardownModal(): void {
+    teardownModal(): void {
         if (this.timeout) clearTimeout(this.timeout);
         this.notificationComponent.remove();
     }

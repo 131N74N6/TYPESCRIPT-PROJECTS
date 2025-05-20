@@ -168,7 +168,7 @@ class UserManagement extends DataStorage<UserInfo> {
 
         const editBtn = document.createElement("button") as HTMLButtonElement;
         editBtn.className = "edit-btn";
-        editBtn.textContent = "Edit";
+        editBtn.textContent = "Select";
         editBtn.type = "button";
         editBtn.addEventListener("click", () => this.handleEdit(info.id), {
             signal: this.controller.signal
@@ -220,9 +220,16 @@ class UserManagement extends DataStorage<UserInfo> {
 
         if(!user) return;
 
-        Array.from(
-            document.querySelectorAll<HTMLInputElement>(`input[value="${user.hobbies}"]:checked`)
-        ).map(hobby => hobby.checked === true);
+        document.querySelectorAll<HTMLInputElement>('input[name="hobbies"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+
+        user.hobbies.forEach(hobby => {
+            const hobbyCheckbox = document.querySelector<HTMLInputElement>(
+                `input[value="${hobby}"][name="hobbies"]`
+            );
+            if (hobbyCheckbox) hobbyCheckbox.checked = true;
+        });
 
         this.selectedId = id;
         this.submitBtn.textContent = "Edit Data";
@@ -244,7 +251,7 @@ class UserManagement extends DataStorage<UserInfo> {
         const data = await this.loadFromStorage();
         
         if (data.length > 0) {
-            this.deleteAllData();
+            await this.deleteAllData();
             this.dataList.replaceChildren();
             this.resetForm();
         } else {
@@ -281,7 +288,9 @@ class UserManagement extends DataStorage<UserInfo> {
     }
 
     cleanUp(): void {
+        this.notification.teardownModal();
         this.controller.abort();
+        this.resetForm();
     }
 }
 
