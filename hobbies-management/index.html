@@ -9,16 +9,6 @@
     <body>
         <main>
             <section id="notification"></section>
-            
-            <section id="form-controller">
-                <button type="button" id="addDataMode">Add Data</button>
-                <button type="button" id="searchMode">Search</button>
-                <button type="button" id="delete-all">Delete All User</button>
-                <div class="theme-toggle">
-                    <label for="dark-mode"></label>
-                    <input type="checkbox" id="dark-mode" name="dark-toggle"/>
-                </div>
-            </section>
 
             <form id="dataForm" title="dataForm">
                 <section class="form-group">
@@ -57,6 +47,27 @@
 
             <section id="data-list"></section>
         </main>
+
+        <header id="form-controller">
+            <button type="button" id="addDataMode">Add Data</button>
+            <button type="button" id="searchMode">Search</button>
+            <button type="button" id="delete-all">Delete All User</button>
+            <div class="sorting-wrap">
+                <div class="ascend-sorting-toggle">
+                    <label for="ascend-sorting">Name A-Z</label>
+                    <input type="checkbox" id="ascend-sorting" name="ascend-sorting-toggle"/>
+                </div>
+                <div class="descend-sorting-toggle">
+                    <label for="descend-sorting">Name Z-A</label>
+                    <input type="checkbox" id="descend-sorting" name="ascend-sorting-toggle"/>
+                </div>
+            </div>
+            <div class="theme-toggle">
+                <label for="dark-mode"></label>
+                <input type="checkbox" id="dark-mode" name="dark-toggle"/>
+            </div>
+        </header>
+
         <script type="module" src="/src/main.ts"></script>
     </body>
 </html>

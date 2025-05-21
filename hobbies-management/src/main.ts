@@ -12,9 +12,12 @@ const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
 const toggleTheme = document.getElementById("dark-mode") as HTMLInputElement;
 
 const notification = document.getElementById("notification") as HTMLElement;
+const ascendSorting = document.getElementById("ascend-sorting") as HTMLInputElement;
+const descendSorting = document.getElementById("descend-sorting") as HTMLInputElement;
 
 const userManagement: UserManagement = new UserManagement(
-    dataForm, inputName, dataList, searchForm, searchInput, submitBtn, toggleTheme, notification
+    dataForm, inputName, dataList, searchForm, searchInput, submitBtn, toggleTheme, notification,
+    ascendSorting, descendSorting
 );
 
 const init = (): void => {

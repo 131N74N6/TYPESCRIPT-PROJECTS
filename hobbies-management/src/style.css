@@ -1,26 +1,59 @@
 body[dark-mode="inactive"]  {
     margin: 0;
+    padding: 1rem;
+    gap: 1rem;
     background-color: #FFFF;
+    display: flex;
+    min-height: 91dvh;
 }
 
 main {
-    max-width: 1000px;
-    margin: 0 auto;
-    min-height: 100dvh;
-    background-color: #F0F0F0;
+    flex-grow: 1;
+    overflow: auto;
+    padding: 20px;
+    max-width: calc(100% - 250px);
+    margin: 0;
+    height: 91dvh;
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    box-shadow: 0 0px 6px rgba(0,0,0,0.323);
     padding: 1.2rem;
     position: relative;
 }
 
 #form-controller {
-    background-color: #F0F0F0;
-    display: flex;
-    flex-wrap: wrap;
+    background-color: #FFFFFF;
+    box-shadow: 0 0px 6px rgba(0,0,0,0.323);
+    width: 230px;
+    flex-shrink: 0;
+    padding: 20px;
+    border-radius: 10px;
     position: sticky;
     top: 0;
-    z-index: 35;
-    align-items: center;
+    height: 91dvh;
+    display: flex;
+    flex-direction: column;
     gap: 1rem;
+}
+
+#form-controller > .sorting-wrap {
+    display: flex;
+    padding: 0.5rem;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+#form-controller > .sorting-wrap input {
+    display: none;
+}
+
+#form-controller > .sorting-wrap label {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 form#dataForm {
@@ -109,10 +142,31 @@ button:hover {
 body[dark-mode="active"] {
     margin: 0;
     background-color: #000000;
+    margin: 0;
+    padding: 1rem;
+    gap: 1rem;
+    display: flex;
+    min-height: 91dvh;
+}
+
+body[dark-mode="active"] #form-controller {
+    background-color: #1d1d1d;
+    box-shadow: 0 0 6px #CDD3F4;
+    width: 230px;
+    flex-shrink: 0;
+    padding: 20px;
+    border-radius: 10px;
+    position: sticky;
+    top: 0;
+    height: 91dvh;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 body[dark-mode="active"] main {
     background-color: #1d1d1d;
+    box-shadow: 0 0 6px #CDD3F4;
 }
 
 body[dark-mode="active"] form#dataForm {

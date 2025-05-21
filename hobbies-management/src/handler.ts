@@ -24,6 +24,8 @@ class UserManagement extends DataStorage<UserInfo> {
     private searchInput: HTMLInputElement;
     private searchForm: HTMLFormElement;
     private toggleTheme: HTMLInputElement;
+    private ascendSorting: HTMLInputElement;
+    private descendSorting: HTMLInputElement;
     private notification: Modal;
     private controller: AbortController = new AbortController();
     private darkTheme = new ThemeChanger("dark-mode", "dark-mode");
@@ -37,7 +39,8 @@ class UserManagement extends DataStorage<UserInfo> {
     constructor(
         dataForm: HTMLFormElement, inputName: HTMLInputElement, dataList: HTMLElement, 
         searchForm: HTMLFormElement, searchInput: HTMLInputElement, submitBtn: HTMLButtonElement,
-        toggleTheme: HTMLInputElement, notification: HTMLElement
+        toggleTheme: HTMLInputElement, notification: HTMLElement, ascendSorting: HTMLInputElement, 
+        descendSorting: HTMLInputElement
     ) {
         super("user and hobbies");
         this.dataForm = dataForm;
@@ -47,6 +50,8 @@ class UserManagement extends DataStorage<UserInfo> {
         this.searchInput = searchInput;
         this.submitBtn = submitBtn;
         this.toggleTheme = toggleTheme;
+        this.ascendSorting = ascendSorting;
+        this.descendSorting = descendSorting;
         this.setupGlobalListeners();
         this.notification = new Modal(notification);
         toggleTheme.checked = this.darkTheme.isActive;
@@ -74,6 +79,16 @@ class UserManagement extends DataStorage<UserInfo> {
         this.toggleTheme.addEventListener("change", (event) => this.handleToggle(event), { 
             signal: this.controller.signal 
         });
+
+        this.ascendSorting.addEventListener("change", async () => {
+            this.descendSorting.checked = false;
+            await this.showAllData();
+        }, { signal: this.controller.signal });
+
+        this.descendSorting.addEventListener("change", async () => {
+            this.ascendSorting.checked = false;
+            await this.showAllData();
+        }, { signal: this.controller.signal });
     }
 
     private async handleForm(event: SubmitEvent): Promise<void> {
@@ -114,13 +129,13 @@ class UserManagement extends DataStorage<UserInfo> {
             }
         }
     
-        this.showAllData();
+        await this.showAllData();
         this.resetForm();
     }
 
-    private resetForm(): void {
+    private async resetForm(): Promise<void> {
         this.dataForm.reset();
-        this.showAllData();
+        await this.showAllData();
         this.dataForm.style.display = "none";
         this.selectedId = null;
     }
@@ -130,7 +145,19 @@ class UserManagement extends DataStorage<UserInfo> {
         const getAllData = await this.loadFromStorage();
 
         if (getAllData.length > 1) {
-            getAllData.forEach(dt => {
+            let sortedData = getAllData;
+            const isAscending = this.ascendSorting.checked;
+            const isDescending = this.descendSorting.checked;
+
+            if (isAscending) {
+                sortedData = [...getAllData].sort((a: UserInfo, b: UserInfo) => a.name.localeCompare(b.name));
+            }
+
+            if (isDescending) {
+                sortedData = [...getAllData].sort((a: UserInfo, b: UserInfo) => b.name.localeCompare(a.name));
+            }
+
+            sortedData.forEach(dt => {
                 const element = this.createUserElement(dt);
                 fragment.appendChild(element);
             });
@@ -244,7 +271,7 @@ class UserManagement extends DataStorage<UserInfo> {
 
         if (this.selectedId === id) this.resetForm();
 
-        this.showAllData();
+        await this.showAllData();
     }
 
     private async deleteAllUser(): Promise<void> {
@@ -257,7 +284,7 @@ class UserManagement extends DataStorage<UserInfo> {
         } else {
             this.notification.createModal("Tambahkan data terlebih dahulu!")
         }
-        this.showAllData();
+        await this.showAllData();
     }
 
     handleToggle(event: Event): void {
@@ -281,9 +308,9 @@ class UserManagement extends DataStorage<UserInfo> {
         this.dataForm.style.display = "none";
     }
 
-    hideSearchFilter(): void {
+    async hideSearchFilter(): Promise<void> {
         this.searchForm.style.display = "none";
-        this.showAllData();
+        await this.showAllData();
         this.searchForm.reset();
     }
 

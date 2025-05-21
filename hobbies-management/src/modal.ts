@@ -23,8 +23,18 @@ class Modal {
     }
 
     teardownModal(): void {
-        if (this.timeout) clearTimeout(this.timeout);
-        this.notificationComponent.remove();
+        if (this.notification.parentElement) {
+            this.notification.parentElement.removeChild(this.notification);
+        }
+        
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+            this.notificationComponent.remove();
+        }
+
+        this.notification.innerHTML = '';
+        this.notificationMessage.textContent = '';
     }
 }
 
