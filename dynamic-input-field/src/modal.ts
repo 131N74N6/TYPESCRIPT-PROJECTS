@@ -1,22 +1,20 @@
 class Modal {
-    private modalMessage: HTMLElement = document.getElementById("modal-msg") as HTMLElement;
-    private message: string;
+    private modalMessage: HTMLElement;
     private modal: HTMLDivElement;
     private timeout: number | null = null;
 
-    constructor(message: string) {
-        this.message = message;
+    constructor(modalMessage: HTMLElement) {
+        this.modalMessage = modalMessage;
         this.modal = document.createElement("div");
         this.modal.className = "modal";
-        this.createModalComponent();
-        this.showModal();
     }
 
-    public createModalComponent(): void {
+    public createModalComponent(message: string): void {
         const text = document.createElement("p");
-        text.textContent = this.message;
+        text.textContent = message;
         this.modal.appendChild(text);
         this.modalMessage.appendChild(this.modal);
+        this.showModal();
     }
 
     public showModal(): void {
@@ -24,8 +22,14 @@ class Modal {
     }
 
     private teardownModal(): void {
-        if (this.timeout) clearTimeout(this.timeout);
-        this.modal.remove()
+        if (this.modalMessage.parentElement) {
+            this.modalMessage.parentElement.removeChild(this.modalMessage);
+        }
+
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
     }
 }
 

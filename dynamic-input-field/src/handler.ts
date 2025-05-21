@@ -1,12 +1,13 @@
 import DataManager from "./storage";
+import Modal from "./modal";
 
-interface DataItem {
+interface Item {
     id: string;
     name: string;
-    details: string[];
+    detail: string[];
 }
 
-class DisplayManager extends DataManager<DataItem> {
+class DisplayManager extends DataManager<Item> {
     private controller: AbortController = new AbortController();
     private inputSection: HTMLFormElement;
     private nameInput: HTMLInputElement;
@@ -14,11 +15,13 @@ class DisplayManager extends DataManager<DataItem> {
     private searchSection: HTMLFormElement;
     private searchData: HTMLInputElement;
     private itemsList: HTMLElement;
-    private selectedId: null | string;
+    private modalMessage: Modal;
+    private selectedId: null | string = null;
 
     constructor(
         inputSection: HTMLFormElement, nameInput: HTMLInputElement, dynamicFields: HTMLDivElement, 
-        searchSection: HTMLFormElement, searchData: HTMLInputElement, itemsList: HTMLElement
+        searchSection: HTMLFormElement, searchData: HTMLInputElement, itemsList: HTMLElement, 
+        modalMessage: HTMLElement
     ) {
         super("dynamic input field");
         this.inputSection = inputSection;
@@ -27,37 +30,19 @@ class DisplayManager extends DataManager<DataItem> {
         this.searchSection = searchSection;
         this.searchData = searchData;
         this.itemsList = itemsList
+        this.modalMessage = new Modal(modalMessage);
         this.setEventListeners();
     }
 
     private setEventListeners(): void {
-        document.addEventListener("click", (event) => {
+        document.addEventListener("click", async (event) => {
             const target = event.target as HTMLElement;
-            const getAllData = Array.from(document.querySelectorAll(".item-card"));
-
-            const selectButton = target.closest(".edit-btn");
-            const deleteButton = target.closest(".delete-btn");
-
-            const getSelectedData = selectButton?.closest(".item-card");
-            const deleteOneData = deleteButton?.closest(".item-card");
-
-            const getSelectedIndex = getAllData.indexOf(getSelectedData as Element);
-            const getIndexToRemove = getAllData.indexOf(deleteOneData as Element);
-
-            if (getSelectedIndex > -1) {
-                const dataDetail = this.getAllItems()[getSelectedIndex];
-                this.selectedData(dataDetail.id);
-            }
-            if (getIndexToRemove > -1) {
-                const dataDetail = this.getAllItems()[getIndexToRemove];
-                this.deleteData(dataDetail.id);
-            }
             if (target.closest("#addFieldBtn")) this.addNewField();
             if (target.closest("#openForm")) this.openFormData();
             if (target.closest("#closeForm")) this.closeFormData();
             if (target.closest("#openSearch")) this.openSearchData();
-            if (target.closest("#closeSearch")) this.closeSearchData();
-            if (target.closest("#delete-all")) this.deleteAllData();
+            if (target.closest("#closeSearch")) await this.closeSearchData();
+            if (target.closest("#delete-all")) await this.deleteAllItem();
         }, { signal: this.controller.signal });
 
         this.inputSection.addEventListener("submit", (event) => this.submitData(event), { 
@@ -82,35 +67,35 @@ class DisplayManager extends DataManager<DataItem> {
         this.dynamicFields.appendChild(this.createInputField());
     }
 
-    private submitData(event: SubmitEvent): void {
+    private async submitData(event: SubmitEvent): Promise<void> {
         event.preventDefault();
-        const smallText = nameInput.value.toLowerCase();
-        const isExist = this.getAllItems().some(data => data.name.toLowerCase().includes(smallText));
-        const isInEditMode = !!this.getEditingId();
+        const smallText = this.nameInput.value.toLowerCase();
+        const data = await this.loadFromStorage();
+        const isExist = data.some(data => data.name.toLowerCase().includes(smallText));
 
-        const newData: ForInput = {
-            name: nameInput.value,
-            details: Array.from(document.querySelectorAll<HTMLInputElement>('#dynamicFields input'))
+        const newData: Omit<Item, 'id'> = {
+            name: this.nameInput.value,
+            detail: Array.from(document.querySelectorAll<HTMLInputElement>('#dynamicFields input'))
                 .map((input: HTMLInputElement) => input.value.trim())
                 .filter(v => v)
         }
 
-        if (nameInput.value.trim().length === 0) {
-            new Modal("input tidak boleh kosong!");
+        if (this.nameInput.value.trim().length === 0) {
+            this.modalMessage.createModalComponent("input tidak boleh kosong!");
             return;
         }
         
-        if (isInEditMode) {
-            this.updateItem(this.getEditingId() as number, newData);
+        if (this.selectedId !== null) {
+            await this.changeSelectedData(this.selectedId, newData);
         } else {
             if (!isExist) {
-                this.addItem(newData);
+                await this.addToStorage(newData);
             } else {
-                new Modal("Data sudah ada");
+                this.modalMessage.createModalComponent("Data sudah ada");
             }
         }
 
-        this.showAllData();
+        await this.showAllData();
         this.resetForm();
     }
 
@@ -120,32 +105,42 @@ class DisplayManager extends DataManager<DataItem> {
         this.inputSection.reset();
     }
 
-    public showAllData(): void {
+    public async showAllData(): Promise<void> {
         const cardFragment = document.createDocumentFragment();
-        const data = this.getAllItems();
 
-        if (data.length > 0) {
-            data.forEach(dt => {
-                const getCardItem = this.createCardItem(dt);
-                cardFragment.appendChild(getCardItem);
-            });
-        } else {
-            const empty = document.createElement("div") as HTMLDivElement;
-            empty.className = "empty-list";
+        try {
+            await this.loadFromStorage((data, error) => {
+                if (error) {
+                    this.modalMessage.createModalComponent(`Error: ${error.message}`);
+                    return;
+                }
+
+                if (data.length > 0) {
+                    data.forEach(dt => {
+                        const getCardItem = this.createCardItem(dt);
+                        cardFragment.appendChild(getCardItem);
+                    });
+                } else {
+                    const empty = document.createElement("div") as HTMLDivElement;
+                    empty.className = "empty-list";
+                    
+                    const message = document.createElement("div");
+                    message.className = "message";
+                    message.textContent = "Daftar data kosong";
             
-            const message = document.createElement("div");
-            message.className = "message";
-            message.textContent = "Daftar data kosong";
-    
-            empty.appendChild(message);
-            cardFragment.appendChild(empty);
+                    empty.appendChild(message);
+                    cardFragment.appendChild(empty);
+                }
+            });
+        } catch (error) {
+            this.modalMessage.createModalComponent(error.message);
         }
 
         this.itemsList.innerHTML = '';
         this.itemsList.appendChild(cardFragment);
     }
 
-    private createCardItem(data: DataItem): HTMLDivElement {
+    private createCardItem(data: Item): HTMLDivElement {
         const card = document.createElement('div');
         card.className = 'item-card';
 
@@ -153,9 +148,9 @@ class DisplayManager extends DataManager<DataItem> {
         h3.textContent = data.name;
 
         const detailsContainer = document.createElement('div');
-        data.details.forEach(detail => {
+        data.detail.forEach(dtl => {
             const p = document.createElement('p');
-            p.textContent = `• ${detail}`;
+            p.textContent = `• ${dtl}`;
             detailsContainer.appendChild(p);
         });
 
@@ -165,12 +160,18 @@ class DisplayManager extends DataManager<DataItem> {
         const editBtn = document.createElement("button") as HTMLButtonElement;
         editBtn.type = "button";
         editBtn.className = "edit-btn";
-        editBtn.textContent = "Edit";
+        editBtn.textContent = "Select";
+        editBtn.addEventListener("click", async () => await this.selectedData(data.id), {
+            signal: this.controller.signal
+        });
         
         const deleteBtn = document.createElement("button") as HTMLButtonElement;
         deleteBtn.type = "button";
         deleteBtn.className = "delete-btn";
-        deleteBtn.textContent = "Hapus";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.addEventListener("click", async () => await this.deleteItem(data.id), {
+            signal: this.controller.signal
+        });
 
         buttonWrap.append(editBtn, deleteBtn);
         card.append(h3, detailsContainer, buttonWrap);
@@ -178,37 +179,38 @@ class DisplayManager extends DataManager<DataItem> {
         return card;
     }
 
-    private selectedData(id: string): void {
+    private async selectedData(id: string): Promise<void> {
         this.selectedId = id;
         this.dynamicFields.innerHTML = '';
         this.inputSection.style.display = "flex";
+        const getAllData = await this.loadFromStorage();
 
-        const data = this.getAllItems().find(dt => dt.id === id); 
+        const data = getAllData.find(dt => dt.id === id); 
 
         if (!data) return;
 
         this.nameInput.value = data.name;
-        data.details.forEach(detail => {
-            this.dynamicFields.appendChild(this.createInputField(detail));
+        data.detail.forEach(dtl => {
+            this.dynamicFields.appendChild(this.createInputField(dtl));
         });
     }
 
-    private filterData = (event: SubmitEvent): void => {
+    private filterData = async (event: SubmitEvent): Promise<void> => {
         event.preventDefault();
     
-        if (searchData.value.trim().length === 0) {
-            new Modal("input tidak boleh kosong!");
+        if (this.searchData.value.trim().length === 0) {
+            this.modalMessage.createModalComponent("input tidak boleh kosong!");
             return;
         }
     
-        const keyword = searchData.value.toLowerCase();
-        const data = this.getAllItems();
-        const result = data.filter(dt => dt.name.toLowerCase().includes(keyword));
+        const keyword = this.searchData.value.toLowerCase();
+        const getAllData = await this.loadFromStorage();
+        const result = getAllData.filter(dt => dt.name.toLowerCase().includes(keyword));
     
         this.searchedData(result);
     }
 
-    private searchedData(searched: DataItem[]): void {
+    private searchedData(searched: Item[]): void {
         const filteredCard = document.createDocumentFragment();
         
         searched.forEach(search => {
@@ -220,26 +222,24 @@ class DisplayManager extends DataManager<DataItem> {
         this.itemsList.appendChild(filteredCard);
     }
 
-    private deleteData(id: number): void {
-        this.deleteItem(id); 
-
-        if (this.getEditingId() === id) this.resetForm();
-        
-        this.showAllData();
-        new Modal("Data berhasil dihapus");
+    private async deleteItem(id: string): Promise<void> {
+        await this.deleteSelectedData(id); 
+        if (this.selectedId === id) this.resetForm();
+        await this.showAllData();
+        this.modalMessage.createModalComponent("Data berhasil dihapus");
     }
 
-    protected deleteAllData(): void {
-        const data = this.getAllItems();
+    private async deleteAllItem(): Promise<void> {
+        const data = await this.loadFromStorage()
         if (data.length > 0) {
-            this.deleteAllItems();
-            itemsList.replaceChildren();
+            await this.deleteAllData();
+            this.itemsList.replaceChildren();
             this.resetForm();
-            new Modal("Data berhasil dihapus");
+            this.modalMessage.createModalComponent("Data berhasil dihapus");
         } else {
-            new Modal("Tambahkan minimal 1 data")
+            this.modalMessage.createModalComponent("Tambahkan minimal 1 data")
         }
-        this.showAllData();
+        await this.showAllData();
     }
 
     public openFormData(): void {
@@ -260,18 +260,19 @@ class DisplayManager extends DataManager<DataItem> {
         this.selectedId = null;
     }
 
-    public closeSearchData(): void {
+    public async closeSearchData(): Promise<void> {
         this.searchSection.style.display = "none";
         this.searchSection.reset();
         this.inputSection.reset();
-        this.showAllData();
+        await this.showAllData();
         this.selectedId = null;
     }
 
-    public cleanUp(): void {
+    public async cleanUp(): Promise<void> {
         this.resetForm();
-        this.closeSearchData();
+        await this.closeSearchData();
         this.closeFormData();
+        this.unsubscribe = null;
         this.controller.abort();
     }
 }

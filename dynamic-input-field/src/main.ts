@@ -9,15 +9,18 @@ const searchSection = document.getElementById("searchSection") as HTMLFormElemen
 const searchData = document.getElementById("searchData") as HTMLInputElement;
 
 const itemsList = document.getElementById("itemsList") as HTMLElement;
+const modalMessage = document.getElementById("modal-msg") as HTMLElement;
 
-const displayer = new DisplayManager(inputSection, nameInput, dynamicFields, searchSection, searchData, itemsList);
+const displayer = new DisplayManager(
+    inputSection, nameInput, dynamicFields, searchSection, searchData, itemsList, modalMessage
+);
 
-function init(): void {
-    displayer.showAllData();
+async function init(): Promise<void> {
+    await displayer.showAllData();
 }
 
-function teardown(): void {
-    displayer.cleanUp();
+async function teardown(): Promise<void> {
+    await displayer.cleanUp();
 }
 
 document.addEventListener("DOMContentLoaded", init);
