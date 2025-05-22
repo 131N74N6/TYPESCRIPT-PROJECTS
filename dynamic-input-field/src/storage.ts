@@ -10,22 +10,36 @@ class DataManager <I extends { id: string }>{
         this.collection_name = collection_name;
     }
 
-    protected async loadFromStorage(
-        callback: (data: I[], error: Error | undefined) => void): Promise<I[] | Unsubscribe> 
-    {
-        try {
-            if (callback) {
-                this.unsubscribe = onSnapshot(collection(db, this.collection_name), (snapshot) => {
-                    const data = snapshot.docs.map(dt => ({ id: dt.id, ...dt.data() } as I));
+    protected loadFromStorage(): Promise<I[]>;
+    protected loadFromStorage(callback: (data: I[], error?: Error) => void): Unsubscribe;
+    protected loadFromStorage(
+        callback?: (data: I[], error?: Error) => void
+    ): Promise<I[]> | Unsubscribe {
+        const colRef = collection(db, this.collection_name);
+        
+        if (callback) {
+            // Mode realtime listener
+            this.unsubscribe = onSnapshot(
+                colRef,
+                (snapshot) => {
+                    const data = snapshot.docs.map(dt => ({ 
+                        id: dt.id, 
+                        ...dt.data() 
+                    }) as I);
                     callback(data, undefined);
-                }, (error) => callback([], error));
-                return this.unsubscribe;
-            }
-            const snapshots = await getDocs(collection(db, this.collection_name));
-            return snapshots.docs.map(dt => ({ id: dt.id, ...dt.data() } as I));
-        } catch (error) {
-            throw error;
+                },
+                (error) => callback([], error)
+            );
+            return this.unsubscribe;
         }
+        
+        // Mode single fetch
+        return getDocs(colRef).then(snapshot => 
+            snapshot.docs.map(dt => ({ 
+                id: dt.id, 
+                ...dt.data() 
+            }) as I)
+        );
     }
 
     protected async addToStorage(new_data: Omit<I, 'id'>): Promise<string> {

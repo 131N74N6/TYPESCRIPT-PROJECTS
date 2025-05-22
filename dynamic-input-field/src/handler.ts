@@ -17,11 +17,12 @@ class DisplayManager extends DataManager<Item> {
     private itemsList: HTMLElement;
     private modalMessage: Modal;
     private selectedId: null | string = null;
+    private errorNotification: HTMLElement;
 
     constructor(
         inputSection: HTMLFormElement, nameInput: HTMLInputElement, dynamicFields: HTMLDivElement, 
         searchSection: HTMLFormElement, searchData: HTMLInputElement, itemsList: HTMLElement, 
-        modalMessage: HTMLElement
+        modalMessage: HTMLElement, errorNotification: HTMLElement
     ) {
         super("dynamic input field");
         this.inputSection = inputSection;
@@ -31,6 +32,7 @@ class DisplayManager extends DataManager<Item> {
         this.searchData = searchData;
         this.itemsList = itemsList
         this.modalMessage = new Modal(modalMessage);
+        this.errorNotification = errorNotification;
         this.setEventListeners();
     }
 
@@ -41,7 +43,7 @@ class DisplayManager extends DataManager<Item> {
             if (target.closest("#openForm")) this.openFormData();
             if (target.closest("#closeForm")) this.closeFormData();
             if (target.closest("#openSearch")) this.openSearchData();
-            if (target.closest("#closeSearch")) await this.closeSearchData();
+            if (target.closest("#closeSearch")) this.closeSearchData();
             if (target.closest("#delete-all")) await this.deleteAllItem();
         }, { signal: this.controller.signal });
 
@@ -70,7 +72,7 @@ class DisplayManager extends DataManager<Item> {
     private async submitData(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         const smallText = this.nameInput.value.toLowerCase();
-        const data = await this.loadFromStorage();
+        const data = await this.loadFromStorage() as Item[];
         const isExist = data.some(data => data.name.toLowerCase().includes(smallText));
 
         const newData: Omit<Item, 'id'> = {
@@ -95,7 +97,6 @@ class DisplayManager extends DataManager<Item> {
             }
         }
 
-        await this.showAllData();
         this.resetForm();
     }
 
@@ -108,33 +109,32 @@ class DisplayManager extends DataManager<Item> {
     public async showAllData(): Promise<void> {
         const cardFragment = document.createDocumentFragment();
 
-        try {
-            await this.loadFromStorage((data, error) => {
-                if (error) {
-                    this.modalMessage.createModalComponent(`Error: ${error.message}`);
-                    return;
-                }
+        await this.loadFromStorage((data, error) => {
+            if (error) {
+                const message = document.createElement("div");
+                message.className = "message";
+                message.textContent = `Error: ${error.message}`;
+                this.errorNotification.appendChild(message);
+                return;
+            }
 
-                if (data.length > 0) {
-                    data.forEach(dt => {
-                        const getCardItem = this.createCardItem(dt);
-                        cardFragment.appendChild(getCardItem);
-                    });
-                } else {
-                    const empty = document.createElement("div") as HTMLDivElement;
-                    empty.className = "empty-list";
-                    
-                    const message = document.createElement("div");
-                    message.className = "message";
-                    message.textContent = "Daftar data kosong";
-            
-                    empty.appendChild(message);
-                    cardFragment.appendChild(empty);
-                }
-            });
-        } catch (error) {
-            this.modalMessage.createModalComponent(error.message);
-        }
+            if (data.length > 0) {
+                data.forEach(dt => {
+                    const getCardItem = this.createCardItem(dt);
+                    cardFragment.appendChild(getCardItem);
+                });
+            } else {
+                const empty = document.createElement("div") as HTMLDivElement;
+                empty.className = "empty-list";
+                
+                const message = document.createElement("div");
+                message.className = "message";
+                message.textContent = "Daftar data kosong";
+        
+                empty.appendChild(message);
+                cardFragment.appendChild(empty);
+            }
+        });
 
         this.itemsList.innerHTML = '';
         this.itemsList.appendChild(cardFragment);
@@ -183,7 +183,9 @@ class DisplayManager extends DataManager<Item> {
         this.selectedId = id;
         this.dynamicFields.innerHTML = '';
         this.inputSection.style.display = "flex";
-        const getAllData = await this.loadFromStorage();
+        const getAllData = await this.loadFromStorage() as Item[];;
+
+        if (!getAllData) return;
 
         const data = getAllData.find(dt => dt.id === id); 
 
@@ -204,7 +206,7 @@ class DisplayManager extends DataManager<Item> {
         }
     
         const keyword = this.searchData.value.toLowerCase();
-        const getAllData = await this.loadFromStorage();
+        const getAllData = await this.loadFromStorage() as Item[];;
         const result = getAllData.filter(dt => dt.name.toLowerCase().includes(keyword));
     
         this.searchedData(result);
@@ -225,7 +227,6 @@ class DisplayManager extends DataManager<Item> {
     private async deleteItem(id: string): Promise<void> {
         await this.deleteSelectedData(id); 
         if (this.selectedId === id) this.resetForm();
-        await this.showAllData();
         this.modalMessage.createModalComponent("Data berhasil dihapus");
     }
 
@@ -239,7 +240,6 @@ class DisplayManager extends DataManager<Item> {
         } else {
             this.modalMessage.createModalComponent("Tambahkan minimal 1 data")
         }
-        await this.showAllData();
     }
 
     public openFormData(): void {
@@ -260,17 +260,16 @@ class DisplayManager extends DataManager<Item> {
         this.selectedId = null;
     }
 
-    public async closeSearchData(): Promise<void> {
+    public closeSearchData(): void {
         this.searchSection.style.display = "none";
         this.searchSection.reset();
         this.inputSection.reset();
-        await this.showAllData();
         this.selectedId = null;
     }
 
-    public async cleanUp(): Promise<void> {
+    public cleanUp(): void {
         this.resetForm();
-        await this.closeSearchData();
+        this.closeSearchData();
         this.closeFormData();
         this.unsubscribe = null;
         this.controller.abort();

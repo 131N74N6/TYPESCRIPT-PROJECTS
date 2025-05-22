@@ -10,17 +10,19 @@ const searchData = document.getElementById("searchData") as HTMLInputElement;
 
 const itemsList = document.getElementById("itemsList") as HTMLElement;
 const modalMessage = document.getElementById("modal-msg") as HTMLElement;
+const errorNotification = document.getElementById("error-notification") as HTMLElement
 
 const displayer = new DisplayManager(
-    inputSection, nameInput, dynamicFields, searchSection, searchData, itemsList, modalMessage
+    inputSection, nameInput, dynamicFields, searchSection, searchData, itemsList, modalMessage, 
+    errorNotification
 );
 
 async function init(): Promise<void> {
     await displayer.showAllData();
 }
 
-async function teardown(): Promise<void> {
-    await displayer.cleanUp();
+function teardown(): void {
+    displayer.cleanUp();
 }
 
 document.addEventListener("DOMContentLoaded", init);

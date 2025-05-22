@@ -114,7 +114,3 @@ button:hover {
     font-size: 2rem;
     font-weight: 650;
 }
-
-#error-notification {
-    display: none;
-}
