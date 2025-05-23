@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css"/> 
+    <title>Home</title>
+</head>
+<body>
+    <main class="container">
+        <section id="modal-msg"></section>
+
+        <header class="header">
+            <a href="handler.html">Check Data</a>
+            <button id="openForm" type="button">Add Data</button>
+        </header>
+
+        <form id="inputSection">
+            <div class="input-group">
+                <input type="text" id="nameInput" placeholder="Masukkan nama">
+                <button type="button" id="addFieldBtn">+ Tambah Field</button>
+            </div>
+            <div id="dynamicFields"></div>
+            <div id="formController">
+                <button type="submit">Simpan Data</button>
+            </div>
+        </form>
+
+    </main>
+    <script type="module" src="main.ts"></script> 
+</body>
+</html>

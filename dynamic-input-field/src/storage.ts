@@ -11,35 +11,28 @@ class DataManager <I extends { id: string }>{
     }
 
     protected loadFromStorage(): Promise<I[]>;
+
     protected loadFromStorage(callback: (data: I[], error?: Error) => void): Unsubscribe;
-    protected loadFromStorage(
-        callback?: (data: I[], error?: Error) => void
-    ): Promise<I[]> | Unsubscribe {
-        const colRef = collection(db, this.collection_name);
-        
-        if (callback) {
-            // Mode realtime listener
-            this.unsubscribe = onSnapshot(
-                colRef,
-                (snapshot) => {
-                    const data = snapshot.docs.map(dt => ({ 
-                        id: dt.id, 
-                        ...dt.data() 
-                    }) as I);
-                    callback(data, undefined);
-                },
-                (error) => callback([], error)
-            );
-            return this.unsubscribe;
+
+    protected loadFromStorage(callback?: (data: I[], error?: Error) => void): Promise<I[]> | Unsubscribe {
+        try {
+            if (callback) {
+                // Mode realtime listener
+                this.unsubscribe = onSnapshot(collection(db, this.collection_name), (snapshot) => {
+                        const data = snapshot.docs.map(dt => ({ id: dt.id, ...dt.data() }) as I);
+                        callback(data, undefined);
+                    }, (error) => callback([], error));
+                return this.unsubscribe;
+            }
+            
+            // Mode single fetch
+            return getDocs(collection(db, this.collection_name)).then(snapshot => 
+                snapshot.docs.map(dt => ({ id: dt.id, ...dt.data() }) as I)
+            );  
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Unknown error occurred";
+            throw new Error(`Failed to get data: ${message}`);
         }
-        
-        // Mode single fetch
-        return getDocs(colRef).then(snapshot => 
-            snapshot.docs.map(dt => ({ 
-                id: dt.id, 
-                ...dt.data() 
-            }) as I)
-        );
     }
 
     protected async addToStorage(new_data: Omit<I, 'id'>): Promise<string> {

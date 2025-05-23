@@ -1,57 +1,39 @@
 import DataManager from "./storage";
-import Modal from "./modal";
+import Modal from "./components/modal";
+import ErrorMessage from "./components/error-message";
+import type Item from "./model/item";
 
-interface Item {
-    id: string;
-    name: string;
-    detail: string[];
-}
+const searchSection = document.getElementById("searchSection") as HTMLFormElement;
+const searchData = document.getElementById("searchData") as HTMLInputElement;
+
+const itemsList = document.getElementById("itemsList") as HTMLElement;
+const modalMessage = document.getElementById("modal-msg") as HTMLElement;
+const errorNotification = document.getElementById("error-notification") as HTMLElement;
 
 class DisplayManager extends DataManager<Item> {
     private controller: AbortController = new AbortController();
-    private inputSection: HTMLFormElement;
-    private nameInput: HTMLInputElement;
-    private dynamicFields: HTMLDivElement;
-    private searchSection: HTMLFormElement;
-    private searchData: HTMLInputElement;
     private itemsList: HTMLElement;
     private modalMessage: Modal;
     private selectedId: null | string = null;
-    private errorNotification: HTMLElement;
+    private errorNotification: ErrorMessage;
 
-    constructor(
-        inputSection: HTMLFormElement, nameInput: HTMLInputElement, dynamicFields: HTMLDivElement, 
-        searchSection: HTMLFormElement, searchData: HTMLInputElement, itemsList: HTMLElement, 
-        modalMessage: HTMLElement, errorNotification: HTMLElement
-    ) {
+    constructor() {
         super("dynamic input field");
-        this.inputSection = inputSection;
-        this.nameInput = nameInput;
-        this.dynamicFields = dynamicFields;
-        this.searchSection = searchSection;
-        this.searchData = searchData;
         this.itemsList = itemsList
         this.modalMessage = new Modal(modalMessage);
-        this.errorNotification = errorNotification;
+        this.errorNotification = new ErrorMessage(errorNotification);
         this.setEventListeners();
+        this.setupRealtimeListener();
     }
 
     private setEventListeners(): void {
         document.addEventListener("click", async (event) => {
             const target = event.target as HTMLElement;
-            if (target.closest("#addFieldBtn")) this.addNewField();
-            if (target.closest("#openForm")) this.openFormData();
-            if (target.closest("#closeForm")) this.closeFormData();
-            if (target.closest("#openSearch")) this.openSearchData();
-            if (target.closest("#closeSearch")) this.closeSearchData();
+            
             if (target.closest("#delete-all")) await this.deleteAllItem();
         }, { signal: this.controller.signal });
 
-        this.inputSection.addEventListener("submit", (event) => this.submitData(event), { 
-            signal: this.controller.signal
-        });
-
-        this.searchSection.addEventListener("submit", (event) => this.filterData(event), { 
+        searchSection.addEventListener("submit", (event) => this.filterData(event), { 
             signal: this.controller.signal
         });
     }
@@ -65,14 +47,10 @@ class DisplayManager extends DataManager<Item> {
         return input;
     }
 
-    private addNewField(): void {
-        this.dynamicFields.appendChild(this.createInputField());
-    }
-
     private async submitData(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         const smallText = this.nameInput.value.toLowerCase();
-        const data = await this.loadFromStorage() as Item[];
+        const data = await this.loadFromStorage();
         const isExist = data.some(data => data.name.toLowerCase().includes(smallText));
 
         const newData: Omit<Item, 'id'> = {
@@ -84,16 +62,23 @@ class DisplayManager extends DataManager<Item> {
 
         if (this.nameInput.value.trim().length === 0) {
             this.modalMessage.createModalComponent("input tidak boleh kosong!");
+            this.modalMessage.showModal();
             return;
         }
         
         if (this.selectedId !== null) {
-            await this.changeSelectedData(this.selectedId, newData);
+            try {
+                await this.changeSelectedData(this.selectedId, newData);
+            } catch (error) {
+                this.errorNotification.createAndshowError(`Error: ${error}`);
+            }
         } else {
-            if (!isExist) {
-                await this.addToStorage(newData);
-            } else {
+            try {
+                !isExist ? await this.addToStorage(newData) : 
                 this.modalMessage.createModalComponent("Data sudah ada");
+                this.modalMessage.showModal();
+            } catch (error) {
+                this.errorNotification.createAndshowError(`Error: ${error}`);
             }
         }
 
@@ -102,19 +87,18 @@ class DisplayManager extends DataManager<Item> {
 
     private resetForm(): void {
         this.selectedId = null;
-        this.inputSection.style.display = "none";
-        this.inputSection.reset();
     }
 
-    public async showAllData(): Promise<void> {
+    private setupRealtimeListener(): void {
+        this.loadFromStorage((data) => this.renderItem(data));
+    }
+
+    public showAllData(): void {
         const cardFragment = document.createDocumentFragment();
 
-        await this.loadFromStorage((data, error) => {
+        this.loadFromStorage((data, error) => {
             if (error) {
-                const message = document.createElement("div");
-                message.className = "message";
-                message.textContent = `Error: ${error.message}`;
-                this.errorNotification.appendChild(message);
+                this.errorNotification.createAndshowError(`Error: ${error.message}`);
                 return;
             }
 
@@ -178,12 +162,19 @@ class DisplayManager extends DataManager<Item> {
 
         return card;
     }
+    
+    private renderItem(data: Item[]): void {
+        const fragment = document.createDocumentFragment();
+        data.forEach(item => fragment.appendChild(this.createCardItem(item)));
+        this.itemsList.innerHTML = '';
+        this.itemsList.appendChild(fragment);
+    }
 
     private async selectedData(id: string): Promise<void> {
         this.selectedId = id;
         this.dynamicFields.innerHTML = '';
         this.inputSection.style.display = "flex";
-        const getAllData = await this.loadFromStorage() as Item[];;
+        const getAllData = await this.loadFromStorage();
 
         if (!getAllData) return;
 
@@ -200,13 +191,14 @@ class DisplayManager extends DataManager<Item> {
     private filterData = async (event: SubmitEvent): Promise<void> => {
         event.preventDefault();
     
-        if (this.searchData.value.trim().length === 0) {
+        if (searchData.value.trim().length === 0) {
             this.modalMessage.createModalComponent("input tidak boleh kosong!");
+            this.modalMessage.showModal();
             return;
         }
     
-        const keyword = this.searchData.value.toLowerCase();
-        const getAllData = await this.loadFromStorage() as Item[];;
+        const keyword = searchData.value.toLowerCase();
+        const getAllData = await this.loadFromStorage();
         const result = getAllData.filter(dt => dt.name.toLowerCase().includes(keyword));
     
         this.searchedData(result);
@@ -225,53 +217,62 @@ class DisplayManager extends DataManager<Item> {
     }
 
     private async deleteItem(id: string): Promise<void> {
-        await this.deleteSelectedData(id); 
-        if (this.selectedId === id) this.resetForm();
-        this.modalMessage.createModalComponent("Data berhasil dihapus");
+        try {
+            await this.deleteSelectedData(id); 
+            if (this.selectedId === id) this.resetForm();
+            this.modalMessage.createModalComponent("Data berhasil dihapus");
+            this.modalMessage.showModal();
+        } catch (error) {
+            this.errorNotification.createAndshowError(`Error: ${error}`);
+        }
     }
 
     private async deleteAllItem(): Promise<void> {
-        const data = await this.loadFromStorage()
-        if (data.length > 0) {
-            await this.deleteAllData();
-            this.itemsList.replaceChildren();
-            this.resetForm();
-            this.modalMessage.createModalComponent("Data berhasil dihapus");
-        } else {
-            this.modalMessage.createModalComponent("Tambahkan minimal 1 data")
+        const data = await this.loadFromStorage();
+        try {
+            if (data.length > 0) {
+                await this.deleteAllData();
+                this.itemsList.replaceChildren();
+                this.resetForm();
+                this.modalMessage.createModalComponent("Data berhasil dihapus");
+                this.modalMessage.showModal();
+            } else {
+                this.modalMessage.createModalComponent("Tambahkan minimal 1 data")
+                this.modalMessage.showModal();
+            }
+        } catch (error) {
+            this.errorNotification.createAndshowError(`Error: ${error}`);
         }
     }
 
     public openFormData(): void {
-        this.inputSection.style.display = "flex";
-        this.searchSection.style.display = "none";
+        searchSection.style.display = "none";
     }
 
     public closeFormData(): void {
-        this.inputSection.style.display = "none";
-        this.inputSection.reset();
-        this.searchSection.reset();
+        searchSection.reset();
         this.selectedId = null;
     }
 
     public openSearchData(): void {
-        this.searchSection.style.display = "flex";
-        this.inputSection.style.display = "none";
         this.selectedId = null;
     }
 
     public closeSearchData(): void {
-        this.searchSection.style.display = "none";
-        this.searchSection.reset();
-        this.inputSection.reset();
+        searchSection.style.display = "none";
+        searchSection.reset();
         this.selectedId = null;
     }
 
     public cleanUp(): void {
         this.resetForm();
         this.closeSearchData();
+        this.modalMessage.teardownModal();
         this.closeFormData();
-        this.unsubscribe = null;
+        if (this.unsubscribe) {
+            this.unsubscribe();
+            this.unsubscribe = null;
+        }
         this.controller.abort();
     }
 }
