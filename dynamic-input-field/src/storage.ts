@@ -1,4 +1,4 @@
-import db from "./config/firebase-config";
+import db from "./firebase-config";
 import { addDoc, collection, doc, deleteDoc, getDocs, onSnapshot, updateDoc } from "firebase/firestore";
 import type { Unsubscribe } from "firebase/firestore";
 
@@ -11,17 +11,15 @@ class DataManager <I extends { id: string }>{
     }
 
     protected loadFromStorage(): Promise<I[]>;
-
     protected loadFromStorage(callback: (data: I[], error?: Error) => void): Unsubscribe;
-
     protected loadFromStorage(callback?: (data: I[], error?: Error) => void): Promise<I[]> | Unsubscribe {
         try {
             if (callback) {
                 // Mode realtime listener
                 this.unsubscribe = onSnapshot(collection(db, this.collection_name), (snapshot) => {
-                        const data = snapshot.docs.map(dt => ({ id: dt.id, ...dt.data() }) as I);
-                        callback(data, undefined);
-                    }, (error) => callback([], error));
+                    const data = snapshot.docs.map(dt => ({ id: dt.id, ...dt.data() }) as I);
+                    callback(data, undefined);
+                }, (error) => callback([], error));
                 return this.unsubscribe;
             }
             
