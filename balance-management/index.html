@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/typescript.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Balance</title>
+    </head>
+    <body>
+        <main id="app">
+            <section id="notification"></section>
+            <section id="balance-list"></section>
+            <form id="balance-input-field">
+                <input type="text" id="balance" placeholder="enter-balance"/>
+                <div>
+                    <label for="income">Income</label>
+                    <input type="radio" name="category" id="income" value="income"/>
+                    <label for="expanse">Expanse</label>
+                    <input type="radio" name="category" id="expanse" value="expanse"/>
+                </div>
+                <button type="submit">Add</button>
+            </form>
+        </main>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
+</html>
