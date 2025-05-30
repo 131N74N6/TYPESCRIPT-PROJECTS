@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/typescript.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Dynamic Input Field</title>
+    </head>
+    <body>
+        <!-- Navigasi -->
+        <header class="header">
+            <button id="openForm" type="button">Add Data</button>
+            <button id="openSearch" type="button">Search Data</button>
+            <button id="delete-all" type="button">Delete All</button>
+        </header>
+        
+        <main class="container">
+          <!-- Notifikasi -->
+            <section id="modal-msg"></section>
+
+            <!-- Form Input -->
+            <form id="inputSection">
+                <div class="input-group">
+                    <input type="text" id="nameInput" placeholder="Masukkan nama">
+                    <button type="button" id="addFieldBtn">+ Tambah Field</button>
+                </div>
+                <div id="dynamicFields"></div>
+                <div id="formController">
+                    <button type="submit">Simpan Data</button>
+                    <button type="button" id="closeForm">X</button>
+                </div>
+            </form>
+
+            <!-- Search Item -->
+            <form id="searchSection">
+                <input type="text" id="searchData" placeholder="cari..."/>
+                <button type="submit" id="searchBtn">Cari</button>
+                <button type="button" id="closeSearch">X</button>
+            </form>
+
+            <!-- Daftar Item -->
+            <section id="itemsList"></section>
+            <section id="error-notification"></section>
+        </main>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
+</html>

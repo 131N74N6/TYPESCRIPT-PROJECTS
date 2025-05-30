@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/typescript.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Hobbies</title>
+    </head>
+    <body>
+        <main>
+            <section id="notification"></section>
+
+            <form id="dataForm" title="dataForm">
+                <section class="form-group">
+                    <label for="name">Nama:</label>
+                    <input type="text" id="name" required/>
+                </section>
+                
+                <section class="form-group">
+                    <div>
+                        <input type="radio" name="gender" id="Laki-laki" value="Laki-laki">
+                        <label for="Laki-laki">Laki-laki</label>
+                    </div>
+                    <div>
+                        <input type="radio" name="gender" id="Perempuan" value="Perempuan">
+                        <label for="Perempuan">Perempuan</label>
+                    </div>
+                </section>
+                
+                <section class="form-group">
+                    <label>Hobi:</label>
+                    <label><input type="checkbox" name="hobbies" value="Membaca"> Membaca</label>
+                    <label><input type="checkbox" name="hobbies" value="Olahraga"> Olahraga</label>
+                    <label><input type="checkbox" name="hobbies" value="Musik"> Musik</label>
+                    <label><input type="checkbox" name="hobbies" value="Melukis/Menggambar"> Melukis/Menggambar</label>
+                </section>
+                
+                <button type="submit" id="submit-btn">Add Data</button>
+                <button type="button" id="closeForm">Tutup</button>
+            </form>
+
+            <form id="searchForm" title="searchForm">
+                <input type="text" id="searched-name" required/>
+                <button type="submit">Cari</button>
+                <button type="button" id="closeFilter">Tutup</button>
+            </form>
+
+            <section id="data-list"></section>
+        </main>
+
+        <header id="form-controller">
+            <button type="button" id="addDataMode">Add Data</button>
+            <button type="button" id="searchMode">Search</button>
+            <button type="button" id="delete-all">Delete All User</button>
+            <div class="sorting-wrap">
+                <div class="ascend-sorting-toggle">
+                    <label for="ascend-sorting">Name A-Z</label>
+                    <input type="checkbox" id="ascend-sorting" name="ascend-sorting-toggle"/>
+                </div>
+                <div class="descend-sorting-toggle">
+                    <label for="descend-sorting">Name Z-A</label>
+                    <input type="checkbox" id="descend-sorting" name="ascend-sorting-toggle"/>
+                </div>
+            </div>
+            <div class="theme-toggle">
+                <label for="dark-mode"></label>
+                <input type="checkbox" id="dark-mode" name="dark-toggle"/>
+            </div>
+        </header>
+
+        <script type="module" src="/src/main.ts"></script>
+    </body>
+</html>

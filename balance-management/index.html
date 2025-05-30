@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/typescript.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Balance</title>
+    </head>
+    <body>
+        <main id="app">
+            <section id="notification"></section>
+            <header>
+                <div>Dark mode</div>
+                <button type="button" id="delete-all-list">Delete All</button>
+                <input type="checkbox" id="oldest" value="oldest-sorting"/>
+                <label for="oldest">Oldest</label>
+                <input type="checkbox" id="newest" value="newest-sorting"/>
+                <label for="newest">Newest</label>
+            </header>
+            <section class="show-data">
+                <section id="balance-list"></section>
+                <section class="detail-inform">
+                    <section class="income-total"></section>
+                    <section class="expense-total"></section>
+                    <section class="income_expense"></section>
+                </section>
+            </section>
+            <form id="balance-input-field">
+                <input type="text" id="balance" placeholder="enter-balance"/>
+                <div class="radio-button-wrap">
+                    <input type="radio" name="category" id="income" value="income"/>
+                    <label for="income">Income</label>
+                    <input type="radio" name="category" id="expanse" value="expanse"/>
+                    <label for="expanse">Expanse</label>
+                </div>
+                <div class="form-button-wrap">
+                    <button type="submit" id="add-balance">Add</button>
+                    <button type="button" id="clear-form">Clear</button>
+                </div>
+            </form>
+        </main>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
+</html>

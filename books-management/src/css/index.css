@@ -1,0 +1,13 @@
+:root {
+    --eva-awakened-primary: #1A1A1A;
+    --eva-awakened-secondary: #4B0082;
+    --eva-awakened-accent: #8A2BE2;
+    --eva-awakened-highlight: #FF00FF;
+    --eva-awakened-bg: #FFFFFF;
+    
+    --eva-unawakened-primary: #3D3D3D;
+    --eva-unawakened-secondary: #2C0033; 
+    --eva-unawakened-accent: #4B0082;
+    --eva-unawakened-highlight: #8B0000;
+    --eva-unawakened-bg: #1A1A1A;
+}

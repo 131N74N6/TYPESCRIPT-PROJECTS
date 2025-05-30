@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/gallery.css"/>
+    <title>Gallery</title>
+</head>
+<body>
+    <section id="modal"></section>
+    <header>
+        <a href="index.html">Home</a>
+        <section>
+            <button type="button" id="delete-all">Delete All</button>
+            <button type="button" id="add-data">Add Image</button>
+            <input type="checkbox" id="dark-mode"/>
+            <label for="dark-mode">Dark Mode</label>
+        </section>
+        <section id="filters">
+            <div class="filter-1">
+                <input type="checkbox" id="Anime" value="anime" checked/>
+                <label for="Anime">Anime</label>
+            </div>
+            <div class="filter-2">
+                <input type="checkbox" id="buildings/urbans" value="buildings/urbans" checked/>
+                <label for="buildings/urbans">Buildings/Urbans</label>
+            </div>
+            <div class="filter-3">
+                <input type="checkbox" id="nature/views" value="nature/views" checked/>
+                <label for="nature/views">Nature/Views</label>
+            </div>
+            <div class="filter-4">
+                <input type="checkbox" id="cartoon" value="cartoon" checked/>
+                <label for="cartoon">Cartoon</label>
+            </div>
+        </section>
+    </header>
+    <main class="content">    
+        <form id="dataForm">
+            <input type="text" id="title" placeholder="Name" required/>
+            <select id="category" title="img-category" required>
+                <option value="anime">Anime</option>
+                <option value="buildings/urbans">Buildings/Urbans</option>
+                <option value="nature/views">Nature</option>
+                <option value="cartoon">Cartoon</option>
+            </select>
+            <section class="url-wrap">
+                <button type="button" id="add-input-field">Add Field +</button>
+            </section>
+            <div class="form-button">
+                <button type="submit">Save</button>
+                <button type="button" id="close-form">Close</button>
+            </div>
+        </form>
+        <section id="itemsContainer"></section>
+        <section id="empty-message"></section>
+    </main>
+    <script src="../ts/img-displayer.ts" type="module"></script>
+</body>
+</html>
