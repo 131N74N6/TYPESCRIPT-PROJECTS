@@ -1,13 +1,27 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="icon" type="image/svg+xml" href="/typescript.svg" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Activity Management</title>
-    </head>
-    <body>
-        <div id="app"></div>
-        <script type="module" src="/src/main.ts"></script>
-    </body>
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="./src/style.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Activity Management</title>
+</head>
+<body>
+    <div id="app">
+    <section id="notification"></section>
+    <section id="activity-list">No activities yet...</section>
+    <section id="form-wrap">
+        <form id="activity-form" title="activity-form">
+            <label for="activity-name" class="sr-only">Enter Activity</label>
+            <textarea id="activity-name" placeholder="enter activity...."></textarea>
+            <div id="button-wrap" class="flex flex-wrap justify-center gap-3">
+                <button id="submit-btn" type="submit">Add Data</button>
+                <button id="delete-all-btn" type="button">Delete All</button>
+                <button id="reset-form-btn" type="button">Clear Forn</button>
+            </div>
+        </form>
+    </section>
+    <script type="module" src="/src/main.ts"></script>
+</body>
 </html>

@@ -8,6 +8,7 @@ const submitButton = document.getElementById("submit-btn") as HTMLButtonElement;
 
 const searchFileSection = document.getElementById("search-file-section") as HTMLFormElement;
 const searchedData = document.getElementById("searched-data") as HTMLInputElement;
+const checkboxCategory = document.querySelectorAll<HTMLInputElement>('.wrapper input[type="checkbox"]');
 
 const ascSortingCheckbox = document.getElementById("asc-sorting") as HTMLInputElement;
 const dscSortingCheckbox = document.getElementById("dsc-sorting") as HTMLInputElement;
@@ -17,8 +18,9 @@ const modal = document.getElementById("modal") as HTMLElement;
 const features = document.getElementById("features-list") as HTMLElement;
 
 const fileDataDisplayer = Displayer(
-    fileUploaderForm, fileInput, documentsList, preview, submitButton, username, 
-    modal, ascSortingCheckbox, dscSortingCheckbox, searchFileSection, searchedData, features
+    fileUploaderForm, fileInput, documentsList, preview, submitButton, username, modal, 
+    ascSortingCheckbox, dscSortingCheckbox, searchFileSection, searchedData, features,
+    checkboxCategory
 );
 
 function init(): void {

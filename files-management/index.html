@@ -52,24 +52,24 @@
             </form>
             <section id="features-list">
                 <div class="sorting-container">
-                    <label for="asc-sorting"><i class="fa-solid fa-sort-up"></i><span>A-Z</span></label>
                     <input type="checkbox" id="asc-sorting" class="sorting-checkbox"/>
-                    <label for="dsc-sorting"><i class="fa-solid fa-sort-down"></i><span>Z-A</span></label>
+                    <label for="asc-sorting"><span>A-Z</span></label>
                     <input type="checkbox" id="dsc-sorting" class="sorting-checkbox"/>
+                    <label for="dsc-sorting"><span>Z-A</span></label>
                 </div>
                 <div class="wrapper">
+                    <input type="checkbox" name="file-type" id="pdf" value="application/pdf" checked/>
                     <label for="pdf">PDF</label>
-                    <input type="checkbox" name="file-type" id="pdf" value="application/pdf"/>
+                    <input type="checkbox" name="file-type" id="jpg" value="image/jpg" checked/>
                     <label for="jpg">JPG</label>
-                    <input type="checkbox" name="file-type" id="jpg" value="image/jpg"/>
+                    <input type="checkbox" name="file-type" id="jpeg" value="image/jpeg" checked/>
                     <label for="jpeg">JPEG</label>
-                    <input type="checkbox" name="file-type" id="jpeg" value="image/jpeg"/>
+                    <input type="checkbox" name="file-type" id="png" value="image/png" checked/>
                     <label for="png">PNG</label>
-                    <input type="checkbox" name="file-type" id="png" value="image/png"/>
+                    <input type="checkbox" name="file-type" id="txt" value="text/plain" checked/>
                     <label for="txt">TXT</label>
-                    <input type="checkbox" name="file-type" id="txt" value="text/plain"/>
+                    <input type="checkbox" name="file-type" id="word/doc" value="application/vnd.openxmlformats-officedocument.wordprocessingml.document" checked/>
                     <label for="word/doc">WORD/DOC</label>
-                    <input type="checkbox" name="file-type" id="word/doc" value="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
                 </div>
                 <button type="button" id="close-features">X</button>
             </section>

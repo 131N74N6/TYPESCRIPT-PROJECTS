@@ -6,7 +6,7 @@ type Activity = {
     created_at: Date;
 }
 
-const dataStorage = StorageManager<Activity>("activity list");
+const dataStorage = StorageManager<Activity>("activity_list");
 
 const ActivityManagement = (
     notification: HTMLElement, activityForm: HTMLFormElement, activityList: HTMLElement, 
@@ -19,7 +19,7 @@ const ActivityManagement = (
     modalText: document.createElement("p") as HTMLParagraphElement,
     currentData: [] as Activity[],
 
-    eventListeners(): void {
+    initEventListeners(): void {
         dataStorage.realtimeinit((data) => {
             this.currentData = data;
             this.showAllActivities();
@@ -28,7 +28,26 @@ const ActivityManagement = (
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
             if (target.closest("#delete-all")) this.deleteAllActivities();
-            if (target.closest("#reset-form")) this.resetActivityForm();
+            else if (target.closest("#reset-form-btn")) this.resetActivityForm();
+        }, { signal: this.controller.signal });
+
+        activityList.addEventListener("click", async (event) => {
+            const target = event.target as HTMLElement;
+            const listComponents = target.closest(".list-component") as HTMLElement | null;
+            if (!listComponents) return; 
+
+            const fileId = listComponents.dataset.id;
+            if (!fileId || fileId === null) {
+                this.showAndCreateModal("File ID not found or invalid on clicked card.");
+                this.teardownModal();
+                return;
+            }
+
+            if (target.closest(".select-button")) {
+                this.selectActivity(fileId);
+            } else if (target.closest(".delete-button")) {
+                await this.deleteAct(fileId);
+            }
         }, { signal: this.controller.signal });
 
         activityForm.addEventListener("submit", (event) => this.submitActivity(event), { 
@@ -37,34 +56,24 @@ const ActivityManagement = (
     },
 
     async showAllActivities(): Promise<void> {
-        const activityFragment = document.createDocumentFragment();
-        const getAllActivities = await dataStorage.loadFromStorage();
+        const activityFragment = document.createDocumentFragment();;
 
-        if (getAllActivities.length > 0) {
-                getAllActivities.forEach(act => activityFragment.appendChild(
+        if (this.currentData.length > 0) {
+            activityList.innerHTML = '';
+            this.currentData.forEach(act => activityFragment.appendChild(
                 this.createActivityComponent(act)
             ));
+            activityList.appendChild(activityFragment);
         } else {
-            const empty = document.createElement("div") as HTMLDivElement;
-            empty.className = "empty-list";
-            
-            const message = document.createElement("div");
-            message.className = "message";
-            message.textContent = "....Daftar aktifitas kosong....";
-
-            empty.appendChild(message);
-            activityFragment.appendChild(empty);
+            activityList.innerHTML = '';
+            activityList.textContent = "No activities yet...";
         }
-
-        activityList.innerHTML = '';
-        activityList.appendChild(activityFragment);
     },
 
     async submitActivity(event: SubmitEvent): Promise<void> {
         event.preventDefault();
-        const getAllActivities = await dataStorage.loadFromStorage();
         const inputValue = activityName.value.trim();
-        const isExist = getAllActivities.some(
+        const isExist = this.currentData.some(
             act => act.act_name.toLowerCase() === inputValue.toLowerCase()
         );
 
@@ -94,6 +103,7 @@ const ActivityManagement = (
     createActivityComponent(act: Activity): HTMLDivElement {
         const activityComponent = document.createElement("div") as HTMLDivElement;
         activityComponent.className = "list-component";
+        activityComponent.dataset.id = act.id.toString();
 
         const activityName = document.createElement("div") as HTMLDivElement;
         activityName.className = "activity-name";
@@ -110,18 +120,12 @@ const ActivityManagement = (
         const selectBtn = document.createElement("button") as HTMLButtonElement;
         selectBtn.type = "button";
         selectBtn.textContent = "Select";
-        selectBtn.className = "select-btn";
-        selectBtn.addEventListener('click', () => this.selectActivity(act.id), { 
-            signal: this.controller.signal 
-        });
+        selectBtn.className = "select-button";
 
         const deleteBtn = document.createElement("button") as HTMLButtonElement;
         deleteBtn.type = "button";
         deleteBtn.textContent = "Delete";
-        deleteBtn.className = "delete-btn";
-        deleteBtn.addEventListener('click', () => this.deleteAct(act.id), { 
-            signal: this.controller.signal 
-        });
+        deleteBtn.className = "delete-button";
 
         buttonWrap.append(selectBtn, deleteBtn);
         activityComponent.append(activityName, date, buttonWrap);
@@ -129,10 +133,9 @@ const ActivityManagement = (
         return activityComponent;
     },
 
-    async selectActivity(id: string) {
+    selectActivity(id: string): void {
         this.selectedActId = id;
-        const getAllActivities = await dataStorage.loadFromStorage();
-        const activityData = getAllActivities.find(act => act.id === id);
+        const activityData = this.currentData.find(act => act.id === id);
         if (!activityData) return;
 
         activityName.value = activityData.act_name;
@@ -140,19 +143,23 @@ const ActivityManagement = (
     },
 
     async deleteAct(id: string): Promise<void> {
-        await dataStorage.deleteSelectedData(id);
-
-        if (this.selectedActId === id) this.resetActivityForm();
-
-        this.showAllActivities();
+        if (this.currentData.length > 0) {
+            await dataStorage.deleteSelectedData(id);
+            if (this.selectedActId === id) this.resetActivityForm();
+        } else {
+            activityList.innerHTML = '';
+            activityList.textContent = "No activities yet...";
+        }
     },
 
     async deleteAllActivities(): Promise<void> {
-        const getAllActivities = await dataStorage.loadFromStorage()
-        if (getAllActivities.length > 0) {
+        if (this.currentData.length > 0) {
             await dataStorage.deleteAllData();
             activityList.replaceChildren();
             this.resetActivityForm();
+            this.currentData = [];
+            activityList.innerHTML = '';
+            activityList.textContent = "No activities yet...";
         } else {
             this.showAndCreateModal("Daftar aktivitas masih kosong!");
         }
@@ -170,6 +177,7 @@ const ActivityManagement = (
         this.modalText.className = "message";
         this.modalText.textContent = message;
         this.modal.appendChild(this.modalText);
+        this.modal.classList.add("show");
         notification.appendChild(this.modal);
 
         this.timeout = window.setTimeout(() => this.teardownModal(), 3000);
@@ -178,11 +186,13 @@ const ActivityManagement = (
     teardownModal(): void {
         if (this.modal.parentElement) {
             this.modal.parentElement.removeChild(this.modal);
+            this.modal.classList.remove("show");
         }
         
         if (this.timeout) {
             clearTimeout(this.timeout);
             this.timeout = null;
+            this.modal.classList.remove("show");
         }
     }
 });

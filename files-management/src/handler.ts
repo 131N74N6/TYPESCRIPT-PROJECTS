@@ -19,7 +19,8 @@ const Displayer = (
     fileUploaderForm: HTMLFormElement, fileInput: HTMLInputElement, documentsList: HTMLElement,
     preview: HTMLDivElement, submitButton: HTMLButtonElement, username: HTMLInputElement, 
     modal: HTMLElement, ascSortingCheckbox: HTMLInputElement, dscSortingCheckbox: HTMLInputElement, 
-    searchFileSection: HTMLFormElement, searchInput: HTMLInputElement, features: HTMLElement
+    searchFileSection: HTMLFormElement, searchInput: HTMLInputElement, features: HTMLElement,
+    checkboxCategory: NodeListOf<HTMLInputElement>
 ) => ({
     setModal: Modal(modal),
     currentData: [] as FileItem[],
@@ -96,6 +97,15 @@ const Displayer = (
             ascSortingCheckbox.checked = false;
             this.showAllFiles();
         }, { signal: this.controller.signal });
+
+        checkboxCategory.forEach(checkbox => {
+            checkbox.addEventListener("change", () => {
+                this.selectedCategories = Array.from(checkboxCategory)
+                .filter(selected => selected.checked)
+                .map(get_value => get_value.value as FileItem['file_type']);
+                this.showAllFiles();
+            }, { signal: this.controller.signal });
+        });
     },
 
     async showAllFiles(): Promise<void> {
@@ -296,6 +306,10 @@ const Displayer = (
     searchedData(event: SubmitEvent): void {
         event.preventDefault();
         const trimmedValue = (searchInput.value.trim()).toLowerCase();
+        if (trimmedValue === "") {
+            this.setModal.createModal("Please insert some text");
+            this.setModal.showMessage();
+        }
         const searched = this.currentData.filter(data => data.file_name.includes(trimmedValue));
         this.showSearchedData(searched);
     },

@@ -1,57 +1,88 @@
-import db from "./config/firebase-config";
-import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, Timestamp, updateDoc } from "firebase/firestore";
-import type { DocumentData, QuerySnapshot, Unsubscribe } from "firebase/firestore";
+import supabase from "./supabase-config";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
-const StorageManager = <X extends { id: string }>(collectionName: string) => ({
-    realtimeinit(callback: (data: X[]) => void): Unsubscribe {
-        const unsubscribe = onSnapshot(collection(db, collectionName), (snapshot) => {
-            const data = this.processSnapshot(snapshot);
-            callback(data);
-        });
+const StorageManager = <XYZ extends { id: string }>(tableName: string) => ({
+    realtimeinit(callback: (data: XYZ[]) => void): RealtimeChannel  {
+        (async () => {
+            const { data, error } = await supabase
+            .from(tableName)
+            .select('*');
 
-        return unsubscribe
+            if (error) {
+                console.error('Initial data fetch error:', error);
+                callback([]);
+                return;
+            }
+
+            const processedData = data.map(item => ({
+                ...item,
+                created_at: new Date(item.created_at as any) 
+            }));
+            callback(processedData as XYZ[]);
+        })();
+
+        const subscription = supabase
+        .channel('any')
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: tableName },
+            async (payload) => {
+                console.log('Realtime change detected:', payload);
+                const { data, error } = await supabase
+                .from(tableName)
+                .select('*');
+
+                if (error) {
+                    console.error('Realtime data fetch error:', error);
+                    return;
+                }
+                const processedData = data.map(item => ({
+                    ...item,
+                    created_at: new Date(item.created_at as any) 
+                }));
+                callback(processedData as XYZ[]);
+            }
+        )
+        .subscribe();
+
+        return subscription;
     },
 
-    processSnapshot(snapshot: QuerySnapshot<DocumentData>): X[] {
-        return snapshot.docs.map((dt) => {
-            const convertedData = this.convertTimestamps(dt.data());
-            return { id: dt.id, ...convertedData } as X;
-        });
+    async addToStorage(newData: Omit<XYZ, 'id'>): Promise<string> {
+        const { data: inserted, error } = await supabase
+        .from(tableName)
+        .insert([newData])
+        .select();
+
+        if (error) throw error
+        return inserted[0].id;
     },
 
-    async loadFromStorage(): Promise<X[]> {
-        const snapshot = await getDocs(collection(db, collectionName));
-        return this.processSnapshot(snapshot);
-    },
+    async changeSelectedData(id: string, newData: Partial<Omit<XYZ, 'id'>>): Promise<void> {
+        const { error } = await supabase
+        .from(tableName)
+        .update(newData)
+        .eq('id', id);
 
-    async addToStorage(newData: Omit<X, 'id'>): Promise<string> {
-        const docRef = await addDoc(collection(db, collectionName), newData);
-        return docRef.id;
-    },
-
-    async changeSelectedData(id: string, newData: Partial<Omit<X, 'id'>>): Promise<void> {
-        const convertedData = this.convertTimestamps(newData); 
-        await updateDoc(doc(db, collectionName, id), convertedData);
+        if (error) throw error
     },
 
     async deleteSelectedData(id: string): Promise<void> {
-        await deleteDoc(doc(db, collectionName, id));
+        const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', id);
+
+        if (error) throw error
     },
 
     async deleteAllData(): Promise<void> {
-        const snapshot = await getDocs(collection(db, collectionName));
-        const deleteAll = snapshot.docs.map(dt => deleteDoc(dt.ref));
-        await Promise.all(deleteAll);
-    }, 
+        const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .neq('id', '0'); // Delete all records
 
-    convertTimestamps(data: DocumentData) {
-        return Object.entries(data).reduce((acc, [key, value]) => {
-            if (value instanceof Timestamp) {
-                acc[key] = value.toDate();
-            } else {
-                acc[key] = value;
-            } return acc;
-        }, {} as Record<string, any>);
+        if (error) throw error
     }
 });
 

@@ -1,55 +1,15 @@
-import './style.css';
 import ActivityManagement from './activity';
 
-const app = document.getElementById("app") as HTMLDivElement;
-
-const notification = document.createElement("section") as HTMLElement;
-notification.id = "notification";
-
-const activityList = document.createElement("section") as HTMLElement;
-activityList.id = "activity-list";
-
-const formWrap = document.createElement("section") as HTMLElement;
-formWrap.id = "form-wrap";
-
-const activityForm = document.createElement("form") as HTMLFormElement;
-activityForm.id = "activity-form";
-activityForm.title = "activity-form";
-
-const activityName = document.createElement("textarea") as HTMLTextAreaElement;
-activityName.placeholder = "enter activity....";
-activityName.id = "activity-name";
-
-const buttonWrap = document.createElement("div") as HTMLDivElement;
-buttonWrap.id = "button-wrap";
-
-const submitButton = document.createElement("button") as HTMLButtonElement;
-submitButton.id = "submit-btn";
-submitButton.type = "submit";
-submitButton.textContent = "Add Data";
-
-const deleteAllButton = document.createElement("button") as HTMLButtonElement;
-deleteAllButton.id = "delete-all-btn";
-deleteAllButton.type = "button";
-deleteAllButton.textContent = "Delete All";
-
-const resetFormButton = document.createElement("button") as HTMLButtonElement;
-resetFormButton.id = "reset-btn";
-resetFormButton.type = "button";
-resetFormButton.textContent = "Clear Forn";
-
-buttonWrap.append(submitButton, deleteAllButton, resetFormButton);
-
-activityForm.append(activityName, buttonWrap);
-
-formWrap.append(activityForm);
-
-app.append(notification, activityList, formWrap);
+const notification = document.getElementById("notification") as HTMLElement;
+const activityForm = document.getElementById("activity-form") as HTMLFormElement;
+const activityName = document.getElementById("activity-name") as HTMLTextAreaElement;
+const activityList = document.getElementById("activity-list") as HTMLElement;
+const submitButton = document.getElementById("submit-btn") as HTMLButtonElement;
 
 const activitManagement = ActivityManagement(notification, activityForm, activityList, activityName, submitButton);
 
 function init(): void {
-    activitManagement.eventListeners();
+    activitManagement.initEventListeners();
 }
 
 function teardown(): void {

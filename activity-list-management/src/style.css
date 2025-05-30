@@ -32,7 +32,7 @@ body {
     gap: 0.5rem;
 }
 
-#activity-list .list-component .button-wrap .select-btn {
+#activity-list .list-component .button-wrap .select-button {
     width: 100px;
     cursor: pointer;
     border: 1px solid #32CD32;
@@ -43,7 +43,7 @@ body {
     border-radius: 0.5rem;
 }
 
-#activity-list .list-component .button-wrap .delete-btn {
+#activity-list .list-component .button-wrap .delete-button {
     width: 100px;
     cursor: pointer;
     border: 1px solid #32CD32;
@@ -105,7 +105,7 @@ body {
     border-radius: 0.5rem;
 }
 
-#form-wrap > #activity-form #button-wrap #reset-btn {
+#form-wrap > #activity-form #button-wrap #reset-form-btn {
     width: 100px;
     cursor: pointer;
     border: 1px solid #32CD32;
@@ -117,6 +117,7 @@ body {
 }
 
 #notification > .content {
+    display: none;
     position: sticky;
     top: 0;
     z-index: 20;
@@ -127,13 +128,7 @@ body {
     font-size: 1rem;
 }
 
-.empty-list {
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100dvh;
-    font-size: 2rem;
-    font-family: Arial;
-    font-weight: 700;
+/* FOR UTILITIES */
+.show {
+    display: block !important;
 }

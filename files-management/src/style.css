@@ -42,7 +42,7 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
-    justify-content: space-between;
+    /* justify-content: space-between; */
     align-items: center;
     border-bottom: 1px solid var(--border-color);
 }
@@ -71,17 +71,19 @@ body {
     gap: 0.4rem;
 }
 
+#features-list input[type="checkbox"]:checked + label { 
+    background-color: var(--eva-lcl-liquid);
+    border: none;
+    color: var(--eva-body);
+}
+
 #features-list label, #features-list button {
     padding: 0.5rem;
     border-radius: 0.5rem;
     cursor: pointer;
     border: 2px solid var(--eva-seele-aura);
-}
-
-#features-list label+input:checked {
-    background-color: var(--eva-lcl-liquid);
-    border: none;
-    color: var(--eva-body);
+    background-color: transparent; 
+    color: var(--text-color); 
 }
 
 .sorting-container input[type="checkbox"] {
