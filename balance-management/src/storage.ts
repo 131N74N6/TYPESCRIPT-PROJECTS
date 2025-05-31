@@ -1,54 +1,103 @@
-import db from "./firebase-config";
-import { 
-    collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot, 
-    QuerySnapshot, Timestamp 
-} from "firebase/firestore";
-import type { DocumentData, Unsubscribe } from "firebase/firestore";
+import supabase from "./supabase-config";
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-const Storage = <Q extends { id: string }>(collectionName: string) => ({
-    realtimeInit(callback: (data: Q[]) => void): Unsubscribe {
-        const unsubscribe = onSnapshot(collection(db, collectionName), (snapshot) => {
-            const data = this.processSnapshot(snapshot);
-            callback(data);
-        });
+const Storage = <WASD extends { id: string }>(tableName: string) => ({
+    currentData: [] as WASD[],
+    realtimeInit(callback: (data: WASD[]) => void): RealtimeChannel  {
+        const channel = supabase.channel('any');
+        // Pasang handler realtime
+        channel.on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: tableName },
+            (payload: RealtimePostgresChangesPayload<WASD>) => {
+                const processItem = (item: any): WASD => ({
+                    ...item,
+                    created_at: new Date(item.created_at)
+                });
 
-        return unsubscribe;
+                switch (payload.eventType) {
+                    case 'INSERT': {
+                        const newItem = processItem(payload.new);
+                        this.currentData.push(newItem);
+                        break;
+                    }
+                    case 'UPDATE': {
+                        const updatedItem = processItem(payload.new);
+                        const index = this.currentData.findIndex(item => item.id === updatedItem.id);
+                        if (index !== -1) this.currentData[index] = updatedItem;
+                        break;
+                    }
+                    case 'DELETE': {
+                        const deletedId = payload.old.id;
+                        this.currentData = this.currentData.filter(item => item.id !== deletedId);
+                        break;
+                    }
+                }
+                callback([...this.currentData]);
+            }
+        );
+        // Fetch data awal
+        (async () => {
+            const { data, error } = await supabase
+            .from(tableName)
+            .select('*');
+
+            if (error) {
+                console.error('Initial data fetch error:', error);
+                callback([]);
+                return;
+            }
+
+            this.currentData = data.map(item => ({
+                ...item, created_at: new Date(item.created_at)
+            })) as WASD[];
+
+            callback(this.currentData);
+            channel.subscribe(); // Mulai subscribe setelah data awal dimuat
+        })();
+
+        return channel;
     },
 
-    processSnapshot(snapshot: QuerySnapshot<DocumentData>): Q[] {
-        return snapshot.docs.map(d => {
-            const convertedData = this.convertTimestamps(d.data());
-            return { id: d.id, ...convertedData } as Q;
-        });
+    async addToStorage(newData: Omit<WASD, 'id'>): Promise<string> {
+        const { data: inserted, error } = await supabase
+        .from(tableName)
+        .insert([newData])
+        .select();
+
+        if (error) throw error
+        return inserted[0].id;
     },
 
-    async addToStorage(data: Omit<Q, 'id'>): Promise<string> {
-        const docRef = await addDoc(collection(db, collectionName), data);
-        return docRef.id;
-    },
+    async changeSelectedData(id: string, newData: Partial<Omit<WASD, 'id'>>): Promise<void> {
+        const { error } = await supabase
+        .from(tableName)
+        .update(newData)
+        .eq('id', id);
 
-    async changeSelectedData(id: string, newData: Partial<Omit<Q, 'id'>>): Promise<void> {
-        await updateDoc(doc(db, collectionName, id), newData);
+        if (error) throw error
     },
 
     async deleteSelectedData(id: string): Promise<void> {
-        await deleteDoc(doc(db, collectionName, id));
+        const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', id);
+
+        if (error) throw error
     },
 
     async deleteAllData(): Promise<void> {
-        const querySnapshot = await getDocs(collection(db, collectionName));
-        const deletePromises = querySnapshot.docs.map(d => deleteDoc(d.ref));
-        await Promise.all(deletePromises);
-    }, 
+        const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .not('id', 'is', null); // Delete all records
 
-    convertTimestamps(data: DocumentData) {
-        return Object.entries(data).reduce((acc, [key, value]) => {
-            if (value instanceof Timestamp) {
-                acc[key] = value.toDate();
-            } else {
-                acc[key] = value;
-            } return acc;
-        }, {} as Record<string, any>);
+        if (error) throw error
+    },
+
+    teardownStorage(): void {
+        this.currentData = [];
     }
 });
 

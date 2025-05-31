@@ -17,17 +17,15 @@ const ActivityManagement = (
     timeout: null as number | null,
     modal: document.createElement("div") as HTMLDivElement,
     modalText: document.createElement("p") as HTMLParagraphElement,
-    currentData: [] as Activity[],
 
     initEventListeners(): void {
-        dataStorage.realtimeinit((data) => {
-            this.currentData = data;
+        dataStorage.realtimeInit(() => {
             this.showAllActivities();
         });
 
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
-            if (target.closest("#delete-all")) this.deleteAllActivities();
+            if (target.closest("#delete-all-button")) this.deleteAllActivities();
             else if (target.closest("#reset-form-btn")) this.resetActivityForm();
         }, { signal: this.controller.signal });
 
@@ -56,28 +54,32 @@ const ActivityManagement = (
     },
 
     async showAllActivities(): Promise<void> {
-        const activityFragment = document.createDocumentFragment();;
-
-        if (this.currentData.length > 0) {
-            activityList.innerHTML = '';
-            this.currentData.forEach(act => activityFragment.appendChild(
-                this.createActivityComponent(act)
-            ));
-            activityList.appendChild(activityFragment);
-        } else {
-            activityList.innerHTML = '';
-            activityList.textContent = "No activities yet...";
+        try{
+            const activityFragment = document.createDocumentFragment();;
+            if (dataStorage.currentData.length > 0) {
+                activityList.innerHTML = '';
+                dataStorage.currentData.forEach(act => activityFragment.appendChild(
+                    this.createActivityComponent(act)
+                ));
+                activityList.appendChild(activityFragment);
+            } else {
+                activityList.innerHTML = '';
+                activityList.textContent = "No activities yet...";
+            }
+        } catch(error) {
+            this.showAndCreateModal(`Failed to show data: ${error}`);
+            this.teardownModal();
         }
     },
 
     async submitActivity(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         const inputValue = activityName.value.trim();
-        const isExist = this.currentData.some(
+        const isExist = dataStorage.currentData.some(
             act => act.act_name.toLowerCase() === inputValue.toLowerCase()
         );
 
-        if (!inputValue) {
+        if (inputValue === "") {
             this.showAndCreateModal("Input tidak boleh kosong");
             return;
         }
@@ -135,7 +137,7 @@ const ActivityManagement = (
 
     selectActivity(id: string): void {
         this.selectedActId = id;
-        const activityData = this.currentData.find(act => act.id === id);
+        const activityData = dataStorage.currentData.find(act => act.id === id);
         if (!activityData) return;
 
         activityName.value = activityData.act_name;
@@ -143,25 +145,32 @@ const ActivityManagement = (
     },
 
     async deleteAct(id: string): Promise<void> {
-        if (this.currentData.length > 0) {
-            await dataStorage.deleteSelectedData(id);
-            if (this.selectedActId === id) this.resetActivityForm();
-        } else {
-            activityList.innerHTML = '';
-            activityList.textContent = "No activities yet...";
+        try {
+            if (dataStorage.currentData.length > 0) {
+                await dataStorage.deleteSelectedData(id);
+                if (this.selectedActId === id) this.resetActivityForm();
+            } else {
+                activityList.innerHTML = '';
+                activityList.textContent = "No activities yet...";
+            }
+        } catch (error) {
+            this.showAndCreateModal(`Failed to delete data: ${error}`);
+            this.teardownModal();
         }
     },
 
     async deleteAllActivities(): Promise<void> {
-        if (this.currentData.length > 0) {
-            await dataStorage.deleteAllData();
-            activityList.replaceChildren();
-            this.resetActivityForm();
-            this.currentData = [];
-            activityList.innerHTML = '';
-            activityList.textContent = "No activities yet...";
-        } else {
-            this.showAndCreateModal("Daftar aktivitas masih kosong!");
+        try {
+            if (dataStorage.currentData.length > 0) {
+                await dataStorage.deleteAllData();
+                this.resetActivityForm();
+            } else {
+                this.showAndCreateModal("Daftar aktivitas masih kosong!");
+                this.teardownModal()
+            } 
+        } catch (error) {
+            this.showAndCreateModal(`Failed to delete all data: ${error}`);
+            this.teardownModal();
         }
         this.showAllActivities();
     },
@@ -194,6 +203,10 @@ const ActivityManagement = (
             this.timeout = null;
             this.modal.classList.remove("show");
         }
+    },
+
+    cleanupStorage(): void {
+        dataStorage.teardownStorage();
     }
 });
 

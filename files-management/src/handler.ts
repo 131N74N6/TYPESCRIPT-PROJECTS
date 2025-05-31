@@ -23,7 +23,6 @@ const Displayer = (
     checkboxCategory: NodeListOf<HTMLInputElement>
 ) => ({
     setModal: Modal(modal),
-    currentData: [] as FileItem[],
     controller: new AbortController() as  AbortController,
     selectedFileId: null as number | null,
     currentFile: null as File | null,
@@ -34,8 +33,7 @@ const Displayer = (
     ] as string[],
 
     initEventListeners(): void {
-        dataStorages.reailtimeInit((fileData) => {
-            this.currentData = fileData;
+        dataStorages.realtimeInit(() => {
             this.showAllFiles();
         });
         
@@ -69,7 +67,7 @@ const Displayer = (
                 await this.deleteSelectedFile(fileId);
             } else {
                 // Jika klik bukan pada tombol select/delete tapi di dalam card
-                const fileData = this.currentData.find(f => f.id === fileId);
+                const fileData = dataStorages.currentData.find(f => f.id === fileId);
                 if (fileData) {
                     this.openDocument(fileData);
                 }
@@ -112,8 +110,8 @@ const Displayer = (
         const fileDataFragment = document.createDocumentFragment();
 
         try {
-            if (this.currentData.length > 0) {
-                const filteredData = this.currentData.filter(data => this.selectedCategories.includes(data.file_type));
+            if (dataStorages.currentData.length > 0) {
+                const filteredData = dataStorages.currentData.filter(data => this.selectedCategories.includes(data.file_type));
                 let sortedData = filteredData;
 
                 if (ascSortingCheckbox.checked) {
@@ -189,7 +187,7 @@ const Displayer = (
 
             if (this.selectedFileId) {
                 // Mode Edit Data
-                const existingFileItem = this.currentData.find(f => f.id === this.selectedFileId);
+                const existingFileItem = dataStorages.currentData.find(f => f.id === this.selectedFileId);
 
                 if (!existingFileItem) {
                     throw new Error("Existing file data not found for editing.");
@@ -310,7 +308,7 @@ const Displayer = (
             this.setModal.createModal("Please insert some text");
             this.setModal.showMessage();
         }
-        const searched = this.currentData.filter(data => data.file_name.includes(trimmedValue));
+        const searched = dataStorages.currentData.filter(data => data.file_name.includes(trimmedValue));
         this.showSearchedData(searched);
     },
 
@@ -340,7 +338,7 @@ const Displayer = (
     selectFile(id: number): void {
         this.openForm();
         this.selectedFileId = id;
-        const fileData = this.currentData.find(f => f.id === id);
+        const fileData = dataStorages.currentData.find(f => f.id === id);
         
         if (!fileData) return;
         
@@ -357,8 +355,8 @@ const Displayer = (
 
     async deleteSelectedFile(id: number): Promise<void> {
         try {
-            if (this.currentData.length > 0) {
-                const fileToDelete = this.currentData.find(f => f.id === id);
+            if (dataStorages.currentData.length > 0) {
+                const fileToDelete = dataStorages.currentData.find(f => f.id === id);
 
                 if (fileToDelete) {
                     // Ekstrak path file dari URL
@@ -395,10 +393,10 @@ const Displayer = (
 
     async deleteAllFiles(): Promise<void> {
         try {
-            if (this.currentData.length > 0) {
+            if (dataStorages.currentData.length > 0) {
                 // Kumpulkan semua path file yang akan dihapus dari storage
                 const filePathsToDelete: string[] = [];
-                this.currentData.forEach(fileItem => {
+                dataStorages.currentData.forEach(fileItem => {
                     const filePath = fileItem.file_url.split(`${storageName}/`)[1];
                     if (filePath) {
                         filePathsToDelete.push(decodeURIComponent(filePath));
@@ -418,7 +416,7 @@ const Displayer = (
                 }
 
                 await dataStorages.deleteAllData();
-                this.currentData = [];
+                dataStorages.currentData = [];
                 documentsList.replaceChildren();
                 this.resetForm();
             } else {    
@@ -487,10 +485,10 @@ const Displayer = (
     cleanUpListener(): void {
         this.controller.abort;
         this.setModal.teardown();
-        this.currentData = [];
         this.resetForm();
         ascSortingCheckbox.checked = false;
         dscSortingCheckbox.checked = false;
+        dataStorages.currentData = [];
     }
 });
 

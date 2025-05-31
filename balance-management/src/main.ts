@@ -1,5 +1,4 @@
-import Displayer from './handler';
-import './style.css';
+import Displayer from './balance';
 
 const getBalance = document.getElementById("balance") as HTMLInputElement;
 const balanceInputField = document.getElementById("balance-input-field") as HTMLFormElement;

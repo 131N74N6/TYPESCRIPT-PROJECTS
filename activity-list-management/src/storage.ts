@@ -1,8 +1,42 @@
 import supabase from "./supabase-config";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 const StorageManager = <XYZ extends { id: string }>(tableName: string) => ({
-    realtimeinit(callback: (data: XYZ[]) => void): RealtimeChannel  {
+    currentData: [] as XYZ[],
+    realtimeInit(callback: (data: XYZ[]) => void): RealtimeChannel  {
+        const channel = supabase.channel('any');
+        // Pasang handler realtime
+        channel.on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: tableName },
+            (payload: RealtimePostgresChangesPayload<XYZ>) => {
+                const processItem = (item: any): XYZ => ({
+                    ...item,
+                    created_at: new Date(item.created_at)
+                });
+
+                switch (payload.eventType) {
+                    case 'INSERT': {
+                        const newItem = processItem(payload.new);
+                        this.currentData.push(newItem);
+                        break;
+                    }
+                    case 'UPDATE': {
+                        const updatedItem = processItem(payload.new);
+                        const index = this.currentData.findIndex(item => item.id === updatedItem.id);
+                        if (index !== -1) this.currentData[index] = updatedItem;
+                        break;
+                    }
+                    case 'DELETE': {
+                        const deletedId = payload.old.id;
+                        this.currentData = this.currentData.filter(item => item.id !== deletedId);
+                        break;
+                    }
+                }
+                callback([...this.currentData]);
+            }
+        );
+        // Fetch data awal
         (async () => {
             const { data, error } = await supabase
             .from(tableName)
@@ -14,38 +48,15 @@ const StorageManager = <XYZ extends { id: string }>(tableName: string) => ({
                 return;
             }
 
-            const processedData = data.map(item => ({
-                ...item,
-                created_at: new Date(item.created_at as any) 
-            }));
-            callback(processedData as XYZ[]);
+            this.currentData = data.map(item => ({
+                ...item, created_at: new Date(item.created_at)
+            })) as XYZ[];
+
+            callback(this.currentData);
+            channel.subscribe(); // Mulai subscribe setelah data awal dimuat
         })();
 
-        const subscription = supabase
-        .channel('any')
-        .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: tableName },
-            async (payload) => {
-                console.log('Realtime change detected:', payload);
-                const { data, error } = await supabase
-                .from(tableName)
-                .select('*');
-
-                if (error) {
-                    console.error('Realtime data fetch error:', error);
-                    return;
-                }
-                const processedData = data.map(item => ({
-                    ...item,
-                    created_at: new Date(item.created_at as any) 
-                }));
-                callback(processedData as XYZ[]);
-            }
-        )
-        .subscribe();
-
-        return subscription;
+        return channel;
     },
 
     async addToStorage(newData: Omit<XYZ, 'id'>): Promise<string> {
@@ -80,9 +91,13 @@ const StorageManager = <XYZ extends { id: string }>(tableName: string) => ({
         const { error } = await supabase
         .from(tableName)
         .delete()
-        .neq('id', '0'); // Delete all records
+        .not('id', 'is', null); // Delete all records
 
         if (error) throw error
+    },
+
+    teardownStorage(): void {
+        this.currentData = [];
     }
 });
 

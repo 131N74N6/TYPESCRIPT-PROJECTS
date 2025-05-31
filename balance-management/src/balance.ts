@@ -8,7 +8,7 @@ type BalanceDetail = {
     created_at: Date;
 }
 
-const storage = Storage<BalanceDetail>("finance management");
+const storage = Storage<BalanceDetail>("finance_list");
 const controller = new AbortController();
 
 const Displayer = (
@@ -18,15 +18,13 @@ const Displayer = (
     income_expense: HTMLElement
 ) => ({
     getSelectedId: null as string | null,
-    currentData: [] as BalanceDetail[],
     balanceNotification: Modal(notification),
     totalIncome: 0 as number,
     totalExpense: 0 as number,
     balanceDifference: 0 as number,
 
     initEventListeners(): void {
-        storage.realtimeInit((data) => {
-            this.currentData = data;
+        storage.realtimeInit(() => {
             this.showAllData();
         });
 
@@ -61,9 +59,9 @@ const Displayer = (
         }
         
         await storage.addToStorage({
+            created_at: new Date(),
             amount: Number(getBalance.value.trim()),
-            type: selectedType.value,
-            created_at: new Date()
+            type: selectedType.value
         });
         
         this.resetForm();
@@ -77,17 +75,17 @@ const Displayer = (
     showAllData(): void {
         balanceList.replaceChildren();
 
-        if (this.currentData.length > 0) {
-            let modifiedData = this.currentData;
+        if (storage.currentData.length > 0) {
+            let modifiedData = storage.currentData;
 
             if (oldest.checked) {
-                modifiedData = [...this.currentData].sort((a: BalanceDetail, b: BalanceDetail) => {
+                modifiedData = [...storage.currentData].sort((a: BalanceDetail, b: BalanceDetail) => {
                     return a.created_at.getTime() - b.created_at.getTime()
                 });
             }
 
             if (newest.checked) {
-                modifiedData = [...this.currentData].sort((a: BalanceDetail, b: BalanceDetail) => {
+                modifiedData = [...storage.currentData].sort((a: BalanceDetail, b: BalanceDetail) => {
                     return b.created_at.getTime() - a.created_at.getTime()
                 });
             }
@@ -214,8 +212,13 @@ const Displayer = (
     },
 
     async deleteSelectedBalance(id: string): Promise<void> {
-        await storage.deleteSelectedData(id);
-        if (this.getSelectedId === null) this.resetForm();
+        try {   
+            await storage.deleteSelectedData(id);
+            if (this.getSelectedId === null) this.resetForm();
+        } catch (error) {
+            this.balanceNotification.createModal(`Failed to delete data: ${error}`);
+            this.balanceNotification.showModal();
+        }
     },
 
     async deleteAllBalanceList(): Promise<void> {
@@ -225,8 +228,10 @@ const Displayer = (
     },
 
     cleanup(): void {
-        controller.abort();
         this.resetForm();
+        controller.abort();
+        this.balanceNotification.teardownModal();
+        storage.teardownStorage();
     }
 });
 

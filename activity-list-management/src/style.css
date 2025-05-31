@@ -1,134 +1,307 @@
-body {
+:root {
+    --evangelion-inner: #1A1A1A;
+    --evangelion-00: #ed9322;
+    --evangelion-01: #765898;
+    --evangelion-03: #32364f;
+    --evangelion-08: #db819e;
+    --evangelion-13: #5a5384;
+    --mass-production-eva: #f5f5f5;
+}
+
+* {
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #4B0082 0%, #000000 70%);
-    color: #32CD32;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, var(--evangelion-03), var(--evangelion-13));
+    min-height: 100vh;
+    padding: 20px;
+    color: var(--mass-production-eva);
+}
+
+#app {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    border: 1px solid var(--evangelion-00);
+}
+
+header h1 {
+    font-size: 2.5rem;
+    color: var(--evangelion-00);
+    text-shadow: 0 0 10px rgba(237, 147, 34, 0.5);
+    margin-bottom: 5px;
+}
+
+header p {
+    font-size: 1.1rem;
+    color: var(--mass-production-eva);
+    opacity: 0.8;
+}
+
+.content {
+    background: var(--evangelion-03);
+    color: var(--mass-production-eva);
+    padding: 15px 20px;
+    border-radius: 8px;
+    border-left: 5px solid var(--evangelion-00);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    animation: slideIn 0.3s ease-out;
+    position: relative;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0%); }
+}
+
+.content-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+@media (min-width: 768px) {
+    .content-wrapper {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+#activity-form {
+    background: var(--evangelion-03);
+    padding: 25px;
+    flex: 0.45;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border: 2px solid var(--evangelion-01);
+    height: 95dvh;
+}
+
+#activity-form h2 {
+    color: var(--evangelion-08);
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--evangelion-13);
+    padding-bottom: 10px;
+}
+
+#activity-name:focus {
+    outline: none;
+    border-color: var(--evangelion-00);
+    box-shadow: 0 0 0 3px rgba(237, 147, 34, 0.3);
+}
+
+#controller {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+#controller button {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#button-wrap button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+#submit-btn {
+    background: var(--evangelion-01);
+    color: white;
+}
+
+#submit-btn:hover {
+    background: #5d4a7f;
+}
+
+#delete-all-button {
+    background: var(--evangelion-08);
+    color: var(--evangelion-inner);
+}
+
+#delete-all-btn:hover {
+    background: #c86f8e;
+}
+
+#reset-form-btn {
+    background: var(--evangelion-00);
+    color: white;
+}
+
+#reset-form-btn:hover {
+    background: #d17a1a;
 }
 
 #activity-list {
-    padding: 0.7rem;
-    max-width: 900px;
-    min-height: 100dvh;
+    background: var(--evangelion-03);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
     display: flex;
+    flex-grow: 1;
     flex-direction: column;
-    margin: 0 auto;
-    gap: 0.7rem;
+    gap: 1rem;
+    border: 2px solid var(--evangelion-01);
+    height: 95dvh;
+    overflow: auto;
 }
 
-#activity-list .list-component {
-    font-size: 1.2rem;
-    font-family: Calibri;
-    border-radius: 0.55rem;
-    background-color: #2c01013f;
-    border: 1px solid #32CD32;
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-    padding: 0.55rem;
-}
-
-#activity-list .list-component .button-wrap {
-    display: flex;
-    gap: 0.5rem;
-}
-
-#activity-list .list-component .button-wrap .select-button {
-    width: 100px;
-    cursor: pointer;
-    border: 1px solid #32CD32;
-    background-color: #2c01013f;
-    color: #32CD32;
-    padding: 0.5rem;
-    font-size: 1rem;
-    border-radius: 0.5rem;
-}
-
-#activity-list .list-component .button-wrap .delete-button {
-    width: 100px;
-    cursor: pointer;
-    border: 1px solid #32CD32;
-    background-color: #2c01013f;
-    color: #32CD32;
-    padding: 0.5rem;
-    font-size: 1rem;
-    border-radius: 0.5rem;
-}
-
-#form-wrap {
-    background-color: #1A1A1A;
-    z-index: 20;
-    position: sticky;
-    bottom: 0;
-    padding: 1rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#form-wrap > #activity-form > textarea#activity-name {
-    border: 1.5px solid #00BFFF;
-    resize: none;
-    width: 95%;
-    height: 90px;
-    color: #00BFFF;
-    font-family: Arial;
-    font-size: 1rem;
-    padding: 0.45rem;
-    background-color: transparent;
-    outline: none;
-}
-
-#form-wrap > #activity-form #button-wrap {
-    display: flex;
-    gap: 0.5rem;
-}
-
-#form-wrap > #activity-form #button-wrap > #submit-btn {
-    width: 120px;
-    cursor: pointer;
-    border: 1px solid #32CD32;
-    background-color: #2c01013f;
-    color: #32CD32;
-    padding: 0.5rem;
-    font-size: 1rem;
-    border-radius: 0.5rem;
-}
-
-#form-wrap > #activity-form #button-wrap #delete-all-btn {
-    width: 100px;
-    cursor: pointer;
-    border: 1px solid #32CD32;
-    background-color: #2c01013f;
-    color: #32CD32;
-    padding: 0.5rem;
-    font-size: 1rem;
-    border-radius: 0.5rem;
-}
-
-#form-wrap > #activity-form #button-wrap #reset-form-btn {
-    width: 100px;
-    cursor: pointer;
-    border: 1px solid #32CD32;
-    background-color: #2c01013f;
-    color: #32CD32;
-    padding: 0.5rem;
-    font-size: 1rem;
-    border-radius: 0.5rem;
-}
-
-#notification > .content {
+#activity-list::-webkit-scrollbar {
     display: none;
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    border: 1px solid #00BFFF;
-    background-color: #2c01013f;
-    color: #00BFFF;
-    padding: 0.5rem;
-    font-size: 1rem;
 }
 
-/* FOR UTILITIES */
-.show {
-    display: block !important;
+#activity-list h2 {
+    color: var(--evangelion-08);
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--evangelion-13);
+    padding-bottom: 10px;
+}
+
+.activities-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.list-component {
+    background: var(--evangelion-inner);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border: 1px solid var(--evangelion-01);
+    transition: all 0.3s;
+}
+
+.list-component:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    border-color: var(--evangelion-00);
+}
+
+#activity-name {
+    background: var(--evangelion-inner);
+    color: var(--mass-production-eva);
+    border: 2px solid var(--evangelion-01);
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 1.1rem;
+    min-height: 150px;
+    resize: none;
+    transition: all 0.3s;
+    font-size: 1rem;
+    color: var(--mass-production-eva);
+    resize: none;
+    width: 100%;
+    height: 205px;
+    font-weight: 600;
+}
+
+.created-at {
+    color: var(--evangelion-08);
+    font-size: 0.9rem;
+}
+
+.button-wrap {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.button-wrap button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.select-button {
+    background: var(--evangelion-01);
+    color: white;
+    width: 90px;
+}
+
+.select-button:hover {
+    background: #5d4a7f;
+}
+
+.delete-button {
+    background: var(--evangelion-08);
+    color: var(--evangelion-inner);
+    width: 90px;
+}
+
+.delete-button:hover {
+    background: #c86f8e;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 30px;
+    color: var(--evangelion-08);
+    font-size: 1.2rem;
+    grid-column: 1 / -1;
+}
+
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 20px;
+    color: var(--mass-production-eva);
+    opacity: 0.7;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+    #button-wrap {
+        flex-direction: column;
+    }
+    
+    #button-wrap button {
+        width: 100%;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    #activity-form, #activity-list {
+        padding: 20px 15px;
+    }
 }

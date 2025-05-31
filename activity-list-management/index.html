@@ -8,20 +8,18 @@
     <title>Activity Management</title>
 </head>
 <body>
-    <div id="app">
     <section id="notification"></section>
-    <section id="activity-list">No activities yet...</section>
-    <section id="form-wrap">
+    <main id="app">
         <form id="activity-form" title="activity-form">
-            <label for="activity-name" class="sr-only">Enter Activity</label>
             <textarea id="activity-name" placeholder="enter activity...."></textarea>
-            <div id="button-wrap" class="flex flex-wrap justify-center gap-3">
+            <div id="controller" class="flex flex-wrap justify-center gap-3">
                 <button id="submit-btn" type="submit">Add Data</button>
-                <button id="delete-all-btn" type="button">Delete All</button>
-                <button id="reset-form-btn" type="button">Clear Forn</button>
+                <button id="delete-all-button" type="button">Delete All</button>
+                <button id="reset-form-btn" type="button">Clear Form</button>
             </div>
         </form>
-    </section>
+        <section id="activity-list">No activities yet...</section>
+    </main>
     <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

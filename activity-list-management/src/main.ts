@@ -16,6 +16,7 @@ function teardown(): void {
     activitManagement.controller.abort();
     activitManagement.teardownModal();
     activitManagement.resetActivityForm();
+    activitManagement.cleanupStorage();
 }
 
 document.addEventListener("DOMContentLoaded", init);
