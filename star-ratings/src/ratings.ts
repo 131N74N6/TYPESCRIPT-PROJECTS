@@ -1,11 +1,12 @@
-import DataManager from "./storage.js";
-import Modal from "./modal.js";
+import DataManager from "./storage";
+import Modal from "./modal";
 
 interface Rating {
     id: string;
     name: string;
     rating: number;
     comment: string;
+    created_at: Date;
 }
 
 class UserRating extends DataManager<Rating> {
@@ -15,7 +16,6 @@ class UserRating extends DataManager<Rating> {
     private saveButton: HTMLButtonElement;
     private ratingsList: HTMLElement;
     private modalComponent: Modal;
-    private currentData: Rating[] = [];
     private controllers: AbortController;
     private selectedId: string | null = null;
 
@@ -23,7 +23,7 @@ class UserRating extends DataManager<Rating> {
         starWidgets: HTMLFormElement, username: HTMLInputElement, comment: HTMLTextAreaElement, 
         ratingsList: HTMLElement, saveButton: HTMLButtonElement, notification: HTMLElement
     ) {
-        super("star ratings");
+        super("ratings_list");
         this.starWidgets = starWidgets;
         this.username = username;
         this.comment = comment;
@@ -35,15 +35,14 @@ class UserRating extends DataManager<Rating> {
     }
 
     setupEventListeners(): void {
-        this.realtimeInit((ratings) => {
-            this.currentData = ratings;
+        this.realtimeInit(() => {
             this.showAllRatings();
         });
 
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
             if (target.closest("#delete-all-ratings")) this.deleteAllRatings();
-            if (target.closest("#clear-form")) this.resetOpinionForm();
+            else if (target.closest("#clear-form")) this.resetOpinionForm();
         }, { signal: this.controllers.signal });
 
         this.starWidgets.addEventListener("submit", async (event) => await this.submitRating(event), {
@@ -52,15 +51,16 @@ class UserRating extends DataManager<Rating> {
     }
 
     async showAllRatings(): Promise<void> {
-        try {
-            if (this.currentData.length > 0) {
-                const opinionComponent = document.createDocumentFragment();
-                this.currentData.forEach(data => opinionComponent.appendChild(this.makeRatingList(data)));
-                this.ratingsList.innerHTML = '';
-                this.ratingsList.appendChild(opinionComponent);
-            }
-        } catch (error) {
-            console.log(error);
+        this.ratingsList.innerHTML = '';
+
+        if (this.currentData.length > 0) {
+            const opinionComponent = document.createDocumentFragment();
+            this.currentData.forEach(data => opinionComponent.appendChild(this.makeRatingList(data)));
+            this.ratingsList.innerHTML = '';
+            this.ratingsList.appendChild(opinionComponent);
+        } else {
+            this.ratingsList.innerHTML = '';
+            this.ratingsList.textContent = '...No Rating Added...';
         }
     }
 
@@ -109,21 +109,28 @@ class UserRating extends DataManager<Rating> {
 
     private async submitRating(event: SubmitEvent): Promise<void> {
         event.preventDefault();
-        const isInEditMode = !!this.selectedId;
         const createRating = document.querySelector('input[name="rate"]:checked') as HTMLInputElement;
 
-        const newRating: Omit<Rating, 'id'> = {
-            name: this.username.value.trim() || `user_${Date.now()}`,
-            rating: Number(createRating.value.trim()),
-            comment: this.comment.value.trim()
+        try {
+            if (this.selectedId !== null) {
+                await this.changeSelectedData(this.selectedId, {
+                    created_at: new Date(),
+                    name: this.username.value.trim() || `user_${Date.now()}`,
+                    rating: Number(createRating.value.trim()),
+                    comment: this.comment.value.trim()
+                });
+            } else {
+                await this.addToStorage({
+                    created_at: new Date(),
+                    name: this.username.value.trim() || `user_${Date.now()}`,
+                    rating: Number(createRating.value.trim()),
+                    comment: this.comment.value.trim()
+                });
+            }
+        } catch (error) {
+            this.modalComponent.createModalComponent(`Failed to add rating ${error}`);
+            this.modalComponent.showModal();
         }
-
-        if (!isInEditMode) {
-            this.addToStorage(newRating as Omit<Rating, 'id'>);
-        } else {
-            this.changeSelectedData(this.selectedId as string, newRating);
-        }
-
         this.resetOpinionForm();
     }
 
@@ -177,7 +184,6 @@ class UserRating extends DataManager<Rating> {
         try {
             await this.deleteSelectedData(id);
             if (this.selectedId === id) this.resetOpinionForm();
-            this.showAllRatings();
         } catch (error) {
             this.modalComponent.createModalComponent("Error when deleting rates");
             this.modalComponent.showModal();
@@ -188,8 +194,13 @@ class UserRating extends DataManager<Rating> {
         try {
             if (this.currentData.length > 0) {
                 await this.deleteAllData();
-                this.ratingsList.replaceChildren();
                 this.resetOpinionForm();
+                this.teardownStorage();
+                this.ratingsList.innerHTML = '';
+                this.ratingsList.textContent = '...No Rating Added...';
+            } else {
+                this.modalComponent.createModalComponent("add one rating");
+                this.modalComponent.showModal();
             }
         } catch (error) {
             this.modalComponent.createModalComponent("Error when deleting rates");
@@ -198,8 +209,10 @@ class UserRating extends DataManager<Rating> {
     }
 
     cleanUp(): void {
+        this.selectedId = null;
         this.controllers.abort();
         this.modalComponent.teardownModal();
+        this.teardownStorage();
         this.resetOpinionForm();
     }
 }

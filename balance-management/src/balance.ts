@@ -13,9 +13,8 @@ const controller = new AbortController();
 
 const Displayer = (
     getBalance: HTMLInputElement, balanceInputField: HTMLFormElement, balanceList: HTMLElement, 
-    notification: HTMLElement, addBalance: HTMLButtonElement, oldest: HTMLInputElement, 
-    newest: HTMLInputElement, incomeTotal: HTMLElement, expenseTotal: HTMLElement, 
-    income_expense: HTMLElement
+    notification: HTMLElement, oldest: HTMLInputElement, newest: HTMLInputElement, incomeTotal: HTMLElement,
+    expenseTotal: HTMLElement, income_expense: HTMLElement
 ) => ({
     getSelectedId: null as string | null,
     balanceNotification: Modal(notification),
@@ -40,6 +39,7 @@ const Displayer = (
         oldest.addEventListener("change", () => { 
             newest.checked = false; 
             this.showAllData();
+            console.log("testing");
         }, { signal: controller.signal });
 
         newest.addEventListener("change", () => { 
@@ -73,7 +73,10 @@ const Displayer = (
     },
 
     showAllData(): void {
-        balanceList.replaceChildren();
+        balanceList.replaceChildren(); 
+        this.totalIncome = 0;
+        this.totalExpense = 0;
+        this.balanceDifference = 0;
 
         if (storage.currentData.length > 0) {
             let modifiedData = storage.currentData;
@@ -93,7 +96,7 @@ const Displayer = (
             modifiedData.forEach(detail => {
                 if (detail.type.toLowerCase() === 'income') {
                     this.totalIncome += detail.amount;
-                } else if (detail.type.toLowerCase() === 'expanse') {
+                } else if (detail.type.toLowerCase() === 'expense') {
                     this.totalExpense += detail.amount;
                 }
                 const component = this.createListComponent(detail);
@@ -114,14 +117,8 @@ const Displayer = (
             expenseTotal.textContent = `Expense = Rp 0`;
             income_expense.textContent = `Both Total = Rp 0`;
             
-            const component = document.createElement("div") as HTMLDivElement;
-            component.className = "error-message-wrap";
-
-            const message = document.createElement("div") as HTMLDivElement;
-            message.textContent = "...Empty...";
-            message.className = "message";
-            component.appendChild(message);
-            balanceList.appendChild(component)
+            balanceList.innerHTML = '';
+            balanceList.textContent = "...Empty...";
         }
     },
 
@@ -130,7 +127,6 @@ const Displayer = (
         balanceWrap.className = "balance-wrap";
 
         if (this.getSelectedId === detail.id) {
-            addBalance.disabled = true;
             // Edit mode
             const amountInput = document.createElement("input");
             amountInput.type = "number";
@@ -144,6 +140,8 @@ const Displayer = (
 
             const buttonWrap = document.createElement("div");
             buttonWrap.className = "button-wrap";
+            buttonWrap.style.display = "flex";
+            buttonWrap.style.gap = "0.6rem";
 
             const changeButton = document.createElement("button");
             changeButton.textContent = "Change";
@@ -169,7 +167,6 @@ const Displayer = (
             buttonWrap.append(changeButton, cancelButton);
             balanceWrap.append(amountInput, typeInput, buttonWrap);
         } else {
-            addBalance.disabled = false;
             // View mode
             const balanceData = document.createElement("p") as HTMLParagraphElement;
             balanceData.className = "balance-data";
