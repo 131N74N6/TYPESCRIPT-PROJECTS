@@ -1,4 +1,5 @@
-import { Product, productData } from "./item.js";
+import { productData } from "./item";
+import type { Product } from "./item";
 
 type CartItem = Product & {
     quantity: number;

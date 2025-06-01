@@ -50,4 +50,5 @@ const productData: Product[] = [
     }
 ];
 
-export { Product, productData }
+export { productData };
+export type { Product };

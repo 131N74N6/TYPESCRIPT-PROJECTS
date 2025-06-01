@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -13,17 +13,31 @@
     <title>Ratings</title>
 </head>
 <body>
+    <section id="notification"></section>
+    <section class="header">
+        <input type="checkbox" name="sorting" id="ascend-sort" value="ascend"/>
+        <label for="ascend-sort">Oldest</label>
+        
+        <input type="checkbox" name="sorting" id="descend-sort" value="descend"/>
+        <label for="descend-sort">Newest</label>
+
+        <input type="checkbox" name="rate-filter" id="show-1" value="1" checked/>
+        <label for="show-1">1</label>
+
+        <input type="checkbox" name="rate-filter" id="show-2" value="2" checked/>
+        <label for="show-2">2</label>
+
+        <input type="checkbox" name="rate-filter" id="show-3" value="3" checked/>
+        <label for="show-3">3</label>
+        
+        <input type="checkbox" name="rate-filter" id="show-4" value="4" checked/>
+        <label for="show-4">4</label>
+        
+        <input type="checkbox" name="rate-filter" id="show-5" value="5" checked/>
+        <label for="show-5">5</label>
+    </section>
     <main id="app">
-      <main id="app">
-        <header class="sidebar">
-            <button type="button" id="delete-all-ratings">Delete All</button>
-        </header>
-
-        <main class="rating-stars">
-            <section id="notification"></section>
-
-            <section id="ratings-list">...No Rating Added...</section>
-
+        <section class="sidebar">
             <form id="star-widgets" title="rating-fields">
                 <section class="stars">
                     <input type="radio" name="rate" title="rating-radio" id="rate-5" value="5"/>
@@ -41,19 +55,18 @@
                     <input type="radio" name="rate" title="rating-radio" id="rate-1" value="1"/>
                     <label for="rate-1"><i class="fa-solid fa-star"></i></label>
                 </section>
-
                 <section id="writing">
                     <input type="text" id="username" placeholder="insert-name..."/>
                     <textarea id="comment" placeholder="insert-your-opinion"></textarea>
-                    
                     <div class="button-wrap">
                         <button type="submit" id="save-btn">Send</button>
                         <button type="button" id="clear-form">Clear Form</button>
+                        <button type="button" id="delete-all-ratings">Delete All</button>
                     </div>
                 </section>
             </form>
-        </main>
-    </main>
+        </section>
+        <section id="ratings-list">...No Rating Added...</section>
     </main>
     <script type="module" src="/src/main.ts"></script>
 </body>

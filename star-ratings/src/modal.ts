@@ -20,10 +20,12 @@ class Modal {
     }
 
     showModal(): void {
+        this.content.classList.add("show");
         this.timeout = window.setTimeout(() => this.teardownModal(), 3000);
     }
 
     teardownModal(): void {
+        this.content.classList.remove("show");
         if (this.timeout) {
             clearTimeout(this.timeout);
             this.timeout = null;

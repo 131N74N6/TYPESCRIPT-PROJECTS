@@ -10,6 +10,12 @@ interface Rating {
 }
 
 class UserRating extends DataManager<Rating> {
+    private header: HTMLElement;
+    private ascendSort: HTMLInputElement; 
+    private descendSort: HTMLInputElement;
+    private ratingFilter: NodeListOf<HTMLInputElement>;
+    private rating: number[] = [1, 2, 3, 4, 5];
+
     private starWidgets: HTMLFormElement;
     private username: HTMLInputElement;
     private comment: HTMLTextAreaElement;
@@ -21,9 +27,16 @@ class UserRating extends DataManager<Rating> {
 
     constructor(
         starWidgets: HTMLFormElement, username: HTMLInputElement, comment: HTMLTextAreaElement, 
-        ratingsList: HTMLElement, saveButton: HTMLButtonElement, notification: HTMLElement
+        ratingsList: HTMLElement, saveButton: HTMLButtonElement, notification: HTMLElement, 
+        header: HTMLElement, ascendSort: HTMLInputElement, descendSort: HTMLInputElement, 
+        ratingFilter: NodeListOf<HTMLInputElement>
     ) {
         super("ratings_list");
+        this.header = header;
+        this.ascendSort = ascendSort;
+        this.descendSort = descendSort;
+        this.ratingFilter = ratingFilter;
+
         this.starWidgets = starWidgets;
         this.username = username;
         this.comment = comment;
@@ -31,7 +44,6 @@ class UserRating extends DataManager<Rating> {
         this.saveButton = saveButton;
         this.controllers = new AbortController();
         this.modalComponent = new Modal(notification);
-        this.setupEventListeners();
     }
 
     setupEventListeners(): void {
@@ -45,17 +57,51 @@ class UserRating extends DataManager<Rating> {
             else if (target.closest("#clear-form")) this.resetOpinionForm();
         }, { signal: this.controllers.signal });
 
+        this.header.addEventListener("change", (event) => {
+            const target = event.target as HTMLElement;
+            if (target.closest("#ascend-sort")) this.sortFromOldest();
+            else if (target.closest("#descend-sort")) this.sortFromNewest();
+            else if (target.closest('.header input[type="checkbox"]')) {
+                this.ratingFilter.forEach(rateFilter => {
+                    rateFilter.addEventListener("change", () => {
+                        this.rating = Array.from(this.ratingFilter)
+                        .filter(getData => getData.checked)
+                        .map(getValue => Number(getValue.value) as Rating['rating']);
+                        this.showAllRatings();
+                    }, { signal: this.controllers.signal });
+                });
+            }
+        }, { signal: this.controllers.signal });
+
         this.starWidgets.addEventListener("submit", async (event) => await this.submitRating(event), {
             signal: this.controllers.signal
         });
     }
 
-    async showAllRatings(): Promise<void> {
-        this.ratingsList.innerHTML = '';
+    sortFromNewest(): void {
+        this.ascendSort.checked = false;
+        this.showAllRatings();
+    }
 
+    sortFromOldest(): void {
+        this.descendSort.checked = false;
+        this.showAllRatings();
+    }
+
+    async showAllRatings(): Promise<void> {
+        const opinionComponent = document.createDocumentFragment();
         if (this.currentData.length > 0) {
-            const opinionComponent = document.createDocumentFragment();
-            this.currentData.forEach(data => opinionComponent.appendChild(this.makeRatingList(data)));
+            let filteredData = this.currentData.filter(rate => this.rating.includes(rate.rating));
+
+            if (this.ascendSort.checked) {
+                filteredData = [...filteredData].sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
+            } else if (this.descendSort.checked) {
+                filteredData = [...filteredData].sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+            } else {
+                filteredData = this.currentData.filter(rate => this.rating.includes(rate.rating));
+            }
+
+            filteredData.forEach(data => opinionComponent.appendChild(this.makeRatingList(data)));
             this.ratingsList.innerHTML = '';
             this.ratingsList.appendChild(opinionComponent);
         } else {
@@ -74,18 +120,20 @@ class UserRating extends DataManager<Rating> {
         username.className = "username";
         username.textContent = content.name;
 
-        const comment = document.createElement("div") as HTMLDivElement;
+        const comment = document.createElement("p") as HTMLParagraphElement;
         comment.className = "comment";
         comment.textContent = content.comment;
 
+        const createdAt = document.createElement('p') as HTMLParagraphElement;
+        createdAt.className = "created-at";
+        createdAt.textContent = content.created_at.toLocaleString();
+
         const buttonWrapper = document.createElement("div") as HTMLDivElement;
         buttonWrapper.className = "button-wrap";
-        buttonWrapper.style.display = "flex";
-        buttonWrapper.style.gap = "0.6rem";
 
         const selectBtn = document.createElement("button") as HTMLButtonElement;
         selectBtn.type = "button";
-        selectBtn.className = "select-btn";
+        selectBtn.className = "select-button";
         selectBtn.textContent = "select";
         selectBtn.style.textTransform = "capitalize";
         selectBtn.addEventListener("click", async () => await this.selectedRating(content.id), { 
@@ -94,7 +142,7 @@ class UserRating extends DataManager<Rating> {
 
         const deleteBtn = document.createElement("button") as HTMLButtonElement;
         deleteBtn.type = "button";
-        deleteBtn.className = "delete-btn";
+        deleteBtn.className = "delete-button";
         deleteBtn.textContent = "delete";
         deleteBtn.style.textTransform = "capitalize";
         deleteBtn.addEventListener("click",  async () => await this.deleteRating(content.id), { 
@@ -103,7 +151,7 @@ class UserRating extends DataManager<Rating> {
 
         buttonWrapper.append(selectBtn, deleteBtn);
 
-        opinion.append(username, this.makeStar(content.rating), comment, buttonWrapper);
+        opinion.append(username, this.makeStar(content.rating), comment, createdAt, buttonWrapper);
         return opinion;
     }
 
@@ -152,11 +200,11 @@ class UserRating extends DataManager<Rating> {
             const star = document.createElement("i") as HTMLElement;
             if (x <= starTotal) {
                 star.className = "fa-solid fa-star";
-                star.style.color = "#CDD3F4";
+                star.style.color = "#f2faed";
                 starWrap.appendChild(star);
             } else {
                 star.className = "fa-solid fa-star";
-                star.style.color = "#052A6A";
+                star.style.color = "#5a5384";
                 starWrap.appendChild(star);
             }
         }

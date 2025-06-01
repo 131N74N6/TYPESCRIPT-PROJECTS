@@ -1,22 +1,16 @@
 import supabase from "./supabase-config";
-import { RealtimeChannel } from "@supabase/supabase-js";
-import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";;
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-class DataManager <V extends { id: string }> {
-    protected tableName: string;
-    protected currentData: V[] = [];
+const Storage = <LTH extends { id: string }>(tableName: string) => ({
+    currentData: [] as LTH[],
 
-    protected constructor(tableName: string) {
-        this.tableName = tableName;
-    }
-
-    protected realtimeInit(callback: (data: V[]) => void): RealtimeChannel {
+    realtimeInit(callback: (data: LTH[]) => void): RealtimeChannel {
         const channel = supabase.channel('any');
         channel.on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: this.tableName },
-            (payload: RealtimePostgresChangesPayload<V>) => {
-                const processItem = (item: any): V => ({
+            { event: '*', schema: 'public', table: tableName },
+            (payload: RealtimePostgresChangesPayload<LTH>) => {
+                const processItem = (item: any): LTH => ({
                     ...item,
                     created_at: new Date(item.created_at)
                 });
@@ -42,10 +36,9 @@ class DataManager <V extends { id: string }> {
                 callback([...this.currentData]);
             }
         );
-        
         (async () => {
             const { data, error } = await supabase
-            .from(this.tableName)
+            .from(tableName)
             .select('*');
 
             if (error) {
@@ -56,55 +49,56 @@ class DataManager <V extends { id: string }> {
 
             this.currentData = data.map(item => ({
                 ...item, created_at: new Date(item.created_at)
-            })) as V[];
+            })) as LTH[];
 
             callback(this.currentData);
             channel.subscribe(); // Mulai subscribe setelah data awal dimuat
         })();
-
         return channel;
-    }
+    },
 
-    protected async addToStorage(new_data: Omit<V, 'id'>): Promise<string> {
+    saveToStorage1(): void {},
+
+    async saveToStorage1(id: string): Promise<void> {
+
+    },
+
+    async changeSelectedData1(new_data: Omit<LTH, 'id'>): Promise<string> {
         const { data, error } = await supabase
-        .from(this.tableName)
-        .insert([new_data])
+        .from(tableName)
+        .insert(new_data)
         .select();
-        
+
         if (error) throw error;
         return data[0].id;
-    }
+    },
 
-    protected async changeSelectedData(id: string, new_data: Partial<Omit<V, 'id'>>): Promise<void> {
+    async changeSelectedData2(id: string, new_data: Partial<Omit<LTH, 'id'>>): Promise<void> {
         const { error } = await supabase
-        .from(this.tableName)
+        .from(tableName)
         .update(new_data)
         .eq('id', id);
 
         if (error) throw error;
-    }
+    },
 
-    protected async deleteSelectedData(id: string): Promise<void> {
+    async deleteSelectedData(id: string): Promise<void> {
         const { error } = await supabase
-        .from(this.tableName)
+        .from(tableName)
         .delete()
         .eq('id', id);
 
         if (error) throw error;
-    }
+    },
 
-    protected async deleteAllData(): Promise<void> {
+    async deleteAllData(): Promise<void> {
         const { error } = await supabase
-        .from(this.tableName)
+        .from(tableName)
         .delete()
         .not('id', 'is', null);
 
         if (error) throw error;
     }
+});
 
-    protected teardownStorage(): void {
-        this.currentData = [];
-    }
-}
-
-export default DataManager;
+export default Storage;
