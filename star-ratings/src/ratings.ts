@@ -162,7 +162,6 @@ class UserRating extends DataManager<Rating> {
         try {
             if (this.selectedId !== null) {
                 await this.changeSelectedData(this.selectedId, {
-                    created_at: new Date(),
                     name: this.username.value.trim() || `user_${Date.now()}`,
                     rating: Number(createRating.value.trim()),
                     comment: this.comment.value.trim()

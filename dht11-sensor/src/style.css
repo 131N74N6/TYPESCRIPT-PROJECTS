@@ -1,0 +1,18 @@
+:root {
+    --add-color-1: #1d1d1b;
+    --eva-mark-09A: #272726;
+    --nerv-jp-logo: #ff0000;
+    --eva-unit-13-awaken: #f2faed;
+    --eva-unit-08: #db819e;
+    --eva-unit-13: #5a5384;
+}
+
+body {
+    background-color: var(--add-color-1);
+    color: var(--eva-unit-08);
+}
+
+main#app {
+    margin: 0 auto;
+    max-width: 1000px;
+}
