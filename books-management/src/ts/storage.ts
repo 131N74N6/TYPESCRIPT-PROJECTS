@@ -1,59 +1,103 @@
-import db from "./firebase-config";
-import { 
-    addDoc, collection, doc, getDocs, deleteDoc, onSnapshot, QuerySnapshot, Timestamp, updateDoc 
-} from "firebase/firestore";
-import type { DocumentData, Unsubscribe } from "firebase/firestore";
+import supabase from "./supabase-config";
+import { RealtimeChannel } from "@supabase/supabase-js";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-class DataStorage<S extends { id: string }> {
-    private collection_name: string;
+class DatabaseStorage <QWERTY extends { id: string }> {
+    protected currentData: QWERTY[] = [];
+    protected tableName: string;
 
-    constructor(collection_name: string) {
-        this.collection_name = collection_name;
+    constructor(tableName: string) {
+        this.tableName = tableName;
     }
 
-    realtimeInit(callback: (data: S[]) => void): Unsubscribe {
-        const unsubscribe = onSnapshot(collection(db, this.collection_name), (snapshot) => {
-            const data = this.processSnapshot(snapshot);
-            callback(data);
-        });
+    protected realtimeInit(callback: (data: QWERTY[]) => void): RealtimeChannel {
+        const channel = supabase.channel('any');
+        channel.on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: this.tableName },
+            (payload: RealtimePostgresChangesPayload<QWERTY>) => {
+                const processData = (dt: any): QWERTY => ({ 
+                    ...dt, created_at: new Date(dt.created_at) 
+                });
 
-        return unsubscribe;
-    }
-    
-    protected processSnapshot(snapshot: QuerySnapshot<DocumentData>): S[] {
-        return snapshot.docs.map(d => {
-            const convertedData = this.convertTimestamps(d.data());
-            return { id: d.id, ...convertedData } as S;
-        });
+                switch(payload.eventType) {
+                    case "INSERT": {
+                        const newData = processData(payload.new);
+                        this.currentData.push(newData);
+                        break;
+                    }
+                    case "UPDATE": {
+                        const changeData = processData(payload.new);
+                        const index = this.currentData.findIndex(dt => dt.id === changeData.id);
+                        if (index !== -1) this.currentData[index] = changeData;
+                        break;
+                    }
+                    case "DELETE": {
+                        const selectedData = payload.old.id;
+                        this.currentData = this.currentData.filter(dt => dt.id === selectedData);
+                        break;
+                    }
+                }
+                callback([...this.currentData]);
+            }
+        );
+        (async () => {
+            const { data, error } = await supabase
+            .from(this.tableName)
+            .select('*');
+
+            if (error) throw error;
+
+            this.currentData = data.map(dt => ({ 
+                ...dt, created_at: new Date(dt.created_at) 
+            })) as QWERTY[];
+
+            callback(this.currentData);
+        })();
+
+        return channel
     }
 
-    protected async saveToStorage(new_data: Omit<S, 'id'>): Promise<void> {
-        await addDoc(collection(db, this.collection_name), new_data);
+    protected async addToDatabase(newData: Omit<QWERTY, 'id'>): Promise<string> {
+        const { data, error } = await supabase
+        .from(this.tableName)
+        .insert(newData)
+        .select();
+
+        if (error) throw error;
+        return data[0].id;
     }
 
-    protected async saveChanges(id: string, new_data: Partial<Omit<S, 'id'>>): Promise<void> {
-        await updateDoc(doc(db, this.collection_name, id), new_data);
+    protected async changeSelectedData(id: string, newData: Partial<Omit<QWERTY, 'id'>>): Promise<void> {
+        const { error } = await supabase
+        .from(this.tableName)
+        .update(newData)
+        .eq('id', id);
+
+        if (error) throw error;
     }
 
-    protected async deleteSelected(id: string): Promise<void> {
-        await deleteDoc(doc(db, this.collection_name, id));
+    protected async deleteSelectedData(id: string): Promise<void> {
+        const { error } = await supabase
+        .from(this.tableName)
+        .delete()
+        .eq('id', id);
+
+        if (error) throw error;
     }
 
     protected async deleteAllData(): Promise<void> {
-        const data = await getDocs(collection(db, this.collection_name));
-        const deleted = data.docs.map(dt => deleteDoc(dt.ref));
-        await Promise.all(deleted);
+        const { error } = await supabase
+        .from(this.tableName)
+        .delete()
+        .not('id', 'is', null);
+
+        if (error) throw error;
     }
 
-    private convertTimestamps(data: DocumentData) {
-        return Object.entries(data).reduce((acc, [key, value]) => {
-            if (value instanceof Timestamp) {
-                acc[key] = value.toDate();
-            } else {
-                acc[key] = value;
-            } return acc;
-        }, {} as Record<string, any>);
+    teardownStorage(): void {
+        this.currentData = [];
     }
 }
 
-export default DataStorage;
+export default DatabaseStorage;

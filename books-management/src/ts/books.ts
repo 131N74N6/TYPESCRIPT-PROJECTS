@@ -1,12 +1,6 @@
-import DataStorage from "./storage";
+import DatabaseStorage from "./storage";
 import Modal from "./modal";
 import Theme from "./theme";
-
-const bookForm = document.getElementById("book-form") as HTMLFormElement;
-const title = document.getElementById("title") as HTMLInputElement;
-const author = document.getElementById("author") as HTMLInputElement;
-const year = document.getElementById("year") as HTMLInputElement;
-const submitButton = document.querySelector("#tambah-buku") as HTMLButtonElement;
 
 const searchForm = document.getElementById("search-form") as HTMLFormElement;
 const searchTitle = document.getElementById("search-title") as HTMLInputElement;
@@ -24,20 +18,27 @@ interface Book {
     released: number;     
 }
 
-class BookManager extends DataStorage<Book> {
+class BookManager extends DatabaseStorage<Book> {
     private controller: AbortController = new AbortController();
-    private currentData: Book[] = [];
     private getSelectedId: string | null = null;
     private darkTheme: Theme = new Theme("dark-mode", "dark-mode");
     private bookNotification: Modal = new Modal(message);
+
+    private searchForm = document.getElementById("search-form") as HTMLFormElement;
+    private searchTitle = document.getElementById("search-title") as HTMLInputElement;
+    private newestYear = document.getElementById("newest-year") as HTMLInputElement;
+    private oldestYear = document.getElementById("oldest-year") as HTMLInputElement;
+
+    private message = document.getElementById("message") as HTMLElement;
+    private darkToggle = document.getElementById("dark-mode") as HTMLInputElement;
+    private bookList = document.getElementById("book-list") as HTMLElement;
 
     constructor() {
         super("books list"); 
     }
 
     setEventListeners(): void {
-        this.realtimeInit((books_data) => {
-            this.currentData = books_data;
+        this.realtimeInit(() => {
             this.showAllBooks();
         });
 
@@ -74,39 +75,6 @@ class BookManager extends DataStorage<Book> {
     private handleDarkTheme = this.darkTheme.debounce((isActived: boolean) => {
         this.darkTheme.changeTheme(isActived ? "active" : "inactive");
     }, 100);
-
-    private async handleForm(event: SubmitEvent): Promise<void> {
-        event.preventDefault();
-        const items = this.currentData;
-        const isExist = items.some(item => item.title.toLowerCase() === title.value.toLowerCase());
-    
-        if (title.value.trim() === "" || author.value.trim() === "" || year.value.trim() === "") {
-            this.bookNotification.createModalComponent("Lengkapi data terlebih dahulu!");
-            this.bookNotification.showModal();
-            return;
-        }
-
-        if (isExist) {
-            this.bookNotification.createModalComponent("Buku sudah ada/terdaftar");
-            this.bookNotification.showModal();
-            return;
-        }
-
-        const newBook: Omit<Book, 'id'> = {
-            title: title.value,
-            author: author.value,
-            released: Number(year.value)
-        }
-
-        await this.saveToStorage(newBook);
-        this.resetForm();
-    }
-
-    private resetForm(): void {
-        this.getSelectedId = null;
-        submitButton.textContent = "+"; 
-        bookForm.reset();
-    }
 
     private resetSearchForm(): void {
         this.showAllBooks();

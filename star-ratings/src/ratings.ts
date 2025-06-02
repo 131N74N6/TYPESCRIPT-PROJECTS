@@ -91,17 +91,18 @@ class UserRating extends DataManager<Rating> {
     async showAllRatings(): Promise<void> {
         const opinionComponent = document.createDocumentFragment();
         if (this.currentData.length > 0) {
-            let filteredData = this.currentData.filter(rate => this.rating.includes(rate.rating));
+            const filteredData = this.currentData.filter(rate => this.rating.includes(rate.rating));
+            let modifiedData = filteredData;
 
             if (this.ascendSort.checked) {
-                filteredData = [...filteredData].sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
+                modifiedData = [...filteredData].sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
             } else if (this.descendSort.checked) {
-                filteredData = [...filteredData].sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+                modifiedData = [...filteredData].sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
             } else {
-                filteredData = this.currentData.filter(rate => this.rating.includes(rate.rating));
+                modifiedData = this.currentData.filter(rate => this.rating.includes(rate.rating));
             }
 
-            filteredData.forEach(data => opinionComponent.appendChild(this.makeRatingList(data)));
+            modifiedData.forEach(data => opinionComponent.appendChild(this.makeRatingList(data)));
             this.ratingsList.innerHTML = '';
             this.ratingsList.appendChild(opinionComponent);
         } else {

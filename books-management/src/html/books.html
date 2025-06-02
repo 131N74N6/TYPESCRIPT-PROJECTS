@@ -24,21 +24,14 @@
                 <label for="oldest-year">Terlama</label>
             </section>
         </header>
-        <section class="form-wrap">
+        <section id="book-wrap">
             <form id="search-form">
                 <input type="text" id="search-title" placeholder="cari judul buku"/>
                 <button type="submit" class="search-btn">Cari</button>
                 <button type="button" id="reset-search">Reset</button>
             </form>
-            <form id="book-form">
-                <input type="text" id="title" placeholder="Judul">
-                <input type="text" id="author" placeholder="Penulis">
-                <input type="text" id="year" placeholder="Tahun">
-                <button type="submit" id="tambah-buku">+</button>
-                <button type="button" id="reset-form">Reset</button>
-            </form>
+            <section id="book-list"></section>
         </section>
-        <section id="book-list"></section>
     </main>
     <script type="module" src="../ts/books.ts"></script>
 </body>
