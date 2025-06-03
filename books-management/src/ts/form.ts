@@ -7,21 +7,24 @@ interface Book {
     title: string;   
     author: string; 
     released: number;
+    created_at: Date;
 }
 
 class BookForm extends DatabaseStorage<Book> {
+    public controller: AbortController = new AbortController();
     private bookForm = document.getElementById("book-form") as HTMLFormElement;
     private title = document.getElementById("title") as HTMLInputElement;
     private author = document.getElementById("author") as HTMLInputElement;
     private year = document.getElementById("year") as HTMLInputElement;
-    public controller: AbortController = new AbortController();
+
     private darkToggle = document.getElementById("dark-mode") as HTMLInputElement;
     private message = document.getElementById("message") as HTMLElement;
-    private bookNotification: Modal = new Modal(this.message);
     private darkTheme: Theme = new Theme("dark-mode", "dark-mode");
+    private formNotification: Modal;
 
     constructor() {
         super("books_list");
+        this.formNotification = new Modal(this.message);
     }
 
     initEventListener(): void {
@@ -46,31 +49,35 @@ class BookForm extends DatabaseStorage<Book> {
     private async addBook(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         const trimmedTitle = this.title.value.trim();
-        const isExist = this.currentData.some(item => item.title.trim().toLowerCase() === trimmedTitle);
+        const getData = Array.from(this.currentData.values());
+        const isExist = getData.some(item => item.title.trim().toLowerCase() === trimmedTitle);
 
         try {
             if (!trimmedTitle || !this.author.value.trim() || !this.year) {
-                this.bookNotification.createModalComponent("Lengkapi data terlebih dahulu!");
-                this.bookNotification.showModal();
+                this.formNotification.createModalComponent("Fulfill the form!");
+                this.formNotification.showModal();
                 return;
             }
 
             if (isExist) {
-                this.bookNotification.createModalComponent("Buku sudah ada/terdaftar");
-                this.bookNotification.showModal();
+                this.formNotification.createModalComponent("Buku sudah ada/terdaftar");
+                this.formNotification.showModal();
                 return;
             }
             
             await this.addToDatabase({
                 title: this.title.value,
+                created_at: new Date(),
                 author: this.author.value,
                 released: Number(this.year.value)
             });
-        } catch (error) {
-            this.bookNotification.createModalComponent(`Gagal menambahkan buku ${error}`);
-            this.bookNotification.showModal();
-        }
 
+            this.formNotification.createModalComponent("Book sucessfully added!");
+            this.formNotification.showModal();
+        } catch (error) {
+            this.formNotification.createModalComponent(`Failed to add book: ${error}`);
+            this.formNotification.showModal();
+        }
         this.bookForm.reset();
     }
 }

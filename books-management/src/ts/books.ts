@@ -2,15 +2,6 @@ import DatabaseStorage from "./storage";
 import Modal from "./modal";
 import Theme from "./theme";
 
-const searchForm = document.getElementById("search-form") as HTMLFormElement;
-const searchTitle = document.getElementById("search-title") as HTMLInputElement;
-const newestYear = document.getElementById("newest-year") as HTMLInputElement;
-const oldestYear = document.getElementById("oldest-year") as HTMLInputElement;
-
-const message = document.getElementById("message") as HTMLElement;
-const darkToggle = document.getElementById("dark-mode") as HTMLInputElement;
-const bookList = document.getElementById("book-list") as HTMLElement;
-
 interface Book {
     id: string;      
     title: string;    
@@ -22,19 +13,20 @@ class BookManager extends DatabaseStorage<Book> {
     private controller: AbortController = new AbortController();
     private getSelectedId: string | null = null;
     private darkTheme: Theme = new Theme("dark-mode", "dark-mode");
-    private bookNotification: Modal = new Modal(message);
+    private bookNotification: Modal;
 
     private searchForm = document.getElementById("search-form") as HTMLFormElement;
     private searchTitle = document.getElementById("search-title") as HTMLInputElement;
     private newestYear = document.getElementById("newest-year") as HTMLInputElement;
     private oldestYear = document.getElementById("oldest-year") as HTMLInputElement;
-
     private message = document.getElementById("message") as HTMLElement;
+
     private darkToggle = document.getElementById("dark-mode") as HTMLInputElement;
     private bookList = document.getElementById("book-list") as HTMLElement;
 
     constructor() {
-        super("books list"); 
+        super("books_list");
+        this.bookNotification = new Modal(this.message);
     }
 
     setEventListeners(): void {
@@ -45,29 +37,25 @@ class BookManager extends DatabaseStorage<Book> {
         document.addEventListener('click', (event) => {
             const target = event.target as HTMLElement;
             if (target.closest(".delete-all")) this.deleteAllBooks();
-            if (target.closest("#reset-form")) this.resetForm();
-            if (target.closest("#reset-search")) this.resetSearchForm();
+            else if (target.closest("#reset-form")) this.searchForm.reset();
+            else if (target.closest("#reset-search")) this.resetSearchForm();
         }, { signal: this.controller.signal });
 
-        newestYear.addEventListener("change", () => {
-            oldestYear.checked = false;
+        this.newestYear.addEventListener("change", () => {
+            this.oldestYear.checked = false;
             this.showAllBooks();
         }, { signal: this.controller.signal });
 
-        oldestYear.addEventListener("change", () => {
-            newestYear.checked = false;
+        this.oldestYear.addEventListener("change", () => {
+            this.newestYear.checked = false;
             this.showAllBooks();
         }, { signal: this.controller.signal });
-            
-        bookForm.addEventListener("submit", (event) => this.handleForm(event), { 
+
+        this.searchForm.addEventListener("submit", (event) => this.handleSearch(event), { 
             signal: this.controller.signal 
         });
 
-        searchForm.addEventListener("submit", (event) => this.handleSearch(event), { 
-            signal: this.controller.signal 
-        });
-
-        darkToggle.addEventListener("change", (event) => this.handleThemeToggle(event), { 
+        this.darkToggle.addEventListener("change", (event) => this.handleThemeToggle(event), { 
             signal: this.controller.signal 
         });
     }
@@ -78,7 +66,7 @@ class BookManager extends DatabaseStorage<Book> {
 
     private resetSearchForm(): void {
         this.showAllBooks();
-        searchForm.reset();
+        this.searchForm.reset();
     }
     
     private handleThemeToggle(event: Event): void {
@@ -87,35 +75,28 @@ class BookManager extends DatabaseStorage<Book> {
 
     showAllBooks(): void {
         const bookFragment = document.createDocumentFragment();
-        let sortedBooks = this.currentData;
+        const getAllBooks = Array.from(this.currentData.values());
+        let sortedBooks = getAllBooks;
+        this.bookList.innerHTML = '';
 
         if (sortedBooks.length > 0) {
-            if (newestYear.checked === true) {
-                sortedBooks = [...this.currentData].sort((a,b) => b.released - a.released);
-            }
-
-            if (oldestYear.checked === true) {
-                sortedBooks = [...this.currentData].sort((a,b) => a.released - b.released);
+            if (this.newestYear.checked === true) {
+                sortedBooks = [...getAllBooks].sort((a,b) => b.released - a.released);
+            } else if (this.oldestYear.checked === true) {
+                sortedBooks = [...getAllBooks].sort((a,b) => a.released - b.released);
+            } else {
+                sortedBooks = getAllBooks;
             }
             
             sortedBooks.forEach(book => {
                 const component = this.createListBookComponent(book);
                 bookFragment.appendChild(component);
             });
-        } else {
-            const empty = document.createElement("div") as HTMLDivElement;
-            empty.className = "empty-list";
             
-            const message = document.createElement("div");
-            message.className = "message";
-            message.textContent = "Daftar buku kosong";
-
-            empty.appendChild(message);
-            bookFragment.appendChild(empty);
+            this.bookList.appendChild(bookFragment);
+        } else {
+            this.bookList.textContent = "No books";
         }
-
-        bookList.innerHTML = '';
-        bookList.appendChild(bookFragment);
     }
 
     private createListBookComponent(book: Book): HTMLDivElement {
@@ -146,15 +127,19 @@ class BookManager extends DatabaseStorage<Book> {
             changeBookData.textContent = "Save";
             changeBookData.className = "change-book-data";
             changeBookData.onclick = async () => {
-                const changedBookData = {
-                    title: newTitle.value,
-                    author: newAuthor.value,
-                    released: Number(newReleasedYear.value)
+                try {
+                    this.getSelectedId = null;
+                    this.showAllBooks();
+                    
+                    await this.changeSelectedData(book.id, {
+                        title: newTitle.value,
+                        author: newAuthor.value,
+                        released: Number(newReleasedYear.value)
+                    });
+                } catch (error) {
+                    this.bookNotification.createModalComponent(`Failed to change book: ${error}`);
+                    this.bookNotification.showModal();
                 }
-                
-                this.getSelectedId = null;
-                this.showAllBooks();
-                await this.saveChanges(book.id, changedBookData);
             }
 
             const cancelButton = document.createElement("button") as HTMLButtonElement;
@@ -212,30 +197,38 @@ class BookManager extends DatabaseStorage<Book> {
     }
 
     private async deleteBook(id: string): Promise<void> {
-        await this.deleteSelected(id);
-        
-        if (this.getSelectedId === id) this.resetForm();
-        
-        this.showAllBooks();
+        try {
+            await this.deleteSelectedData(id);
+            if (this.getSelectedId === id) this.searchForm.reset();           
+        } catch (error) {
+            this.bookNotification.createModalComponent(`Failed to delete book: ${error}`);
+            this.bookNotification.showModal();
+        }
     }
 
     async deleteAllBooks(): Promise<void> {
-        const data = this.currentData;
-        if (data.length > 0) {
-            await this.deleteAllData();
-            bookList.replaceChildren();
-            this.resetForm();
-        } else {
-            this.bookNotification.createModalComponent("Tidak ada buku yang ditambahkan");
+        const data = Array.from(this.currentData.values());
+
+        try {
+            if (data.length > 0) {
+                await this.deleteAllData();
+                this.searchForm.reset();
+                this.bookList.innerHTML = '';
+                this.bookList.textContent = 'No Books';
+            } else {
+                this.bookNotification.createModalComponent("Please add one book");
+                this.bookNotification.showModal();
+            }     
+        } catch (error) {
+            this.bookNotification.createModalComponent(`Failed to delete all books: ${error}`);
             this.bookNotification.showModal();
         }
-        this.showAllBooks();
     }
 
     private handleSearch(event: SubmitEvent): void {
         event.preventDefault();
-        const items = this.currentData;
-        const searched = searchTitle.value.toLowerCase();
+        const items = Array.from(this.currentData.values());
+        const searched = this.searchTitle.value.toLowerCase();
     
         if (searched.trim() === "") {
             this.bookNotification.createModalComponent("Masukkan judul buku yang akan dicari");
@@ -255,8 +248,8 @@ class BookManager extends DatabaseStorage<Book> {
             filteredBooks.appendChild(searchedComponents);
         });
 
-        bookList.innerHTML = '';
-        bookList.appendChild(filteredBooks);
+        this.bookList.innerHTML = '';
+        this.bookList.appendChild(filteredBooks);
     }
 
     cleanUp(): void {

@@ -1,23 +1,21 @@
 import supabase from "./supabase-config";
-import { RealtimeChannel } from "@supabase/supabase-js";
-import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-class DatabaseStorage <QWERTY extends { id: string }> {
-    protected currentData: Map<string, QWERTY>;
-    protected tableName: string;
+class DatabaseStorage <LV extends { id: string }> {
+    protected currentData: Map<string, LV>;
+    private tabble_name: string;
 
-    constructor(tableName: string) {
-        this.tableName = tableName;
-        this.currentData = new Map<string, QWERTY>();
+    constructor(tabble_name: string) {
+        this.tabble_name = tabble_name
+        this.currentData = new Map<string, LV>()
     }
-
-    protected realtimeInit(callback: (data: QWERTY[]) => void): RealtimeChannel {
+    protected realtimeInit(callback: (data: LV[]) => void): RealtimeChannel {
         const channel = supabase.channel('any');
         channel.on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: this.tableName },
-            (payload: RealtimePostgresChangesPayload<QWERTY>) => {
-                const processData = (dt: any): QWERTY => ({ 
+            { event: '*', schema: 'public', table: this.tabble_name },
+            (payload: RealtimePostgresChangesPayload<LV>) => {
+                const processData = (dt: any): LV => ({ 
                     ...dt, created_at: new Date(dt.created_at) 
                 });
 
@@ -45,7 +43,7 @@ class DatabaseStorage <QWERTY extends { id: string }> {
         );
         (async () => {
             const { data, error } = await supabase
-            .from(this.tableName)
+            .from(this.tabble_name)
             .select('*');
 
             if (error) {
@@ -55,7 +53,7 @@ class DatabaseStorage <QWERTY extends { id: string }> {
 
             this.currentData.clear();
             data.forEach(dt => {
-                const processed = { ...dt, created_at: new Date(dt.created_at) } as QWERTY;
+                const processed = { ...dt, created_at: new Date(dt.created_at) } as LV;
                 this.currentData.set(processed.id, processed);
             });
 
@@ -66,9 +64,9 @@ class DatabaseStorage <QWERTY extends { id: string }> {
         return channel
     }
 
-    protected async addToDatabase(newData: Omit<QWERTY, 'id'>): Promise<string> {
+    protected async addToDatabase(newData: Omit<LV, 'id'>): Promise<string> {
         const { data, error } = await supabase
-        .from(this.tableName)
+        .from(this.tabble_name)
         .insert([newData])
         .select();
 
@@ -76,9 +74,9 @@ class DatabaseStorage <QWERTY extends { id: string }> {
         return data[0].id;
     }
 
-    protected async changeSelectedData(id: string, newData: Partial<Omit<QWERTY, 'id'>>): Promise<void> {
+    protected async changeSelectedData(id: string, newData: Partial<Omit<LV, 'id'>>): Promise<void> {
         const { error } = await supabase
-        .from(this.tableName)
+        .from(this.tabble_name)
         .update(newData)
         .eq('id', id);
 
@@ -87,7 +85,7 @@ class DatabaseStorage <QWERTY extends { id: string }> {
 
     protected async deleteSelectedData(id: string): Promise<void> {
         const { error } = await supabase
-        .from(this.tableName)
+        .from(this.tabble_name)
         .delete()
         .eq('id', id);
 
@@ -96,7 +94,7 @@ class DatabaseStorage <QWERTY extends { id: string }> {
 
     protected async deleteAllData(): Promise<void> {
         const { error } = await supabase
-        .from(this.tableName)
+        .from(this.tabble_name)
         .delete()
         .not('id', 'is', null);
 
