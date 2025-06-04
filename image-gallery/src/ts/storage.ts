@@ -1,21 +1,21 @@
 import supabase from "./supabase-config";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-class DatabaseStorage <LV extends { id: string }> {
-    protected currentData: Map<string, LV>;
+class DatabaseStorage <RC extends { id: string }> {
+    protected currentData: Map<string, RC>;
     private tabble_name: string;
 
     constructor(tabble_name: string) {
         this.tabble_name = tabble_name
-        this.currentData = new Map<string, LV>()
+        this.currentData = new Map<string, RC>()
     }
-    protected realtimeInit(callback: (data: LV[]) => void): RealtimeChannel {
+    protected realtimeInit(callback: (data: RC[]) => void): RealtimeChannel {
         const channel = supabase.channel('any');
         channel.on(
             'postgres_changes',
             { event: '*', schema: 'public', table: this.tabble_name },
-            (payload: RealtimePostgresChangesPayload<LV>) => {
-                const processData = (dt: any): LV => ({ 
+            (payload: RealtimePostgresChangesPayload<RC>) => {
+                const processData = (dt: any): RC => ({ 
                     ...dt, created_at: new Date(dt.created_at) 
                 });
 
@@ -53,7 +53,7 @@ class DatabaseStorage <LV extends { id: string }> {
 
             this.currentData.clear();
             data.forEach(dt => {
-                const processed = { ...dt, created_at: new Date(dt.created_at) } as LV;
+                const processed = { ...dt, created_at: new Date(dt.created_at) } as RC;
                 this.currentData.set(processed.id, processed);
             });
 
@@ -64,7 +64,7 @@ class DatabaseStorage <LV extends { id: string }> {
         return channel
     }
 
-    protected async addToDatabase(newData: Omit<LV, 'id'>): Promise<string> {
+    protected async addToDatabase(newData: Omit<RC, 'id'>): Promise<string> {
         const { data, error } = await supabase
         .from(this.tabble_name)
         .insert([newData])
@@ -74,7 +74,17 @@ class DatabaseStorage <LV extends { id: string }> {
         return data[0].id;
     }
 
-    protected async changeSelectedData(id: string, newData: Partial<Omit<LV, 'id'>>): Promise<void> {
+    protected async selectedData(id: string): Promise<RC[]> {
+        const { data, error } = await supabase
+        .from(this.tabble_name)
+        .select("*")
+        .eq('id', id);
+
+        if (error) throw error;
+        return data;
+    }
+
+    protected async changeSelectedData(id: string, newData: Partial<Omit<RC, 'id'>>): Promise<void> {
         const { error } = await supabase
         .from(this.tabble_name)
         .update(newData)
