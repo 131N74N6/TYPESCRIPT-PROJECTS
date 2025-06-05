@@ -2,9 +2,6 @@ import DatabaseStorage from "./storage";
 
 interface ImageMedia {
     id: string;
-    created_at: Date;
-    title: string;
-    image_name: string[];
     image_url: string[];
 }
 

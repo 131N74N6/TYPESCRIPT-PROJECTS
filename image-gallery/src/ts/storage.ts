@@ -3,17 +3,18 @@ import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/
 
 class DatabaseStorage <RC extends { id: string }> {
     protected currentData: Map<string, RC>;
-    private tabble_name: string;
+    private table_name: string;
 
-    constructor(tabble_name: string) {
-        this.tabble_name = tabble_name
+    constructor(table_name: string) {
+        this.table_name = table_name
         this.currentData = new Map<string, RC>()
     }
-    protected realtimeInit(callback: (data: RC[]) => void): RealtimeChannel {
+    protected realtimeInit(
+        callback: (data: RC[]) => void, initialQuery?: (query: any) => any): RealtimeChannel {
         const channel = supabase.channel('any');
         channel.on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: this.tabble_name },
+            { event: '*', schema: 'public', table: this.table_name },
             (payload: RealtimePostgresChangesPayload<RC>) => {
                 const processData = (dt: any): RC => ({ 
                     ...dt, created_at: new Date(dt.created_at) 
@@ -42,23 +43,34 @@ class DatabaseStorage <RC extends { id: string }> {
             }
         );
         (async () => {
-            const { data, error } = await supabase
-            .from(this.tabble_name)
-            .select('*');
+            try {
+                let query = supabase
+                .from(this.table_name)
+                .select('*');
 
-            if (error) {
+                if (initialQuery) {
+                    query = initialQuery(query);
+                }
+
+                const { data, error } = await query;
+
+                if (error) {
+                    callback([]);
+                    throw new Error(`Error fetching data: ${error.message}`);
+                }
+
+                this.currentData.clear();
+                data.forEach(dt => {
+                    const processed = { ...dt, created_at: new Date(dt.created_at) } as RC;
+                    this.currentData.set(processed.id, processed);
+                });
+
+                callback(Array.from(this.currentData.values()));
+                channel.subscribe();
+            } catch (error) {
                 callback([]);
-                throw new Error(`Error fetching data: ${error}`);
+                throw new Error(`Initialization error: ${error}`);
             }
-
-            this.currentData.clear();
-            data.forEach(dt => {
-                const processed = { ...dt, created_at: new Date(dt.created_at) } as RC;
-                this.currentData.set(processed.id, processed);
-            });
-
-            callback(Array.from(this.currentData.values()));
-            channel.subscribe();
         })();
 
         return channel
@@ -66,7 +78,7 @@ class DatabaseStorage <RC extends { id: string }> {
 
     protected async addToDatabase(newData: Omit<RC, 'id'>): Promise<string> {
         const { data, error } = await supabase
-        .from(this.tabble_name)
+        .from(this.table_name)
         .insert([newData])
         .select();
 
@@ -76,7 +88,7 @@ class DatabaseStorage <RC extends { id: string }> {
 
     protected async selectedData(id: string): Promise<RC[]> {
         const { data, error } = await supabase
-        .from(this.tabble_name)
+        .from(this.table_name)
         .select("*")
         .eq('id', id);
 
@@ -86,7 +98,7 @@ class DatabaseStorage <RC extends { id: string }> {
 
     protected async changeSelectedData(id: string, newData: Partial<Omit<RC, 'id'>>): Promise<void> {
         const { error } = await supabase
-        .from(this.tabble_name)
+        .from(this.table_name)
         .update(newData)
         .eq('id', id);
 
@@ -95,7 +107,7 @@ class DatabaseStorage <RC extends { id: string }> {
 
     protected async deleteSelectedData(id: string): Promise<void> {
         const { error } = await supabase
-        .from(this.tabble_name)
+        .from(this.table_name)
         .delete()
         .eq('id', id);
 
@@ -104,7 +116,7 @@ class DatabaseStorage <RC extends { id: string }> {
 
     protected async deleteAllData(): Promise<void> {
         const { error } = await supabase
-        .from(this.tabble_name)
+        .from(this.table_name)
         .delete()
         .not('id', 'is', null);
 
