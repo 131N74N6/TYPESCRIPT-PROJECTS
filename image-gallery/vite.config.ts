@@ -12,7 +12,8 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: resolve(root, 'html', 'index.html'),
-                gallery: resolve(root, 'html', 'gallery.html')
+                gallery: resolve(root, 'html', 'gallery.html'),
+                detail: resolve(root, 'html', 'detail.html')
             }
         }
     },

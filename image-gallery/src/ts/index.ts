@@ -2,21 +2,16 @@ import DatabaseStorage from "./storage";
 import uploadToSupabaseStorage from "./supabase-storage";
 import Modal from "./modal";
 
-interface UserData {
+interface ImageUploader {
     id: string;
     uploader_name: string;
-    created_at: Date;
-}
-
-interface ImageGalleryForm {
-    id: string;
     created_at: Date;
     image_name: string[];
     image_url: string[];
     title: string;
 }
 
-class ImageForm extends DatabaseStorage<UserData & ImageGalleryForm> {
+class ImageForm extends DatabaseStorage<ImageUploader> {
     controller: AbortController = new AbortController();
     imageFiles: File[] = [];
     private imageUploadField = document.getElementById("image-upload-field") as HTMLFormElement;
@@ -29,12 +24,16 @@ class ImageForm extends DatabaseStorage<UserData & ImageGalleryForm> {
     private uploaderModal: Modal = new Modal(this.notification);
 
     constructor() {
-        super("image_gallery_user");
-        super("image_gallery_content");
+        super("image_gallery");
     }
 
     initEventListener(): void {
-        this.imageUploadField.addEventListener("submit", async (event) => this.addImage(event), {
+        document.addEventListener("click", (event) => {
+            const target = event.target as HTMLElement;
+            if (target.closest("#image-preview-container")) this.mediaFile.click();
+        }, { signal: this.controller.signal });
+
+        this.imageUploadField.addEventListener("submit", async (event) => await this.addImage(event), {
             signal: this.controller.signal
         });
         
@@ -69,14 +68,9 @@ class ImageForm extends DatabaseStorage<UserData & ImageGalleryForm> {
                 img.className = 'preview-image';
                 img.alt = `Preview ${i + 1}`;
                 
-                const fileNameSpan = document.createElement('span');
-                fileNameSpan.textContent = file.name;
-                fileNameSpan.className = 'file-name';
-                
                 previewDiv.appendChild(img);
-                previewDiv.appendChild(fileNameSpan);
                 this.imagePreviewContainer.appendChild(previewDiv);
-            };
+            }
             reader.readAsDataURL(file);
         }
     }
@@ -101,32 +95,30 @@ class ImageForm extends DatabaseStorage<UserData & ImageGalleryForm> {
             // Save to database
             await this.addToDatabase({
                 created_at: new Date(),
-                uploader_name: this.uploaderName.value.trim() || `user_${Date.now()}`
-            });
-
-            await this.addToDatabase({
+                uploader_name: this.uploaderName.value.trim() || `user_${Date.now()}`,
                 title: this.imageTitle.value.trim() || `gallery_${Date.now()}`,
-                created_at: new Date(),
                 image_name: imageNames,
-                image_url, imageUrls
-            })
+                image_url: imageUrls
+            });
             
-            // Reset form
-            this.uploaderName.value = '';
-            this.imageTitle.value = '';
-            this.mediaFile.value = '';
-            this.imagePreviewContainer.innerHTML = '';
-            this.imageFiles = [];
-            
+            this.resetForm();
             this.uploaderModal.createComponent('Images uploaded successfully!');
             this.uploaderModal.showComponent();
         } catch (error) {
-            this.uploaderModal.createComponent(`Upload error: ${error}`);
+            this.uploaderModal.createComponent(`${error}`);
             this.uploaderModal.showComponent();
         } finally {
             this.submitButton.disabled = false;
             this.submitButton.textContent = 'Upload Images';
         }
+    }
+
+    resetForm(): void {
+        this.controller.abort();
+        this.imageUploadField.reset();
+        this.mediaFile.value = '';
+        this.imagePreviewContainer.innerHTML = '';
+        this.imageFiles = [];
     }
 }
 
@@ -138,8 +130,7 @@ function initForm(): void {
 
 function teardownForm(): void {
     imageForm.teardownStorage();
-    imageForm.controller.abort();
-    imageForm.imageFiles = [];
+    imageForm.resetForm();
 }
 
 document.addEventListener("DOMContentLoaded", initForm);
