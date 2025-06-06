@@ -9,14 +9,10 @@
 }
 
 #images-gallery {
+    padding: 1rem;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.3rem;
-}
-
-#images-gallery .image-post {
-    padding: 1rem;
-    box-shadow: 0 0 6px var(--evangelion-inner);
+    gap: 0.5rem;
 }
 
 #images-gallery .image-post .image-wrap {

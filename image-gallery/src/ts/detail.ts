@@ -4,8 +4,8 @@ import Modal from "./modal";
 interface DetailData {
     id: string;
     image_url: string[];
+    uploader_name: string;
     title: string;
-    description?: string; // Tambahkan ini jika ada deskripsi di DB
     created_at: Date;
 }
 
@@ -13,56 +13,22 @@ class GalleryDetail extends DatabaseStorage<DetailData> {
     private controller = new AbortController();
     private urlParams = new URLSearchParams(window.location.search);
     private imageId: string | null;
-
-    private notification__: HTMLElement;
-    private galleryDetailModal: Modal;
-    private imageGroup: HTMLElement; // <section class="image-group">
-
-    // Elemen DOM yang akan kita manipulasi untuk carousel
-    private carouselContainer: HTMLElement; // <div class="carousel-container">
-    private navigationContainer: HTMLElement; // <div class="navigation">
-
     private currentIndex = 0;
     private totalSlide = 0;
+
+    private notification__ = document.getElementById("notification__") as HTMLElement;
+    private galleryDetailModal: Modal = new Modal(this.notification__);
+
+    private uploaderName = document.querySelector(".uploader-name") as HTMLParagraphElement;
+    private carouselContainer = document.querySelector(".carousel-container") as HTMLElement; 
+    private navigationContainer = document.querySelector(".navigation") as HTMLElement; 
+    private imageTitle = document.querySelector(".image-title") as HTMLParagraphElement;
+    private uploadedAt = document.querySelector(".created-at") as HTMLParagraphElement;
 
     constructor() {
         super("image_gallery");
         this.imageId = this.urlParams.get('id');
-
-        const notificationElement = document.getElementById("notification__");
-        if (!notificationElement) throw new Error("Element with ID 'notification__' not found.");
-        this.notification__ = notificationElement;
-        this.galleryDetailModal = new Modal(this.notification__);
-
-        const imageGroupElement = document.querySelector(".image-group");
-        if (!imageGroupElement) throw new Error("Element with class 'image-group' not found.");
-        this.imageGroup = imageGroupElement as HTMLElement;
-
-        const carouselContainerElement = document.querySelector(".carousel-container");
-        if (!carouselContainerElement) throw new Error("Element with class 'carousel-container' not found.");
-        this.carouselContainer = carouselContainerElement as HTMLElement;
-
-        const navigationElement = document.querySelector(".navigation");
-        if (!navigationElement) throw new Error("Element with class 'navigation' not found.");
-        this.navigationContainer = navigationElement as HTMLElement;
-
-        // Memuat data awal saat instance dibuat
-        this.realtimeInit((data) => {
-            const updatedDetail = data.find(item => item.id === this.imageId);
-            if (updatedDetail) {
-                this.renderDetail(updatedDetail);
-            } else if (!updatedDetail && this.imageId) {
-                this.imageGroup.innerHTML = '<p>Gambar ini telah dihapus.</p>';
-                this.resetCarouselState();
-            }
-        });
-
-        if (this.imageId) {
-            this.showGalleryDetail(); // Panggil untuk memuat data awal
-        } else {
-            this.imageGroup.innerHTML = '<p>ID gambar tidak ditemukan di URL.</p>';
-            this.navigationContainer.style.display = 'none';
-        }
+        this.realtimeInit(() => this.showGalleryDetail());
     }
 
     initEventListener(): void {
@@ -82,9 +48,14 @@ class GalleryDetail extends DatabaseStorage<DetailData> {
     }
 
     async showGalleryDetail(): Promise<void> {
+        // Hapus konten carousel dan info sebelum memuat yang baru
+        this.carouselContainer.innerHTML = '';
+        this.imageTitle.textContent = '';
+        this.uploadedAt.textContent = '';
+        this.navigationContainer.style.display = 'none'; // Sembunyikan navigasi secara default
+
         if (!this.imageId) {
-            this.imageGroup.innerHTML = '<p>ID gambar tidak ditemukan.</p>';
-            this.navigationContainer.style.display = 'none';
+            this.displayMessage('Image not found or has been deleted');
             return;
         }
 
@@ -92,24 +63,22 @@ class GalleryDetail extends DatabaseStorage<DetailData> {
             const getDetail = await this.selectedData(this.imageId);
 
             if (getDetail) {
-                this.renderDetail(getDetail);
+                this.createSliderComponent(getDetail);
             } else {
-                this.imageGroup.innerHTML = '<p>Gambar tidak ditemukan.</p>';
-                this.navigationContainer.style.display = 'none';
+                this.displayMessage('Image not found or has been deleted');
                 this.resetCarouselState();
             }
         } catch (error: any) {
             console.error("Error fetching gallery detail:", error);
-            this.galleryDetailModal.createComponent(`Gagal memuat detail gambar: ${error.message || error}`);
+            this.galleryDetailModal.createComponent(`Failed to load image: ${error.message || error}`);
             this.galleryDetailModal.showComponent();
-            this.imageGroup.innerHTML = '<p>Terjadi kesalahan saat memuat detail gambar.</p>';
-            this.navigationContainer.style.display = 'none';
+            this.displayMessage('Something went wrong. Please try again later.');
             this.resetCarouselState();
         }
     }
 
-    private renderDetail(detail: DetailData): void {
-        this.carouselContainer.innerHTML = '';
+    private createSliderComponent(detail: DetailData): void {
+        this.carouselContainer.innerHTML = ''; // Pastikan carousel bersih sebelum mengisi
 
         detail.image_url.forEach((image, index) => {
             const imageWrap = document.createElement("div") as HTMLDivElement;
@@ -124,15 +93,9 @@ class GalleryDetail extends DatabaseStorage<DetailData> {
             this.carouselContainer.appendChild(imageWrap);
         });
 
-
-        // Perbarui detail info di HTML yang sudah ada
-        const titleElement = this.imageGroup.querySelector('.detail-info h2') as HTMLHeadingElement;
-        const descriptionElement = this.imageGroup.querySelector('.detail-info .description') as HTMLParagraphElement;
-        const createdAtElement = this.imageGroup.querySelector('.detail-info .created-at') as HTMLElement;
-
-        if (titleElement) titleElement.textContent = detail.title;
-        if (descriptionElement) descriptionElement.textContent = detail.description || 'Tidak ada deskripsi.';
-        if (createdAtElement) createdAtElement.textContent = `Diunggah pada: ${detail.created_at.toLocaleString()}`;
+        this.uploaderName.textContent = detail.uploader_name;
+        this.imageTitle.textContent = detail.title;
+        this.uploadedAt.textContent = `Uploaded at: ${new Date(detail.created_at).toLocaleString()}`;
 
         // Perbarui totalSlide dan reset currentIndex
         this.totalSlide = detail.image_url.length;
@@ -145,10 +108,14 @@ class GalleryDetail extends DatabaseStorage<DetailData> {
         this.updateCarousel();
     }
 
+    private displayMessage(message: string): void {
+        this.carouselContainer.innerHTML = `<p style="text-align: center; padding: 20px;">${message}</p>`;
+        this.imageTitle.textContent = ''; // Kosongkan judul dan tanggal
+        this.uploadedAt.textContent = '';
+    }
+
     updateCarousel(): void {
-        if (!this.carouselContainer || this.totalSlide === 0) {
-            return;
-        }
+        if (!this.carouselContainer || this.totalSlide === 0) return;
 
         if (this.currentIndex < 0) {
             this.currentIndex = this.totalSlide - 1;
@@ -156,8 +123,6 @@ class GalleryDetail extends DatabaseStorage<DetailData> {
             this.currentIndex = 0;
         }
 
-        // Terapkan transform pada carouselContainer itu sendiri
-        // Karena setiap gambar adalah flex item 100%, kita geser 100% dari lebar container
         this.carouselContainer.style.transform = `translateX(-${this.currentIndex * 100}%)`;
     }
 
@@ -180,7 +145,10 @@ class GalleryDetail extends DatabaseStorage<DetailData> {
         this.controller.abort();
         this.resetCarouselState();
         this.galleryDetailModal.teardownComponent();
-        this.imageGroup.innerHTML = '';
+        this.carouselContainer.innerHTML = ''; // Kosongkan hanya carousel
+        this.imageTitle.textContent = '';
+        this.uploadedAt.textContent = '';
+        this.navigationContainer.style.display = 'none';
     }
 }
 

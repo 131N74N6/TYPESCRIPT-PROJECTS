@@ -11,7 +11,10 @@
 main#gallery-detail {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 1rem 0;
+    padding: 1rem;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 0.55fr 300px;
 }
 
 main#gallery-detail .image-group {
@@ -65,4 +68,10 @@ main#gallery-detail .image-group .carousel-container .image-wrap img {
 
 .right-button  {
     right: 15px;
+}
+
+@media (max-width: 768px) {
+    main#gallery-detail {
+        grid-template-columns: 1fr;
+    }
 }
