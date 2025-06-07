@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="../css/index.css"/>
+    <title>DS-STACK-ACTIVITY</title>
+</head>
+<body>
+    <main id="app">
+        <form id="act-input-filed">
+            <input type="text" placeholder="enter activity" id="act-input"/>
+            <button type="submit">Add +</button>
+            <button type="button" id="delete-all">Delete All</button>
+        </form>
+        <section id="activity-content">
+            <section>
+                <button type="button" id="pop-stack">Delete</button>
+            </section>
+            <section id="activity-stack"></section>
+        </section>
+    </main>
+    <script type="module" src="../ts/index.ts"></script>
+</body>
+</html>
