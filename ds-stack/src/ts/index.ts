@@ -1,3 +1,4 @@
+import Modal from "./modal";
 import TableStorage from "./storage";
 
 interface Activity {
@@ -8,9 +9,13 @@ interface Activity {
 
 class ActivityStack extends TableStorage<Activity> {
     private controller = new AbortController();
+    private getSelcetedId: string | null = null;
     private actInputFiled = document.getElementById("act-input-filed") as HTMLFormElement;
     private activityInput = document.getElementById("act-input") as HTMLInputElement;
     private activities = document.getElementById("activity-stack") as HTMLElement;
+    private notification = document.getElementById("notification") as HTMLElement;
+    private submitButton = document.getElementById("submit-button") as HTMLButtonElement;
+    private actNotification = new Modal(this.notification);
 
     constructor() {
         super("activity_list"); 
@@ -21,12 +26,26 @@ class ActivityStack extends TableStorage<Activity> {
         document.addEventListener("click", async (event) => {
             const target = event.target as HTMLElement;
             if (target.closest("#delete-all")) await this.clearActivities();
-            else if (target.closest("#pop-stack")) await this.popActivity()
+            else if (target.closest("#pop-stack")) await this.popActivity();
+            else if (target.closest("#reset-form")) this.resetactForm();
         }, { signal: this.controller.signal });
 
         this.actInputFiled.addEventListener("submit", async (event) => this.addActivity(event), {
             signal: this.controller.signal
         });
+
+        this.activities.addEventListener('click', (event) => {
+            const target = event.target as HTMLElement;
+            if (target.classList.contains('select-button')) {
+                const activityWrap = target.closest('.activity-wrap') as HTMLDivElement;
+                if (activityWrap) {
+                    const id = activityWrap.dataset.id; // Pastikan card memiliki data-id
+                    if (id) {
+                        this.selectedActivity(id);
+                    }
+                }
+            }
+        }, { signal: this.controller.signal });
     }
 
     showAllActivities(): void {
@@ -34,11 +53,18 @@ class ActivityStack extends TableStorage<Activity> {
         const activityData = Array.from(this.currentData.values())
         .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 
-        if (activityData.length > 0) {
-            activityData.forEach(data => fragment.appendChild(this.createActComponent(data)));
-            this.activities.innerHTML = ''; 
-            this.activities.appendChild(fragment);
-        } else {
+        try {
+            if (activityData.length > 0) {
+                activityData.forEach(data => fragment.appendChild(this.createActComponent(data)));
+                this.activities.innerHTML = ''; 
+                this.activities.appendChild(fragment);
+            } else {
+                this.activities.innerHTML = '';
+                this.activities.textContent = 'No Activity Added!';
+            }
+        } catch (error) {
+            this.actNotification.createModal(`Failed to load data: ${error}`);
+            this.actNotification.showModal();
             this.activities.innerHTML = '';
             this.activities.textContent = 'No Activity Added!';
         }
@@ -52,38 +78,52 @@ class ActivityStack extends TableStorage<Activity> {
 
         try {
             if (trimmedValue === "" || !trimmedValue) {
-                alert("Enter required data!");
+                this.actNotification.createModal("Enter required data!");
+                this.actNotification.showModal();
                 return;
             }
 
             if (isExist) {
-                alert("Activity already exist!");
-                this.actInputFiled.reset();
+                this.actNotification.createModal("Activity already exist!");
+                this.actNotification.showModal();
                 return;
             }
 
-            await this.push({ act_name: trimmedValue, created_at: new Date() });
-            this.actInputFiled.reset(); 
+            if (this.getSelcetedId === null) {
+                await this.push({ act_name: trimmedValue, created_at: new Date() });
+            } else {
+                await this.changeSelectedData(this.getSelcetedId, { act_name: trimmedValue });
+            }
         } catch (error: any) {
-            alert(`Failed to add activity: ${error.message || error}`);
+            this.actNotification.createModal(`Failed to add activity: ${error.message || error}`);
+            this.actNotification.showModal();
+        } finally {
+            this.resetactForm();
         }
     }
 
     private async popActivity(): Promise<void> {
         const activityData = Array.from(this.currentData.values());
         try {
-            activityData.length > 0 ? await this.pop() : alert("Empty!");
+            if (activityData.length > 0) await this.pop();
+            else { 
+                this.actNotification.createModal("Empty!");
+                this.actNotification.showModal();
+            }
         } catch (error: any) {
             alert(`Failed to delete activity: ${error.message || error}`);
         }
     }
 
-    async editActivity(id: string, newName: string): Promise<void> {
-        try {
-            await this.changeSelectedData(id, { act_name: newName });
-        } catch (error: any) {
-            alert(`Failed to change: ${error.message || error}`);
-        }
+    private selectedActivity(id: string): void {
+        this.getSelcetedId = id;
+        const data = Array.from(this.currentData.values());
+        const activity = data.find(dt => dt.id === this.getSelcetedId);
+
+        if (!activity) return;
+
+        this.activityInput.value = activity.act_name;
+        this.submitButton.textContent = 'Save Change';
     }
 
     private createActComponent(detail: Activity): HTMLDivElement {
@@ -93,13 +133,18 @@ class ActivityStack extends TableStorage<Activity> {
 
         const activityName = document.createElement("p") as HTMLParagraphElement;
         activityName.className = "activity-name";
-        activityName.textContent = detail.act_name;
+        activityName.textContent = `Aktivitas: ${detail.act_name}`;
 
         const createdAt = document.createElement("p") as HTMLParagraphElement;
         createdAt.className = "created-at";
         createdAt.textContent = `Dibuat pada: ${detail.created_at.toLocaleString()}`;
 
-        div.append(activityName, createdAt);
+        const selectButton = document.createElement("button") as HTMLButtonElement;
+        selectButton.className = 'select-button';
+        selectButton.type = 'button';
+        selectButton.textContent = 'Select';
+
+        div.append(activityName, createdAt, selectButton);
         return div;
     }
 
@@ -113,6 +158,12 @@ class ActivityStack extends TableStorage<Activity> {
             alert(`Failed to delete all: ${error.message || error}`);
         }
     }
+
+    resetactForm(): void {
+        this.actInputFiled.reset();
+        this.getSelcetedId = null;
+        this.submitButton.textContent = 'Add +';
+    }
 }
 
 const activityStack = new ActivityStack();
@@ -123,6 +174,7 @@ function initActivityStack(): void {
 
 function teardownActivityStack(): void {
     activityStack.teardown(); 
+    activityStack.resetactForm();
 }
 
 document.addEventListener("DOMContentLoaded", initActivityStack);

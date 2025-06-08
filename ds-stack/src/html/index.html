@@ -8,15 +8,20 @@
     <title>DS-STACK-ACTIVITY</title>
 </head>
 <body>
+    <header>
+        <a href="hobbies.html">Hobby (Stack)</a>
+    </header>
+    <section id="notification"></section>
+    <form id="act-input-filed">
+        <input type="text" placeholder="enter activity" id="act-input"/>
+        <button type="submit" id="submit-button">Add +</button>
+        <button type="button" id="reset-form">Clear Form</button>
+    </form>
     <main id="app">
-        <form id="act-input-filed">
-            <input type="text" placeholder="enter activity" id="act-input"/>
-            <button type="submit">Add +</button>
-            <button type="button" id="delete-all">Delete All</button>
-        </form>
         <section id="activity-content">
-            <section>
+            <section id="pop-the-stack">
                 <button type="button" id="pop-stack">Delete</button>
+                <button type="button" id="delete-all">Delete All</button>
             </section>
             <section id="activity-stack"></section>
         </section>

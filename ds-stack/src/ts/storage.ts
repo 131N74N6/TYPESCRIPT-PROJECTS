@@ -4,7 +4,6 @@ import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/
 export default class TableStorage<DXD extends { id: string }> {
     protected currentData: Map<string, DXD>;
     protected tableName: string;
-    protected channels: RealtimeChannel[] = [];
 
     constructor(tableName: string) {
         this.tableName = tableName;
@@ -73,7 +72,6 @@ export default class TableStorage<DXD extends { id: string }> {
         return channel;
     }
 
-    // Memastikan created_at selalu diubah menjadi objek Date
     protected processData(data: any): DXD {
         if (data && data.created_at && typeof data.created_at === 'string') {
             return { ...data, created_at: new Date(data.created_at) } as DXD;
@@ -85,10 +83,9 @@ export default class TableStorage<DXD extends { id: string }> {
         const { data, error } = await supabase
         .from(this.tableName)
         .insert([item])
-        .select('id'); // Hanya pilih ID yang baru saja dibuat
+        .select(); 
 
-        if (error) throw new Error(`Error pushing data: ${error.message}`);
-        if (!data || data.length === 0) throw new Error("No data returned after insert.");
+        if (error) throw error;
 
         return data[0].id;
     }
@@ -104,7 +101,6 @@ export default class TableStorage<DXD extends { id: string }> {
         .limit(1);
 
         if (error) throw error;
-        if (!data || data.length === 0) return undefined;
 
         const topItem = data[0];
         
@@ -138,10 +134,8 @@ export default class TableStorage<DXD extends { id: string }> {
         .from(this.tableName)
         .select('*', { count: 'exact', head: true });
 
-        if (error) {
-            console.error('Error checking if stack is empty:', error.message);
-            return true; // Asumsikan kosong jika ada error database
-        }
+        if (error) throw error;
+        
         return count === 0;
     }
 
@@ -164,8 +158,6 @@ export default class TableStorage<DXD extends { id: string }> {
     }
 
     teardown(): void {
-        this.channels.forEach(channel => supabase.removeChannel(channel));
-        this.channels = [];
         this.currentData.clear();
     }
 }

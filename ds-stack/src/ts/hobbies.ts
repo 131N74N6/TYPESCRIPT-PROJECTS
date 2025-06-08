@@ -1,10 +1,7 @@
 import TableStorage from "./storage";
 import Modal from "./modal";
 
-const Gender = {
-    Male: "Laki-laki",
-    Female: "Perempuan"
-} as const;
+const Gender = { Male: "Laki-laki", Female: "Perempuan" } as const;
 
 type Gender = typeof Gender[keyof typeof Gender];
 
@@ -17,65 +14,175 @@ interface UserInfo {
 }
 
 class HobbiesStacks extends TableStorage<UserInfo> {
-    private controller: AbortController = new AbortController();
     private dataForm = document.getElementById("dataForm") as HTMLFormElement;
     private inputName = document.getElementById("name") as HTMLInputElement;
     private submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
-
+    private controller: AbortController = new AbortController();
+    
+    private getSelectedId: string | null = null;
     private dataList = document.getElementById("data-list") as HTMLElement;
-    private searchInput = document.getElementById("searched-name") as HTMLInputElement;
-    private searchForm = document.getElementById("searchForm") as HTMLFormElement;
+    // private searchInput = document.getElementById("searched-name") as HTMLInputElement;
+    // private searchForm = document.getElementById("searchForm") as HTMLFormElement;
     private notification = document.getElementById("notification") as HTMLElement;
     private hobbiesModal = new Modal(this.notification);
 
     constructor() {
-        super("hobbies");
+        super("hobbies_list");
+        this.realtimeInit(() => this.showAllHobbiesAndUsers());
     }
 
-    initEventListeners(): void {}
-
-    async addHobbiesAndUser(event: SubmitEvent): Promise<void> {
-        event.preventDefault();
-        const trimmedValue = this.inputName.value.trim().toLowerCase();
-        const data = Array.from(this.currentData.values());
-        const isExist = data.some(dt => dt.name.toLowerCase() === trimmedValue);
-
-        const selectedGender = document.querySelector<HTMLInputElement>(
-            'input[name="gender"]:checked'
-        )?.value as Gender;
-        
-        const selectedHobbies = Array.from(
-            document.querySelectorAll<HTMLInputElement>('input[name="hobbies"]:checked')
-        ).map(hobby => hobby.value);
-
-        if (trimmedValue === "" || !selectedGender || !selectedHobbies) {
-            this.hobbiesModal.createModal("Missing required data...");
-            this.hobbiesModal.teardownModal();
-            this.dataForm.reset();
-            return;
-        }
-
-        if (isExist) {
-            this.hobbiesModal.createModal("Name already exist...");
-            this.hobbiesModal.teardownModal();
-            this.dataForm.reset();
-            return;
-        }
-
-        await this.push({
-            created_at: new Date(),
-            name: trimmedValue,
-            gender: selectedGender,
-            hobbies: selectedHobbies
+    initEventListeners(): void {
+        this.dataForm.addEventListener('submit', async (event) => this.addData(event), {
+            signal: this.controller.signal
         });
 
-        this.dataForm.reset();
+        this.dataList.addEventListener('click', (event) => {
+            const target = event.target as HTMLElement;
+            if (target.classList.contains('select-button')) {
+                const card = target.closest('.card') as HTMLDivElement;
+                if (card) {
+                    const id = card.dataset.id; // Pastikan card memiliki data-id
+                    if (id) {
+                        this.selectedData(id);
+                    }
+                }
+            }
+        }, { signal: this.controller.signal });
     }
 
-    showAllHobbiesAndUsers(): void {}
+    async addData(event: SubmitEvent): Promise<void> {
+        event.preventDefault();
+        const data = Array.from(this.currentData.values());
+        const trimmedValue = this.inputName.value.trim().toLowerCase();
+        const isExist = data.some(dt => dt.name.toLowerCase() === trimmedValue);
+        
+        const selectedGenderElement = document.querySelector<HTMLInputElement>('input[name="gender"]:checked');
+        const selectedGender = selectedGenderElement?.value as Gender;
+
+        const selectedHobbiesElements = document.querySelectorAll<HTMLInputElement>('input[name="hobbies"]:checked');
+        const selectedHobbies = Array.from(selectedHobbiesElements).map(hobby => hobby.value);
+        
+        try {
+            if (trimmedValue === "" || !selectedGender || !selectedHobbies) {
+                this.hobbiesModal.createModal("Missing required data...");
+                this.hobbiesModal.showModal();
+                return;
+            }
+
+            if (isExist) {
+                this.hobbiesModal.createModal("Name already exist...");
+                this.dataForm.reset();
+                this.hobbiesModal.showModal();
+                return;
+            }
+
+            if (this.getSelectedId === null) {
+                await this.push({
+                    created_at: new Date(),
+                    name: trimmedValue,
+                    gender: selectedGender,
+                    hobbies: selectedHobbies
+                });
+            } else {
+                await this.changeSelectedData(this.getSelectedId, {
+                    name: trimmedValue,
+                    gender: selectedGender,
+                    hobbies: selectedHobbies
+                });
+            }
+        } catch (error) {
+            this.hobbiesModal.createModal(`Failed to add/change data: ${error}`);
+            this.hobbiesModal.showModal();
+        } finally {
+            this.resetHobbyForm();
+            this.hobbiesModal.teardownModal();
+        }
+    }
+
+    showAllHobbiesAndUsers(): void {
+        const fragment = document.createDocumentFragment();
+        const data = Array.from(this.currentData.values())
+        .sort((a,b) => b.created_at.getTime() - a.created_at.getTime());
+        
+        try {
+            if (data.length > 0) {
+                this.dataList.innerHTML = '';
+                data.forEach(dt => fragment.appendChild(this.createComponent(dt)));
+                this.dataList.appendChild(fragment);
+            } else {
+                this.dataList.innerHTML = '';
+                this.dataList.textContent = 'Empty';
+            }
+        } catch (error) {
+            this.hobbiesModal.createModal(`Failed to load data: ${error}`);
+            this.hobbiesModal.showModal();
+            this.dataList.innerHTML = '';
+            this.dataList.textContent = 'Empty';
+        }
+    }
 
     createComponent(detail: UserInfo): HTMLDivElement {
+        const card = document.createElement("div") as HTMLDivElement
+        card.className = "card";
+
+        const username = document.createElement("div") as HTMLDivElement;
+        username.className = "username";
+        username.textContent = detail.name;
+
+        const usergender = document.createElement("div") as HTMLDivElement;
+        usergender.className = "user-gender";
+        usergender.textContent = `gender: ${detail.gender}`;
         
+        const userhobbies = document.createElement("div") as HTMLDivElement;
+        userhobbies.className = "user-hobbies";
+        userhobbies.textContent = `Hobby: ${detail.hobbies.join(', ')}`;
+
+        const createdAt = document.createElement("div") as HTMLDivElement;
+        createdAt.className = "created-at";
+        createdAt.textContent = `Added at: ${detail.created_at.toLocaleString()}`;
+
+        const buttonWrap = document.createElement("div") as HTMLDivElement;
+        buttonWrap.className = 'button-wrap';
+
+        const selectButton = document.createElement("button") as HTMLButtonElement;
+        selectButton.className = 'select-button';
+        selectButton.type = 'button';
+        selectButton.textContent = 'Select';
+
+        card.append(username, usergender, userhobbies, createdAt, selectButton);
+        return card;
+    }
+
+    teardownHobby(): void {
+        this.resetHobbyForm();
+        this.controller.abort();
+        this.hobbiesModal.teardownModal();
+    }
+
+    resetHobbyForm(): void {
+        this.dataForm.reset();
+        this.getSelectedId = null;
+    }
+
+    private selectedData(id: string): void {
+        this.getSelectedId = id;
+        this.submitBtn.textContent = 'Change';
+        const data = Array.from(this.currentData.values());
+        const detail = data.find(dt => dt.id === this.getSelectedId);
+        
+        if (!detail) return;
+
+        document.querySelectorAll<HTMLInputElement>('input[name="hobbies"]')
+        .forEach(checkbox => checkbox.checked = false);
+        
+        const oldGender = document.querySelector<HTMLInputElement>(`input[value="${detail.gender}"]`);
+        detail.hobbies.forEach(hobby => {
+            const oldHobby = document.querySelector<HTMLInputElement>(`input[value="${hobby}"][name="hobbies"]`);
+            if (oldHobby) oldHobby.checked = true;
+        });
+
+        this.inputName.value = detail.name;
+        if (oldGender) oldGender.checked = true;
     }
 }
 
@@ -87,6 +194,8 @@ function initHobbiesStacks(): void {
 
 function teardownHobbiesStacks(): void {
     hobbyStack.teardown(); 
+    hobbyStack.resetHobbyForm();
+    hobbyStack.teardownHobby();
 }
 
 document.addEventListener("DOMContentLoaded", initHobbiesStacks);

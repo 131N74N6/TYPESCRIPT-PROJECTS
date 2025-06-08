@@ -8,7 +8,6 @@ class Modal {
         this.notification = notification;
         this.notificationComponent = document.createElement("div");
         this.notificationMessage = document.createElement("p");
-        this.showModal();
     }
 
     createModal(text: string): void {
@@ -18,13 +17,13 @@ class Modal {
         this.notification.appendChild(this.notificationComponent);
     }
 
-    private showModal(): void {
+    showModal(): void {
         this.timeout = window.setTimeout(() => this.teardownModal(), 3000);
     }
 
     teardownModal(): void {
-        if (this.notification.parentElement) {
-            this.notification.parentElement.removeChild(this.notification);
+        if (this.notificationComponent.parentElement) {
+            this.notificationComponent.parentElement.removeChild(this.notificationComponent);
         }
         
         if (this.timeout) {
