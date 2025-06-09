@@ -107,6 +107,8 @@ const queueDynamicInput = () => ({
         } catch (error) {
             dynamicInputNotification.createComponent(`Failed to add data: ${error}`);
             dynamicInputNotification.showComponent();
+        } finally {
+            this.resetform();
         }
     },
 
@@ -144,6 +146,7 @@ const queueDynamicInput = () => ({
             const newDataName = document.createElement('input') as HTMLInputElement;
             newDataName.type = 'text';
             newDataName.value = detail.data_name;
+            newDataName.placeholder = 'enter new data name...'
             newDataName.className = 'new-data-name';
 
             const newDetailInfo = document.createElement('div') as HTMLDivElement;
