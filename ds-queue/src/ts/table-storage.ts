@@ -9,10 +9,24 @@ type BaseData = {
 
 const TableStorage = <ZZZ extends BaseData>(tableName: string) => ({
     currentData: new Map<string, ZZZ>() as Map<string, ZZZ>,
+    realtimeChannel: null as RealtimeChannel | null ,
+    isInitialized: false as boolean,
 
-    realtimeInit(callback: (data: ZZZ[])=> void, initialQuery?: (query: any) => any): RealtimeChannel {
-        const channel = supabase.channel(`table_${tableName}`);
-        channel.on(
+    async realtimeInit(callback: (data: ZZZ[])=> void, initialQuery?: (query: any) => any): Promise<void> {
+        if (this.isInitialized && this.realtimeChannel) {
+            console.warn(`TableStorage for ${tableName} is already initialized.`);
+            // Panggil callback dengan data yang sudah ada jika sudah diinisialisasi
+            callback(Array.from(this.currentData.values()));
+            return;
+        }
+
+        if (this.realtimeChannel) {
+            this.realtimeChannel.unsubscribe();
+            this.realtimeChannel = null;
+        }
+
+        this.realtimeChannel = supabase.channel(`table_${tableName}`);
+        this.realtimeChannel.on(
             'postgres_changes',
             { event: '*', schema: 'public', table: tableName },
             (payload: RealtimePostgresChangesPayload<ZZZ>) => {
@@ -33,36 +47,37 @@ const TableStorage = <ZZZ extends BaseData>(tableName: string) => ({
                         break;
                     }
                 }
+                callback(Array.from(this.currentData.values()));
             }
         );
 
-        (async () => {
-            try {
-                let query = supabase
-                .from(tableName)
-                .select('*')
-                .order('created_at', { ascending: true });
+        try {
+            let query = supabase
+            .from(tableName)
+            .select('*')
+            .order('created_at', { ascending: true });
 
-                const { data, error } = await query;
+            const { data, error } = await query;
 
-                if (initialQuery) query = initialQuery(query);
+            if (initialQuery) query = initialQuery(query);
 
-                if (error) throw error;
+            if (error) throw error;
 
-                this.currentData.clear();
-                data.forEach(dt => {
-                    const processed = { ...dt, created_at: new Date(dt.created_at) } as ZZZ;
-                    this.currentData.set(processed.id, processed);
-                });
+            this.currentData.clear();
+            data.forEach(dt => {
+                const processed = { ...dt, created_at: new Date(dt.created_at) } as ZZZ;
+                this.currentData.set(processed.id, processed);
+            });
 
-                callback(Array.from(this.currentData.values()));
-                channel.subscribe();
-            } catch (error) {
-                throw error;
-            }
-        })();
-
-        return channel
+            callback(Array.from(this.currentData.values()));
+            this.realtimeChannel.subscribe();
+            this.isInitialized = true;
+        } catch (error) {
+            callback([]);
+            this.realtimeChannel = null;
+            this.isInitialized = false;
+            throw new Error(`Failed to load data: ${error}`);
+        }
     },
 
     processData(data: any): ZZZ {
@@ -121,6 +136,11 @@ const TableStorage = <ZZZ extends BaseData>(tableName: string) => ({
     },
 
     teardownTable(): void {
+        if (this.realtimeChannel) {
+            this.realtimeChannel.unsubscribe();
+            this.realtimeChannel = null;
+        }
+        this.isInitialized = false;
         this.currentData.clear();
     }
 });

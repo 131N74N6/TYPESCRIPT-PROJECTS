@@ -11,7 +11,8 @@ export default defineConfig({
         emptyOutDir: true,
         rollupOptions: {
             input: {
-                main: resolve(root, 'html', 'index.html')
+                main: resolve(root, 'html', 'index.html'),
+                dynamic_input: resolve(root, 'html', 'dynamic-input.html')
             }
         }
     },

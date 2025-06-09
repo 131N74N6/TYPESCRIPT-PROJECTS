@@ -18,32 +18,42 @@ class HobbiesStacks extends TableStorage<UserInfo> {
     private inputName = document.getElementById("name") as HTMLInputElement;
     private submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
     private controller: AbortController = new AbortController();
-    
     private getSelectedId: string | null = null;
+    
     private dataList = document.getElementById("data-list") as HTMLElement;
-    // private searchInput = document.getElementById("searched-name") as HTMLInputElement;
-    // private searchForm = document.getElementById("searchForm") as HTMLFormElement;
+    private searchForm = document.getElementById("searchForm") as HTMLFormElement;
+    private searchInput = document.getElementById("searched-name") as HTMLInputElement;
     private notification = document.getElementById("notification") as HTMLElement;
     private hobbiesModal = new Modal(this.notification);
 
     constructor() {
         super("hobbies_list");
-        this.realtimeInit(() => this.showAllHobbiesAndUsers());
+        this.realtimeInit(() => this.showAlluserDataAndHobby());
     }
 
     initEventListeners(): void {
+        document.addEventListener('click', async (event) => {
+            const target = event.target as HTMLElement;
+            if (target.closest('#close-filter')) this.resetfilter();
+            else if (target.closest('#delete-all')) await this.deleteAllUser();
+        }, { signal: this.controller.signal });
+
         this.dataForm.addEventListener('submit', async (event) => this.addData(event), {
+            signal: this.controller.signal
+        });
+
+        this.searchForm.addEventListener('submit', async (event) => this.handleFilterData(event), {
             signal: this.controller.signal
         });
 
         this.dataList.addEventListener('click', (event) => {
             const target = event.target as HTMLElement;
             if (target.classList.contains('select-button')) {
-                const card = target.closest('.card') as HTMLDivElement;
-                if (card) {
-                    const id = card.dataset.id; // Pastikan card memiliki data-id
+                const userDataAndHobby = target.closest('.card') as HTMLDivElement;
+                if (userDataAndHobby) {
+                    const id = userDataAndHobby.dataset.id; // Pastikan card memiliki data-id
                     if (id) {
-                        this.selectedData(id);
+                        this.selectedUserData(id);
                     }
                 }
             }
@@ -99,7 +109,7 @@ class HobbiesStacks extends TableStorage<UserInfo> {
         }
     }
 
-    showAllHobbiesAndUsers(): void {
+    showAlluserDataAndHobby(): void {
         const fragment = document.createDocumentFragment();
         const data = Array.from(this.currentData.values())
         .sort((a,b) => b.created_at.getTime() - a.created_at.getTime());
@@ -121,8 +131,9 @@ class HobbiesStacks extends TableStorage<UserInfo> {
         }
     }
 
-    createComponent(detail: UserInfo): HTMLDivElement {
-        const card = document.createElement("div") as HTMLDivElement
+    private createComponent(detail: UserInfo): HTMLDivElement {
+        const card = document.createElement("div") as HTMLDivElement;
+        card.dataset.id = detail.id;
         card.className = "card";
 
         const username = document.createElement("div") as HTMLDivElement;
@@ -153,6 +164,31 @@ class HobbiesStacks extends TableStorage<UserInfo> {
         return card;
     }
 
+    private async handleFilterData(event: SubmitEvent): Promise<void> {
+        event.preventDefault();
+        const trimmedValue = this.searchInput.value.trim().toLowerCase();
+        const getData = Array.from(this.currentData.values());
+        const filtered = getData.filter(user => user.name.toLowerCase().includes(trimmedValue));
+
+        if (trimmedValue === "" || !trimmedValue) {
+            this.hobbiesModal.createModal("Fill the search input");
+            this.hobbiesModal.showModal();
+            this.searchForm.reset();
+            return;
+        }
+
+        this.showFilteredUser(filtered);
+    }
+
+    showFilteredUser(users: UserInfo[]): void {
+        const fragment = document.createDocumentFragment();
+        // const getAllData = Array.from(this.currentData.values());
+
+        this.dataList.innerHTML = '';
+        users.forEach(user => fragment.appendChild(this.createComponent(user)));
+        this.dataList.appendChild(fragment);
+    }
+
     teardownHobby(): void {
         this.resetHobbyForm();
         this.controller.abort();
@@ -164,7 +200,13 @@ class HobbiesStacks extends TableStorage<UserInfo> {
         this.getSelectedId = null;
     }
 
-    private selectedData(id: string): void {
+    resetfilter(): void {
+        this.searchForm.reset();
+        this.getSelectedId = null;
+        this.showAlluserDataAndHobby();
+    }
+
+    private selectedUserData(id: string): void {
         this.getSelectedId = id;
         this.submitBtn.textContent = 'Change';
         const data = Array.from(this.currentData.values());
@@ -183,6 +225,25 @@ class HobbiesStacks extends TableStorage<UserInfo> {
 
         this.inputName.value = detail.name;
         if (oldGender) oldGender.checked = true;
+    }
+
+    private async deleteAllUser(): Promise<void> {
+        try {
+            const data = Array.from(this.currentData.values());
+            if (data.length > 0) {
+                await this.clear();
+                this.dataList.innerHTML = '';
+                this.dataList.textContent = 'Empty';
+            } else {
+                this.hobbiesModal.createModal('Empty');
+                this.hobbiesModal.showModal();
+                this.dataList.innerHTML = '';
+                this.dataList.textContent = 'Empty';
+            }
+        } catch (error) {
+            this.hobbiesModal.createModal(`Failed to delete all: ${error}`);
+            this.hobbiesModal.showModal();
+        }
     }
 }
 

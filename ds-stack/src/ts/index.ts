@@ -111,7 +111,8 @@ class ActivityStack extends TableStorage<Activity> {
                 this.actNotification.showModal();
             }
         } catch (error: any) {
-            alert(`Failed to delete activity: ${error.message || error}`);
+            this.actNotification.createModal(`Failed to delete activity: ${error.message || error}`);
+            this.actNotification.showModal();
         }
     }
 
