@@ -211,14 +211,14 @@ const queueDynamicInput = () => ({
             dataName.textContent = detail.data_name;
             dataName.className = 'data-name';
 
-            const newDetailInfo = document.createElement('div') as HTMLDivElement;
-            newDetailInfo.className = 'detail-info';
+            const detailInfo = document.createElement('div') as HTMLDivElement;
+            detailInfo.className = 'detail-info';
 
             detail.detail_info.forEach((info) => {
                 const additionalInfo = document.createElement('div') as HTMLDivElement;
                 additionalInfo.className = `info`;
                 additionalInfo.textContent = `-) ${info}`;
-                newDetailInfo.appendChild(additionalInfo);
+                detailInfo.appendChild(additionalInfo);
             });
 
             const createdAt = document.createElement('p') as HTMLParagraphElement;
@@ -247,7 +247,7 @@ const queueDynamicInput = () => ({
             }
 
             buttonWrap.append(selectButton);
-            card.append(dataName, newDetailInfo, createdAt, buttonWrap);
+            card.append(dataName, detailInfo, createdAt, buttonWrap);
         }
 
         return card;
