@@ -5,6 +5,7 @@ type BalanceInfo = {
     id: string;
     created_at: Date;
     amount: number;
+    description: string;
     type: string;
 }
 
@@ -20,6 +21,7 @@ let differenceTotal: number = 0;
 const balanceNotification = Modal(notification);
 const balanceInputField = document.getElementById('balance-input-field') as HTMLFormElement;
 const balanceValue = document.getElementById('balance-value') as HTMLInputElement;
+const description = document.getElementById('description') as HTMLInputElement;
 
 const balanceList = document.getElementById('balance-list') as HTMLElement;
 const income = document.querySelector('.income-total') as HTMLElement;
@@ -27,8 +29,14 @@ const expense = document.querySelector('.expense-total') as HTMLElement;
 const difference = document.querySelector('.income_expense') as HTMLElement;
 
 const balanceWithQueueDS = () => ({
-    initEventListeners(): void {
-        dataStorage.realtimeInit((data) => this.showAllBalance(data));
+    async initEventListeners(): Promise<void> {
+        await dataStorage.realtimeInit((data) => this.showAllBalance(data));
+
+        document.addEventListener('click', async (event) => {
+            const target = event.target as HTMLElement;
+            if (target.closest('#dequeue-balance')) await this.dequeueBalanceData();
+            else if (target.closest('#delete-all')) await this.removeAllBalance();
+        }, { signal: controller.signal });
 
         balanceInputField.addEventListener('submit', async (event) => this.addNewBalance(event), {
             signal: controller.signal
@@ -70,15 +78,26 @@ const balanceWithQueueDS = () => ({
         } catch (error) {
             balanceNotification.createComponent(`Failed to add balance: ${error}`);
             balanceNotification.showComponent();
+            incomeTotal = 0;
+            expenseTotal = 0;
+            differenceTotal = 0;
+
+            income.textContent = 'Rp: 0';
+            expense.textContent = 'Rp: 0';
+            difference.textContent = 'Rp: 0';
+
+            balanceList.innerHTML = '';
+            balanceList.textContent = 'No Balance Added Yet';
         }
     },
 
     async addNewBalance(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         const trimmedAmount = Number(balanceValue.value.trim());
+        const trimmedDesc = description.value.trim();
         const chosenTypeElement = document.querySelector('input[name="category"]:checked') as HTMLInputElement;
 
-        if (isNaN(trimmedAmount) || trimmedAmount <= 0 || !chosenTypeElement) {
+        if (isNaN(trimmedAmount) || trimmedAmount <= 0 || trimmedDesc === '' || !chosenTypeElement) {
             balanceNotification.createComponent('Missing required data');
             balanceNotification.showComponent();
             return;
@@ -88,7 +107,8 @@ const balanceWithQueueDS = () => ({
             await dataStorage.addQueue({
                 created_at: new Date(),
                 amount: trimmedAmount,
-                type: chosenTypeElement.value
+                type: chosenTypeElement.value,
+                description: trimmedDesc
             });
         } catch (error) {
             balanceNotification.createComponent(`Failed to add data: ${error}`);
@@ -112,6 +132,10 @@ const balanceWithQueueDS = () => ({
             amountType.className = 'amount-type';
             amountType.textContent = `Type: ${detail.type}`;
 
+            const balanceDescription = document.createElement('div') as HTMLDivElement;
+            balanceDescription.className = 'balance-description';
+            balanceDescription.textContent = `Description: ${detail.description}`;
+
             const createdAt = document.createElement('div') as HTMLDivElement;
             createdAt.className = 'created-at';
             createdAt.textContent = `Created At: ${detail.created_at.toLocaleString()}`;
@@ -129,34 +153,40 @@ const balanceWithQueueDS = () => ({
                     this.updateExistingComponent(previousSelectedId);
                 }
             }
-            balanceCard.append(amount, amountType, createdAt, selectButton);
+            balanceCard.append(amount, amountType, balanceDescription, createdAt, selectButton);
         } else {
             const newAmount = document.createElement('input') as HTMLInputElement;
             newAmount.value = detail.amount.toString();
             newAmount.type = 'text';
             newAmount.placeholder = 'enter new amount...';
             newAmount.className = 'new-amount';
+
+            const newDescription = document.createElement('input') as HTMLInputElement;
+            newDescription.value = detail.description;
+            newDescription.type = 'text';
+            newDescription.placeholder = 'enter new description...';
+            newDescription.className = 'new-description';
             
             const incomeTypeRadio = document.createElement('input') as HTMLInputElement;
             incomeTypeRadio.type = 'radio';
-            incomeTypeRadio.id = 'income';
-            incomeTypeRadio.name = 'amount-type';
+            incomeTypeRadio.id = `income-${detail.id}`;
+            incomeTypeRadio.name = `amount-type-${detail.id}`;
             incomeTypeRadio.value = 'income';
             incomeTypeRadio.checked = (detail.type === 'income');
             
             const expenseTypeRadio = document.createElement('input') as HTMLInputElement;
             expenseTypeRadio.type = 'radio';
-            expenseTypeRadio.id = 'expense';
-            expenseTypeRadio.name = 'amount-type';
+            expenseTypeRadio.id = `expense-${detail.id}`;
+            expenseTypeRadio.name = `amount-type-${detail.id}`;
             expenseTypeRadio.value = 'expense';
             expenseTypeRadio.checked = (detail.type === 'expense');
             
             const incomeLabel = document.createElement('label') as HTMLLabelElement;
-            incomeLabel.htmlFor = 'income';
+            incomeLabel.htmlFor = `income-${detail.id}`;
             incomeLabel.textContent = 'Income';
             
             const expenseLabel = document.createElement('label') as HTMLLabelElement;
-            expenseLabel.htmlFor = 'expense';
+            expenseLabel.htmlFor = `expense-${detail.id}`;
             expenseLabel.textContent = 'Expense';
             
             const firstRadioWrap = document.createElement('div') as HTMLDivElement;
@@ -176,16 +206,13 @@ const balanceWithQueueDS = () => ({
             const changeButton = document.createElement('button') as HTMLButtonElement;
             changeButton.textContent = 'Save';
             changeButton.className = 'change-button';
-
             changeButton.onclick = async (): Promise<void> => {
-                const trimmedValue = Number(newAmount.value.trim());
-                let selctedAmountType: string | undefined;
+                const newTrimmedAmount = Number(newAmount.value.trim());
+                const newTrimmedDesc = newDescription.value.trim();
 
-                const selectedRadio = radioButtonGroup.querySelector(`input[value="${detail.type}"]:checked`) as HTMLInputElement;
+                const selectedRadio = radioButtonGroup.querySelector(`input[name="amount-type-${detail.id}"]:checked`) as HTMLInputElement;
 
-                if (selectedRadio) selctedAmountType = selectedRadio.value;
-
-                if (isNaN(trimmedValue) || trimmedValue <= 0 || !selctedAmountType) {
+                if (isNaN(newTrimmedAmount) || newTrimmedAmount <= 0 || newTrimmedDesc === '' || !selectedRadio) {
                     balanceNotification.createComponent('Invalid amount or type selected!');
                     balanceNotification.showComponent();
                     return;
@@ -193,9 +220,12 @@ const balanceWithQueueDS = () => ({
 
                 try {
                     await dataStorage.changedSelectedData(detail.id, {
-                        amount: trimmedValue,
-                        type: selctedAmountType
+                        amount: newTrimmedAmount,
+                        type: selectedRadio.value,
+                        description: newTrimmedDesc
                     });
+                    getSelectedId = null;
+                    this.updateExistingComponent(detail.id);
                 } catch (error) {
                     balanceNotification.createComponent(`Failed to save change: ${error}`);
                     balanceNotification.showComponent();
@@ -209,9 +239,10 @@ const balanceWithQueueDS = () => ({
                 getSelectedId = null;
                 this.updateExistingComponent(detail.id);
             }
+
             buttonWrapForEdit.append(changeButton, cancelButton);
-            radioButtonGroup.append(secondRadioWrap, buttonWrapForEdit);
-            balanceCard.append(newAmount, firstRadioWrap, radioButtonGroup);
+            radioButtonGroup.append(firstRadioWrap, secondRadioWrap);
+            balanceCard.append(newAmount, radioButtonGroup, newDescription, buttonWrapForEdit);
         }
         return balanceCard;
     },
@@ -277,8 +308,8 @@ const balanceWithQueueDS = () => ({
     }
 });
 
-function initBalanceWithQueueDS(): void {
-    balanceWithQueueDS().initEventListeners();
+async function initBalanceWithQueueDS(): Promise<void> {
+    await balanceWithQueueDS().initEventListeners();
 }
 
 function teardownBalanceWithQueueDS(): void {

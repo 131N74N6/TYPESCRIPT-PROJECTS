@@ -11,9 +11,11 @@
     <header>
         <a href="index.html">Home</a>
     </header>
+    <section id="notification"></section>
     <main id="balance">
         <form id="balance-input-field">
-            <input type="text" id="balance-value" placeholder="enter-balance"/>
+            <input type="text" id="balance-value" placeholder="enter balance"/>
+            <input type="text" id="description" placeholder="enter description"/>
             <div class="radio-button-wrap">
                 <input type="radio" name="category" id="income" value="income"/>
                 <label for="income">Income</label>
@@ -26,12 +28,12 @@
                 <button type="button" id="delete-all">Delete All</button>
             </div>
         </form>
-        <section id="notification"></section>
         <section class="show-data">
             <section class="detail-inform">
                 <section class="income-total"></section>
                 <section class="expense-total"></section>
                 <section class="income_expense"></section>
+                <button type="button" id="dequeue-balance">Delete</button>
             </section>
             <section id="balance-list">No Balance Added Yet</section>
         </section>
