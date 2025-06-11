@@ -1,16 +1,16 @@
 import supabase from "./supabase-config";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-const Storage = <WASD extends { id: string }>(tableName: string) => ({
-    currentData: [] as WASD[],
-    realtimeInit(callback: (data: WASD[]) => void): RealtimeChannel  {
+const Storage = <TT extends { id: string }>(tableName: string) => ({
+    currentData: [] as TT[],
+    realtimeInit(callback: (data: TT[]) => void): RealtimeChannel  {
         const channel = supabase.channel('any');
         // Pasang handler realtime
         channel.on(
             'postgres_changes',
             { event: '*', schema: 'public', table: tableName },
-            (payload: RealtimePostgresChangesPayload<WASD>) => {
-                const processItem = (item: any): WASD => ({
+            (payload: RealtimePostgresChangesPayload<TT>) => {
+                const processItem = (item: any): TT => ({
                     ...item,
                     created_at: new Date(item.created_at)
                 });
@@ -50,7 +50,7 @@ const Storage = <WASD extends { id: string }>(tableName: string) => ({
 
             this.currentData = data.map(item => ({
                 ...item, created_at: new Date(item.created_at)
-            })) as WASD[];
+            })) as TT[];
 
             callback(this.currentData);
             channel.subscribe(); // Mulai subscribe setelah data awal dimuat
@@ -59,7 +59,7 @@ const Storage = <WASD extends { id: string }>(tableName: string) => ({
         return channel;
     },
 
-    async addToStorage(newData: Omit<WASD, 'id'>): Promise<string> {
+    async addToStorage(newData: Omit<TT, 'id'>): Promise<string> {
         const { data: inserted, error } = await supabase
         .from(tableName)
         .insert([newData])
@@ -69,7 +69,7 @@ const Storage = <WASD extends { id: string }>(tableName: string) => ({
         return inserted[0].id;
     },
 
-    async changeSelectedData(id: string, newData: Partial<Omit<WASD, 'id'>>): Promise<void> {
+    async changeSelectedData(id: string, newData: Partial<Omit<TT, 'id'>>): Promise<void> {
         const { error } = await supabase
         .from(tableName)
         .update(newData)

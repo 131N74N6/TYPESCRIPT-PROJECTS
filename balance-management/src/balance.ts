@@ -23,9 +23,7 @@ const Displayer = (
     balanceDifference: 0 as number,
 
     initEventListeners(): void {
-        storage.realtimeInit(() => {
-            this.showAllData();
-        });
+        storage.realtimeInit((data) => this.showAllBalanceData(data));
 
         document.addEventListener("click", async (event) => {
             const target = event.target as HTMLElement;
@@ -38,13 +36,13 @@ const Displayer = (
 
         oldest.addEventListener("change", () => { 
             newest.checked = false; 
-            this.showAllData();
+            this.showAllBalanceData();
             console.log("testing");
         }, { signal: controller.signal });
 
         newest.addEventListener("change", () => { 
             oldest.checked = false; 
-            this.showAllData();
+            this.showAllBalanceData();
         }, { signal: controller.signal });
     },
 
@@ -72,23 +70,23 @@ const Displayer = (
         this.getSelectedId = null;
     },
 
-    showAllData(): void {
+    showAllBalanceData(balanceData: BalanceDetail[]): void {
         balanceList.replaceChildren(); 
         this.totalIncome = 0;
         this.totalExpense = 0;
         this.balanceDifference = 0;
 
-        if (storage.currentData.length > 0) {
-            let modifiedData = storage.currentData;
+        if (balanceData.length > 0) {
+            let modifiedData = balanceData;
 
             if (oldest.checked) {
-                modifiedData = [...storage.currentData].sort((a: BalanceDetail, b: BalanceDetail) => {
+                modifiedData = [...balanceData].sort((a: BalanceDetail, b: BalanceDetail) => {
                     return a.created_at.getTime() - b.created_at.getTime()
                 });
             }
 
             if (newest.checked) {
-                modifiedData = [...storage.currentData].sort((a: BalanceDetail, b: BalanceDetail) => {
+                modifiedData = [...balanceData].sort((a: BalanceDetail, b: BalanceDetail) => {
                     return b.created_at.getTime() - a.created_at.getTime()
                 });
             }
@@ -125,6 +123,7 @@ const Displayer = (
     createListComponent(detail: BalanceDetail): HTMLElement {
         const balanceWrap = document.createElement("div");
         balanceWrap.className = "balance-wrap";
+        balanceWrap.dataset.id = detail.id;
 
         if (this.getSelectedId === detail.id) {
             // Edit mode
@@ -153,7 +152,7 @@ const Displayer = (
                     created_at: detail.created_at
                 });
                 this.getSelectedId = null;
-                this.showAllData();
+                this.updateExistingComponent(detail.id);
             }
 
             const cancelButton = document.createElement("button");
@@ -161,7 +160,7 @@ const Displayer = (
             cancelButton.className = "cancel-button";
             cancelButton.onclick = () => {
                 this.getSelectedId = null;
-                this.showAllData();
+                this.updateExistingComponent(detail.id);
             }
 
             buttonWrap.append(changeButton, cancelButton);
@@ -189,8 +188,13 @@ const Displayer = (
             selectButton.textContent = "Select";
             selectButton.className = "select-button";
             selectButton.onclick = () => {
+                const previousId = this.getSelectedId;
                 this.getSelectedId = detail.id;
-                this.showAllData();
+                this.updateExistingComponent(detail.id);
+
+                if (previousId && previousId !== detail.id) {
+                    this.updateExistingComponent(previousId);
+                }
             }
 
             const deleteButton = document.createElement("button");
@@ -221,7 +225,7 @@ const Displayer = (
     async deleteAllBalanceList(): Promise<void> {
         await storage.deleteAllData();
         balanceList.replaceChildren();
-        this.showAllData();
+        this.showAllBalanceData();
     },
 
     cleanup(): void {
@@ -229,6 +233,27 @@ const Displayer = (
         controller.abort();
         this.balanceNotification.teardownModal();
         storage.teardownStorage();
+    },
+
+    updateExistingComponent(id: string): void {
+        const existingComponent = balanceList.querySelector(`.balance-wrap[data-id="${id}"]`);
+        if (existingComponent) {
+            const detail = storage.currentData.find(item => item.id === id);
+            if (detail) {
+                const newComponent = this.createListComponent(detail);
+                newComponent.dataset.id = id;
+                existingComponent.replaceWith(newComponent);
+            } else {
+                existingComponent.remove();
+
+                if (storage.currentData.length === 0) {
+                    balanceList.innerHTML = '';
+                    balanceList.textContent = "...Empty...";
+                }
+            }
+        } else {
+            this.showAllBalanceData(Array.from(storage.currentData));
+        }
     }
 });
 

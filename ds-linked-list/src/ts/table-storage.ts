@@ -1,30 +1,20 @@
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import supabase from "./supabase-config";
-
-interface BaseModel {
-    id: string;
-    created_at: Date;
-}
-
-interface ListNode<T> {
-    data: T;
-    next: ListNode<T> | null;
-    prev: ListNode<T> | null; // Untuk implementasi doubly linked list
-}
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { BaseModel, ListNode } from "./interfaces";
 
 class TableStorage <XDD extends BaseModel> {
-    protected currenData: Map<string, ListNode<XDD>> = new Map<string, ListNode<XDD>>();
+    protected currentData: Map<string, ListNode<XDD>> = new Map<string, ListNode<XDD>>();
     private isInitialized: boolean = false;
     private realtimeChannel: RealtimeChannel | null = null;
     private tableName: string;
-    private head : ListNode<XDD> | null = null;
-    private tail : ListNode<XDD> | null = null;
+    protected head : ListNode<XDD> | null = null;
+    protected tail : ListNode<XDD> | null = null;
 
     constructor(tableName: string) {
         this.tableName = tableName;
     }
 
-    private addDataToNode(data: XDD): void {
+    protected addDataToNode(data: XDD): void {
         const newNode: ListNode<XDD> = {
             data,
             next: null,
@@ -34,23 +24,23 @@ class TableStorage <XDD extends BaseModel> {
         this.tail ? this.tail.next = newNode : this.head = newNode; // Jika ini adalah node pertama
 
         this.tail = newNode;
-        this.currenData.set(data.id, newNode);
+        this.currentData.set(data.id, newNode);
     }
 
     private changeNodeData(data: XDD): void {
-        const node = this.currenData.get(data.id)
+        const node = this.currentData.get(data.id)
         if (node) node.data = data;
     }
 
     private removeDataFromNode(id: string): void {
-        const node = this.currenData.get(id);
+        const node = this.currentData.get(id);
         if (!node) return;
         node.prev ? node.prev.next = node.next : this.head = node.next;
         node.next ? node.next.prev = node.prev : this.tail = node.prev;
-        this.currenData.delete(id);
+        this.currentData.delete(id);
     }
 
-    private linkedListToArray(): XDD[] {
+    protected linkedListToArray(): XDD[] {
         const array: XDD[] = [];
         let current = this.head;
         while (current) {
@@ -61,7 +51,7 @@ class TableStorage <XDD extends BaseModel> {
     }
 
     private resetLinkedList(): void {
-        this.currenData.clear();
+        this.currentData.clear();
         this.head = null;
         this.tail = null;
     }
@@ -116,7 +106,7 @@ class TableStorage <XDD extends BaseModel> {
 
             if (error) throw error;
 
-            this.currenData.clear();
+            this.currentData.clear();
             data.forEach(dt => {
                 const process = { ...dt, created_at: new Date(dt.created_at) } as XDD;
                 this.addDataToNode(process);
@@ -140,12 +130,11 @@ class TableStorage <XDD extends BaseModel> {
         return data as XDD;
     }
 
-    protected async insertToDatabase(newData: Omit<XDD, 'id'>): Promise<XDD> {
+    protected async insertToDatabase(newData: Omit<XDD, 'id'>): Promise<string> {
         const { error, data } = await supabase
         .from(this.tableName)
         .insert([newData])
-        .select()
-        .single();
+        .select();
         if (error) throw error;
 
         return data[0].id;
@@ -156,8 +145,7 @@ class TableStorage <XDD extends BaseModel> {
         .from(this.tableName)
         .update(newData)
         .eq('id', id)
-        .select()
-        .single();
+        .select();
 
         if (error) throw error;
     }
