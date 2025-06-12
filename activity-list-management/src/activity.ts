@@ -18,10 +18,8 @@ const ActivityManagement = (
     modal: document.createElement("div") as HTMLDivElement,
     modalText: document.createElement("p") as HTMLParagraphElement,
 
-    initEventListeners(): void {
-        dataStorage.realtimeInit(() => {
-            this.showAllActivities();
-        });
+    async initEventListeners(): Promise<void> {
+        await dataStorage.realtimeInit((data) => this.showAllActivities(data));
 
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
@@ -53,12 +51,12 @@ const ActivityManagement = (
         });
     },
 
-    async showAllActivities(): Promise<void> {
+    async showAllActivities(activities: Activity[]): Promise<void> {
         try{
             const activityFragment = document.createDocumentFragment();;
-            if (dataStorage.currentData.length > 0) {
+            if (activities.length > 0) {
                 activityList.innerHTML = '';
-                dataStorage.currentData.forEach(act => activityFragment.appendChild(
+                activities.forEach(act => activityFragment.appendChild(
                     this.createActivityComponent(act)
                 ));
                 activityList.appendChild(activityFragment);
@@ -69,15 +67,16 @@ const ActivityManagement = (
         } catch(error) {
             this.showAndCreateModal(`Failed to show data: ${error}`);
             this.teardownModal();
+            activityList.innerHTML = '';
+            activityList.textContent = "No activities yet...";
         }
     },
 
     async submitActivity(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         const inputValue = activityName.value.trim();
-        const isExist = dataStorage.currentData.some(
-            act => act.act_name.toLowerCase() === inputValue.toLowerCase()
-        );
+        const isExist = dataStorage.currentData
+        .some(act => act.act_name.toLowerCase() === inputValue.toLowerCase());
 
         if (inputValue === "") {
             this.showAndCreateModal("Input tidak boleh kosong");
@@ -164,6 +163,8 @@ const ActivityManagement = (
             if (dataStorage.currentData.length > 0) {
                 await dataStorage.deleteAllData();
                 this.resetActivityForm();
+                activityList.innerHTML = '';
+                activityList.textContent = "No activities yet...";
             } else {
                 this.showAndCreateModal("Daftar aktivitas masih kosong!");
                 this.teardownModal()
@@ -172,7 +173,6 @@ const ActivityManagement = (
             this.showAndCreateModal(`Failed to delete all data: ${error}`);
             this.teardownModal();
         }
-        this.showAllActivities();
     },
 
     resetActivityForm(): void {

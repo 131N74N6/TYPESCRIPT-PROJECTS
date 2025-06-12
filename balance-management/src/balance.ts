@@ -6,6 +6,7 @@ type BalanceDetail = {
     amount: number;
     type: string;
     created_at: Date;
+    description: string;
 }
 
 const storage = Storage<BalanceDetail>("finance_list");
@@ -14,7 +15,7 @@ const controller = new AbortController();
 const Displayer = (
     getBalance: HTMLInputElement, balanceInputField: HTMLFormElement, balanceList: HTMLElement, 
     notification: HTMLElement, oldest: HTMLInputElement, newest: HTMLInputElement, incomeTotal: HTMLElement,
-    expenseTotal: HTMLElement, income_expense: HTMLElement
+    expenseTotal: HTMLElement, income_expense: HTMLElement, description: HTMLInputElement
 ) => ({
     getSelectedId: null as string | null,
     balanceNotification: Modal(notification),
@@ -36,22 +37,24 @@ const Displayer = (
 
         oldest.addEventListener("change", () => { 
             newest.checked = false; 
-            this.showAllBalanceData();
+            this.showAllBalanceData(Array.from(storage.currentData.values()));
             console.log("testing");
         }, { signal: controller.signal });
 
         newest.addEventListener("change", () => { 
             oldest.checked = false; 
-            this.showAllBalanceData();
+            this.showAllBalanceData(Array.from(storage.currentData.values()));
         }, { signal: controller.signal });
     },
 
     async submitData(event: SubmitEvent): Promise<void> {
         event.preventDefault();
+        const trimmedAmount = Number(getBalance.value.trim());
+        const trimmedDescription = description.value.trim();
         const selectedType = (document.querySelector('input[name="category"]:checked') as HTMLInputElement);
 
-        if (!getBalance.value.trim()) {
-            this.balanceNotification.createModal("enter amount of balance");
+        if (isNaN(trimmedAmount) || !selectedType) {
+            this.balanceNotification.createModal('Missing required data!');
             this.balanceNotification.showModal();
             return;
         }
@@ -59,7 +62,8 @@ const Displayer = (
         await storage.addToStorage({
             created_at: new Date(),
             amount: Number(getBalance.value.trim()),
-            type: selectedType.value
+            type: selectedType.value,
+            description: trimmedDescription || '-'
         });
         
         this.resetForm();
@@ -71,7 +75,7 @@ const Displayer = (
     },
 
     showAllBalanceData(balanceData: BalanceDetail[]): void {
-        balanceList.replaceChildren(); 
+        const fragment = document.createDocumentFragment();
         this.totalIncome = 0;
         this.totalExpense = 0;
         this.balanceDifference = 0;
@@ -83,9 +87,7 @@ const Displayer = (
                 modifiedData = [...balanceData].sort((a: BalanceDetail, b: BalanceDetail) => {
                     return a.created_at.getTime() - b.created_at.getTime()
                 });
-            }
-
-            if (newest.checked) {
+            } else if (newest.checked) {
                 modifiedData = [...balanceData].sort((a: BalanceDetail, b: BalanceDetail) => {
                     return b.created_at.getTime() - a.created_at.getTime()
                 });
@@ -97,12 +99,13 @@ const Displayer = (
                 } else if (detail.type.toLowerCase() === 'expense') {
                     this.totalExpense += detail.amount;
                 }
-                const component = this.createListComponent(detail);
-                balanceList.appendChild(component);
+                fragment.appendChild(this.createListComponent(detail));
             });
+            
+            balanceList.innerHTML = '';
+            balanceList.appendChild(fragment);
 
             this.balanceDifference = this.totalIncome - this.totalExpense;
-
             incomeTotal.textContent = `Income = Rp ${this.totalIncome.toLocaleString()}`;
             expenseTotal.textContent = `Expense = Rp ${this.totalExpense.toLocaleString()}`;
             income_expense.textContent = `Both Total = Rp ${this.balanceDifference.toLocaleString()}`;
@@ -127,32 +130,83 @@ const Displayer = (
 
         if (this.getSelectedId === detail.id) {
             // Edit mode
-            const amountInput = document.createElement("input");
-            amountInput.type = "number";
-            amountInput.value = detail.amount.toString();
-            amountInput.className = "edit-amount";
+            const newAmountInput = document.createElement("input");
+            newAmountInput.type = "text";
+            newAmountInput.placeholder = 'Insert new amount';
+            newAmountInput.value = detail.amount.toString();
+            newAmountInput.className = "edit-amount";
 
-            const typeInput = document.createElement("input");
-            typeInput.type = "text";
-            typeInput.value = detail.type;
-            typeInput.className = "edit-type";
+            const incomeLabel = document.createElement('label') as HTMLLabelElement;
+            incomeLabel.htmlFor = `income-${detail.id}`;
+            incomeLabel.textContent = 'Income';
+
+            const incomeRadioButton = document.createElement('input') as HTMLInputElement;
+            incomeRadioButton.id = `income-${detail.id}`;
+            incomeRadioButton.name = `amount-type-${detail.id}`;
+            incomeRadioButton.type = 'radio';
+            incomeRadioButton.value = 'income';
+            incomeRadioButton.checked = (detail.type === 'income');
+
+            const expenseLabel = document.createElement('label') as HTMLLabelElement;
+            expenseLabel.htmlFor = `expense-${detail.id}`;
+            expenseLabel.textContent = 'Expense';
+
+            const expenseRadioButton = document.createElement('input') as HTMLInputElement;
+            expenseRadioButton.id = `expense-${detail.id}`;
+            expenseRadioButton.name = `amount-type-${detail.id}`;
+            expenseRadioButton.type = 'radio';
+            expenseRadioButton.value = 'expense';
+            expenseRadioButton.checked = (detail.type === 'expense');
+
+            const newDescription = document.createElement('input') as HTMLInputElement;
+            newDescription.type = 'text';
+            newDescription.className = 'new-description';
+            newDescription.value = detail.description;
 
             const buttonWrap = document.createElement("div");
             buttonWrap.className = "button-wrap";
             buttonWrap.style.display = "flex";
             buttonWrap.style.gap = "0.6rem";
 
+            const firstRadioWrap = document.createElement('div') as HTMLDivElement;
+            firstRadioWrap.className = 'type-1';
+            firstRadioWrap.append(incomeRadioButton, incomeLabel);
+
+            const secondRadioWrap = document.createElement('div') as HTMLDivElement;
+            secondRadioWrap.className = 'type-2';
+            secondRadioWrap.append(expenseRadioButton, expenseLabel);
+
+            const radioButtonGroup = document.createElement('div') as HTMLDivElement;
+            radioButtonGroup.className = 'radio-button-group';
+            radioButtonGroup.append(firstRadioWrap, secondRadioWrap);
+
             const changeButton = document.createElement("button");
-            changeButton.textContent = "Change";
+            changeButton.textContent = "Save";
             changeButton.className = "change-button";
             changeButton.onclick = async () => {
-                await storage.changeSelectedData(detail.id, {
-                    amount: Number(amountInput.value),
-                    type: typeInput.value,
-                    created_at: detail.created_at
-                });
-                this.getSelectedId = null;
-                this.updateExistingComponent(detail.id);
+                const selectedType = radioButtonGroup.querySelector(`input[name="amount-type-${detail.id}"]:checked`) as HTMLInputElement;
+                const trimmedNewAmount = Number(newAmountInput.value.trim());
+                const trimmedNewDescription = newDescription.value.trim();
+
+                if (isNaN(trimmedNewAmount) || trimmedNewAmount <= 0 || !selectedType) {
+                    this.balanceNotification.createModal('Missing required data!');
+                    this.balanceNotification.showModal();
+                    return;
+                }
+
+                try {
+                    await storage.changeSelectedData(detail.id, {
+                        amount: trimmedNewAmount,
+                        type: selectedType.value,
+                        description: trimmedNewDescription || '-'
+                    });
+                    
+                    this.getSelectedId = null;
+                    this.updateExistingComponent(detail.id);
+                } catch (error) {
+                    this.balanceNotification.createModal(`Failed to change: ${error}`);
+                    this.balanceNotification.showModal();
+                }
             }
 
             const cancelButton = document.createElement("button");
@@ -164,18 +218,22 @@ const Displayer = (
             }
 
             buttonWrap.append(changeButton, cancelButton);
-            balanceWrap.append(amountInput, typeInput, buttonWrap);
+            balanceWrap.append(newAmountInput, radioButtonGroup, newDescription, buttonWrap);
         } else {
             // View mode
-            const balanceData = document.createElement("p") as HTMLParagraphElement;
+            const balanceData = document.createElement("div") as HTMLDivElement;
             balanceData.className = "balance-data";
             balanceData.textContent = `Amount: Rp ${detail.amount}`;
 
-            const balanceType = document.createElement("p") as HTMLParagraphElement;
+            const balanceType = document.createElement("div") as HTMLDivElement;
             balanceType.className = "balance-type";
             balanceType.textContent = `Category: ${detail.type}`;
 
-            const createdAt = document.createElement("p") as HTMLParagraphElement;
+            const balanceDescription = document.createElement("div") as HTMLDivElement;
+            balanceDescription.className = 'balance-description';
+            balanceDescription.textContent = `Desctiption: ${detail.description}`;
+
+            const createdAt = document.createElement("div") as HTMLDivElement;
             createdAt.className = "created_at";
             createdAt.textContent = `Created at: ${detail.created_at.toLocaleString()}`;
 
@@ -201,21 +259,38 @@ const Displayer = (
             deleteButton.textContent = "Delete";
             deleteButton.className = "delete-button";
             deleteButton.onclick = async () => {
-                await this.deleteSelectedBalance(detail.id);
+                const balanceData = Array.from(storage.currentData.values());
+                try {
+                    if (balanceData.length > 0) {
+                        await this.deleteSelectedBalance(detail.id);
+                    } else {                        
+                        this.balanceNotification.createModal('No balance added!');
+                        this.balanceNotification.showModal();
+                        balanceList.innerHTML = '';
+                        balanceList.textContent = "...Empty...";
+                    }
+                } catch (error) {
+                    this.balanceNotification.createModal(`Failed to delete: ${error}`);
+                    this.balanceNotification.showModal();
+                }
             }
 
             buttonWrap.append(selectButton, deleteButton);
-            balanceWrap.append(balanceData, balanceType, createdAt, buttonWrap);
-            balanceWrap.style.borderBottom = "2px solid black";
+            balanceWrap.append(balanceData, balanceType, balanceDescription, createdAt, buttonWrap);
         }
 
         return balanceWrap;
     },
 
     async deleteSelectedBalance(id: string): Promise<void> {
-        try {   
-            await storage.deleteSelectedData(id);
-            if (this.getSelectedId === null) this.resetForm();
+        const balanceData = Array.from(storage.currentData.values());
+        try {
+            if (balanceData.length > 0) {
+                await storage.deleteSelectedData(id);
+            } else {
+                balanceList.innerHTML = '';
+                balanceList.textContent = "...Empty...";
+            }
         } catch (error) {
             this.balanceNotification.createModal(`Failed to delete data: ${error}`);
             this.balanceNotification.showModal();
@@ -223,9 +298,20 @@ const Displayer = (
     },
 
     async deleteAllBalanceList(): Promise<void> {
-        await storage.deleteAllData();
-        balanceList.replaceChildren();
-        this.showAllBalanceData();
+        const balanceData = Array.from(storage.currentData.values());
+        try {
+            if (balanceData.length > 0) {
+                await storage.deleteAllData();
+                balanceList.innerHTML = '';
+                balanceList.textContent = "...Empty...";
+            } else {
+                this.balanceNotification.createModal('No data added!');
+                this.balanceNotification.showModal();
+            }
+        } catch(error) {
+            this.balanceNotification.createModal(`Failed to delete all :${error}`);
+            this.balanceNotification.showModal();
+        }
     },
 
     cleanup(): void {
@@ -235,24 +321,25 @@ const Displayer = (
         storage.teardownStorage();
     },
 
-    updateExistingComponent(id: string): void {
-        const existingComponent = balanceList.querySelector(`.balance-wrap[data-id="${id}"]`);
+    updateExistingComponent(balanceId: string): void {
+        const existingComponent = balanceList.querySelector(`.balance-wrap[data-id="${balanceId}"]`);
+        const balanceData = Array.from(storage.currentData.values());
         if (existingComponent) {
-            const detail = storage.currentData.find(item => item.id === id);
+            const detail = storage.currentData.get(balanceId);
             if (detail) {
                 const newComponent = this.createListComponent(detail);
-                newComponent.dataset.id = id;
+                newComponent.dataset.id = balanceId;
                 existingComponent.replaceWith(newComponent);
             } else {
                 existingComponent.remove();
 
-                if (storage.currentData.length === 0) {
+                if (balanceData.length === 0) {
                     balanceList.innerHTML = '';
                     balanceList.textContent = "...Empty...";
                 }
             }
         } else {
-            this.showAllBalanceData(Array.from(storage.currentData));
+            this.showAllBalanceData(balanceData);
         }
     }
 });

@@ -90,9 +90,10 @@ header p {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
+    flex: 0.3;
     gap: 20px;
     border: 2px solid var(--evangelion-01);
-    height: 95dvh;
+    height: 94dvh;
 }
 
 #activity-form h2 {
@@ -169,11 +170,11 @@ header p {
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
     display: flex;
-    flex-grow: 1;
+    flex: 0.7;
     flex-direction: column;
     gap: 1rem;
     border: 2px solid var(--evangelion-01);
-    height: 95dvh;
+    height: 94dvh;
     overflow: auto;
 }
 

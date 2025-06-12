@@ -8,8 +8,8 @@ const submitButton = document.getElementById("submit-btn") as HTMLButtonElement;
 
 const activitManagement = ActivityManagement(notification, activityForm, activityList, activityName, submitButton);
 
-function init(): void {
-    activitManagement.initEventListeners();
+async function init(): Promise<void> {
+    await activitManagement.initEventListeners();
 }
 
 function teardown(): void {

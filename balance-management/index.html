@@ -8,26 +8,26 @@
     <title>Balance</title>
 </head>
 <body>
+    <section id="notification"></section>
     <main id="app">
-        <section id="notification"></section>
-        <header>
-            <div>Dark mode</div>
-            <button type="button" id="delete-all-list">Delete All</button>
-            <input type="checkbox" id="oldest" value="oldest-sorting"/>
-            <label for="oldest">Oldest</label>
-            <input type="checkbox" id="newest" value="newest-sorting"/>
-            <label for="newest">Newest</label>
-        </header>
         <section class="show-data">
-            <section id="balance-list"></section>
+            <section>
+                <button type="button" id="delete-all-list">Delete All</button>
+                <input type="checkbox" id="oldest" value="oldest-sorting"/>
+                <label for="oldest">Oldest</label>
+                <input type="checkbox" id="newest" value="newest-sorting"/>
+                <label for="newest">Newest</label>
+            </section>
             <section class="detail-inform">
                 <section class="income-total"></section>
                 <section class="expense-total"></section>
                 <section class="income_expense"></section>
             </section>
+            <section id="balance-list"></section>
         </section>
         <form id="balance-input-field">
-            <input type="text" id="balance" placeholder="enter-balance"/>
+            <input type="text" id="balance" placeholder="enter balance..."/>
+            <input type="text" id="description" placeholder="enter description..."/>
             <div class="radio-button-wrap">
                 <input type="radio" name="category" id="income" value="income"/>
                 <label for="income">Income</label>

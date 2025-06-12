@@ -1,62 +1,73 @@
 import supabase from "./supabase-config";
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { RealtimeChannel, type RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 const Storage = <TT extends { id: string }>(tableName: string) => ({
-    currentData: [] as TT[],
-    realtimeInit(callback: (data: TT[]) => void): RealtimeChannel  {
-        const channel = supabase.channel('any');
-        // Pasang handler realtime
-        channel.on(
+    currentData: new Map<string, TT>() as Map<string, TT>,
+    realtimeChannel: null as RealtimeChannel | null,
+    isInitialize: false as boolean,
+
+    async realtimeInit(callback: (data: TT[]) => void): Promise<void> {
+        if (this.isInitialize && this.realtimeChannel) {
+            console.warn(`TableStorage for ${tableName} is already initialized.`);
+            return;
+        }
+
+        if (this.realtimeChannel) {
+            this.realtimeChannel.unsubscribe;
+            this.realtimeChannel = null;
+        }
+
+        this.realtimeChannel = supabase.channel('any');
+        this.realtimeChannel.on(
             'postgres_changes',
             { event: '*', schema: 'public', table: tableName },
             (payload: RealtimePostgresChangesPayload<TT>) => {
-                const processItem = (item: any): TT => ({
-                    ...item,
-                    created_at: new Date(item.created_at)
-                });
+                const processItem = (item: any): TT => {
+                    if (item && item.created_at && typeof item.created_at === 'string') {
+                        return { ...item, created_at: new Date(item.created_at) } as TT;
+                    } 
+                    return item as TT;
+                }
 
                 switch (payload.eventType) {
                     case 'INSERT': {
                         const newItem = processItem(payload.new);
-                        this.currentData.push(newItem);
+                        this.currentData.set(newItem.id, newItem);
                         break;
                     }
                     case 'UPDATE': {
                         const updatedItem = processItem(payload.new);
-                        const index = this.currentData.findIndex(item => item.id === updatedItem.id);
-                        if (index !== -1) this.currentData[index] = updatedItem;
+                        this.currentData.set(updatedItem.id, updatedItem);
                         break;
                     }
                     case 'DELETE': {
                         const deletedId = payload.old.id;
-                        this.currentData = this.currentData.filter(item => item.id !== deletedId);
+                        if (deletedId) this.currentData.delete(deletedId);
                         break;
                     }
                 }
-                callback([...this.currentData]);
+                callback(Array.from(this.currentData.values()));
             }
         );
-        // Fetch data awal
-        (async () => {
-            const { data, error } = await supabase
-            .from(tableName)
-            .select('*');
+        
+        const { data, error } = await supabase
+        .from(tableName)
+        .select('*');
 
-            if (error) {
-                console.error('Initial data fetch error:', error);
-                callback([]);
-                return;
-            }
+        if (error) {
+            callback([]);
+            throw error;
+        }
+        
+        this.currentData.clear();
+        data.forEach(dt => {
+            const processed = { ...dt,  created_at: new Date(dt.created_at) } as TT;
+            this.currentData.set(processed.id, processed);
+        });
 
-            this.currentData = data.map(item => ({
-                ...item, created_at: new Date(item.created_at)
-            })) as TT[];
-
-            callback(this.currentData);
-            channel.subscribe(); // Mulai subscribe setelah data awal dimuat
-        })();
-
-        return channel;
+        callback(Array.from(this.currentData.values()));
+        this.realtimeChannel.subscribe(); 
+        this.isInitialize = true;
     },
 
     async addToStorage(newData: Omit<TT, 'id'>): Promise<string> {
@@ -97,7 +108,12 @@ const Storage = <TT extends { id: string }>(tableName: string) => ({
     },
 
     teardownStorage(): void {
-        this.currentData = [];
+        this.currentData.clear();
+        this.isInitialize = false;
+        if (this.realtimeChannel) {
+            this.realtimeChannel.unsubscribe();
+            this.realtimeChannel = null;
+        }
     }
 });
 
