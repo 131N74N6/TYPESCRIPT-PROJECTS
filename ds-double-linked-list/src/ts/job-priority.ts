@@ -40,10 +40,11 @@ class JobPriority extends TableStorage<JobInfo> {
 
     constructor() {
         super("job_priority");
-        this.realtimeInit((data) => this.showAllJobs(data));
     }
+    
+    async initEventListeners(): Promise<void> {
+        await this.realtimeInit((data) => this.showAllJobs(data));
 
-    initEventListeners(): void {
         this.jobForm.addEventListener("submit", async (event) => await this.insertJob(event), {
             signal: this.controller.signal
         }); 

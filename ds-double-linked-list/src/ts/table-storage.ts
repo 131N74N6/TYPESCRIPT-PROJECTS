@@ -61,6 +61,7 @@ class TableStorage <XDD extends BaseModel> {
     ): Promise<void> {
         if (this.isInitialized && this.realtimeChannel) {
             console.warn(`TableStorage for ${this.tableName} is already initialized.`);
+            callback(this.linkedListToArray());
             return;
         }
 

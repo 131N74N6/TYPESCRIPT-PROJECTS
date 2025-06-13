@@ -19,10 +19,11 @@ class ActivityStack extends TableStorage<Activity> {
 
     constructor() {
         super("activity_list"); 
-        this.realtimeInit(() => this.showAllActivities());
     }
 
-    initEventListeners(): void {
+    async initEventListeners(): Promise<void> {
+        await this.realtimeInit((data) => this.showAllActivities(data));
+
         document.addEventListener("click", async (event) => {
             const target = event.target as HTMLElement;
             if (target.closest("#delete-all")) await this.clearActivities();
@@ -48,10 +49,9 @@ class ActivityStack extends TableStorage<Activity> {
         }, { signal: this.controller.signal });
     }
 
-    showAllActivities(): void {
+    showAllActivities(activity: Activity[]): void {
         const fragment = document.createDocumentFragment();
-        const activityData = Array.from(this.currentData.values())
-        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+        const activityData = activity.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 
         try {
             if (activityData.length > 0) {
@@ -155,8 +155,8 @@ class ActivityStack extends TableStorage<Activity> {
             this.activities.innerHTML = '';
             this.activities.textContent = 'No Activity Added!';
         } catch (error: any) {
-            console.error("Error clearing activities:", error);
-            alert(`Failed to delete all: ${error.message || error}`);
+            this.actNotification.createModal(`Error clearing activities: ${error.message || error}`);
+            this.actNotification.showModal();
         }
     }
 
@@ -174,7 +174,7 @@ function initActivityStack(): void {
 }
 
 function teardownActivityStack(): void {
-    activityStack.teardown(); 
+    activityStack.teardownTable(); 
     activityStack.resetactForm();
 }
 

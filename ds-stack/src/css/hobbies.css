@@ -1,45 +1,7 @@
 :root {
-    --evangelion-inner-1: #1A1A1A;
-    --evangelion-inner-2: #242424;
-    --evangelion-unit-13-awaken: #FFFFFF;
-    --tropical-indigo: #9381FF;
-    --periwinkle: #B8B8FF;
-    --ghost-white: #F8F7FF;
-    --antique-white: #FFEEDD;
-    --apricot: #FFD8BE;
-}
-
-header {
-    padding: 1.3rem;
-    font-family: Arial;
-    background-color: var(--periwinkle);
-    position: sticky;
-    z-index: 20;
-    top: 0;
-}
-
-a {
-    font-weight: 500;
-    color: var(--evangelion-inner-2);
-    text-decoration: none;
-}
-
-form#dataForm {
-    display: flex;
-    gap: 0.8rem;
-    position: sticky;
-    padding: 1rem;
-    z-index: 30;
-    background-color: var(--ghost-white);
-    top: 3.7rem;
-}
-
-form#dataForm input[type="text"] {
-    border-radius: 8px;
-    border: 2px solid var(--evangelion-inner-1);
-    outline: none;
-    box-shadow: 4px 4px var(--evangelion-inner-1);
-    padding: 0.6em;
-    font-size: 1rem;
-    font-family: monospace;
+    --anti-flash-white: #E7ECEF;
+    --yin-mn-blue: #274C77;
+    --air-superiority-blue: #6096BA;
+    --uranian-blue: #A3CEF1;
+    --battleship-gray: #8B8C89;
 }

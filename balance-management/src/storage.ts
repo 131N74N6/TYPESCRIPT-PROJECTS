@@ -9,6 +9,7 @@ const Storage = <TT extends { id: string }>(tableName: string) => ({
     async realtimeInit(callback: (data: TT[]) => void): Promise<void> {
         if (this.isInitialize && this.realtimeChannel) {
             console.warn(`TableStorage for ${tableName} is already initialized.`);
+            callback(this.toArray());
             return;
         }
 
@@ -46,7 +47,7 @@ const Storage = <TT extends { id: string }>(tableName: string) => ({
                         break;
                     }
                 }
-                callback(Array.from(this.currentData.values()));
+                callback(this.toArray());
             }
         );
         
@@ -65,8 +66,8 @@ const Storage = <TT extends { id: string }>(tableName: string) => ({
             this.currentData.set(processed.id, processed);
         });
 
-        callback(Array.from(this.currentData.values()));
-        this.realtimeChannel.subscribe(); 
+        callback(this.toArray());
+        this.realtimeChannel.subscribe();
         this.isInitialize = true;
     },
 
@@ -114,6 +115,10 @@ const Storage = <TT extends { id: string }>(tableName: string) => ({
             this.realtimeChannel.unsubscribe();
             this.realtimeChannel = null;
         }
+    },
+
+    toArray(): TT[] {
+        return Array.from(this.currentData.values());
     }
 });
 

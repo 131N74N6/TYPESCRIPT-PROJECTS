@@ -83,7 +83,7 @@ const queueDynamicInput = () => ({
         .map(data => data.value)
         .filter(dt => dt);
 
-        const getAllData = Array.from(dataStorage.currentData.values());
+        const getAllData = dataStorage.toArray();
         const isExsist = getAllData.some(data => data.data_name.toLowerCase() === trimmedValue.toLowerCase());
 
         if (trimmedValue === '' || !trimmedValue) {
@@ -115,7 +115,7 @@ const queueDynamicInput = () => ({
     handleSearchFilter(event: SubmitEvent): void {
         event.preventDefault();
         const trimmedSearch = searchData.value.trim().toLowerCase();
-        const existedData = Array.from(dataStorage.currentData.values());
+        const existedData = dataStorage.toArray();;
 
         if (trimmedSearch === '') {
             dynamicInputNotification.createComponent('Missing required data');
@@ -274,13 +274,13 @@ const queueDynamicInput = () => ({
             // Ini adalah fallback. Idealnya, jika realtimeInit sudah benar,
             // ini jarang dipanggil kecuali untuk item baru yang tidak tertangkap
             // atau jika ada masalah sinkronisasi.
-            this.showAllExistingData(Array.from(dataStorage.currentData.values()));
+            this.showAllExistingData(dataStorage.toArray());
         }
     },
 
     async dequeueExistingData(): Promise<void> {
         try {
-            const data = Array.from(dataStorage.currentData.values());
+            const data = dataStorage.toArray();
             if (data.length > 0) await dataStorage.dequeue();
             else {
                 dynamicInputNotification.createComponent('No Data Added Yet');
@@ -294,7 +294,7 @@ const queueDynamicInput = () => ({
 
     async clearAllData(): Promise<void> {
         try {
-            const data = Array.from(dataStorage.currentData.values());
+            const data = dataStorage.toArray();
             if (data.length > 0) {
                 await dataStorage.clearQueue();
                 itemsList.innerHTML = '';

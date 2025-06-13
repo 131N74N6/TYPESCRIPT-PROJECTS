@@ -1,27 +1,20 @@
 import DatabaseStorage from "./storage";
 import uploadToSupabaseStorage from "./supabase-storage";
 import Modal from "./modal";
+import type { GalleryPost } from "./interfaces";
 
-interface ImageUploader {
-    id: string;
-    uploader_name: string;
-    created_at: Date;
-    image_name: string[];
-    image_url: string[];
-    title: string;
-}
-
-class ImageForm extends DatabaseStorage<ImageUploader> {
+class ImageForm extends DatabaseStorage<GalleryPost> {
     controller: AbortController = new AbortController();
     imageFiles: File[] = [];
+    private notification = document.getElementById("notification_") as HTMLElement;
+    private uploaderModal: Modal = new Modal(this.notification);
+    
     private imageUploadField = document.getElementById("image-upload-field") as HTMLFormElement;
     private uploaderName = document.getElementById("uploader-name") as HTMLInputElement;
     private imageTitle = document.getElementById("image-title") as HTMLInputElement;
     private mediaFile = document.getElementById("media-file") as HTMLInputElement;
     private imagePreviewContainer = document.getElementById("image-preview-container") as HTMLElement;
     private submitButton = document.getElementById("add-post-button") as HTMLButtonElement;
-    private notification = document.getElementById("notification_") as HTMLElement;
-    private uploaderModal: Modal = new Modal(this.notification);
 
     constructor() {
         super("image_gallery");

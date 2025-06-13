@@ -18,8 +18,8 @@ const displayer = Displayer(
     expenseTotal, income_expense, description
 );
 
-function init(): void {
-    displayer.initEventListeners();
+async function init(): Promise<void> {
+    await displayer.initEventListeners();
 }
 
 function teardown(): void {

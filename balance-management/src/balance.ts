@@ -23,8 +23,8 @@ const Displayer = (
     totalExpense: 0 as number,
     balanceDifference: 0 as number,
 
-    initEventListeners(): void {
-        storage.realtimeInit((data) => this.showAllBalanceData(data));
+    async initEventListeners(): Promise<void> {
+        await storage.realtimeInit((data) => this.showAllBalanceData(data));
 
         document.addEventListener("click", async (event) => {
             const target = event.target as HTMLElement;
@@ -37,13 +37,13 @@ const Displayer = (
 
         oldest.addEventListener("change", () => { 
             newest.checked = false; 
-            this.showAllBalanceData(Array.from(storage.currentData.values()));
+            this.showAllBalanceData(storage.toArray());
             console.log("testing");
         }, { signal: controller.signal });
 
         newest.addEventListener("change", () => { 
             oldest.checked = false; 
-            this.showAllBalanceData(Array.from(storage.currentData.values()));
+            this.showAllBalanceData(storage.toArray());
         }, { signal: controller.signal });
     },
 
@@ -80,36 +80,49 @@ const Displayer = (
         this.totalExpense = 0;
         this.balanceDifference = 0;
 
-        if (balanceData.length > 0) {
-            let modifiedData = balanceData;
+        try {
+            if (balanceData.length > 0) {
+                let modifiedData = balanceData;
 
-            if (oldest.checked) {
-                modifiedData = [...balanceData].sort((a: BalanceDetail, b: BalanceDetail) => {
-                    return a.created_at.getTime() - b.created_at.getTime()
-                });
-            } else if (newest.checked) {
-                modifiedData = [...balanceData].sort((a: BalanceDetail, b: BalanceDetail) => {
-                    return b.created_at.getTime() - a.created_at.getTime()
-                });
-            }
-
-            modifiedData.forEach(detail => {
-                if (detail.type.toLowerCase() === 'income') {
-                    this.totalIncome += detail.amount;
-                } else if (detail.type.toLowerCase() === 'expense') {
-                    this.totalExpense += detail.amount;
+                if (oldest.checked) {
+                    modifiedData = [...balanceData].sort((a: BalanceDetail, b: BalanceDetail) => {
+                        return a.created_at.getTime() - b.created_at.getTime()
+                    });
+                } else if (newest.checked) {
+                    modifiedData = [...balanceData].sort((a: BalanceDetail, b: BalanceDetail) => {
+                        return b.created_at.getTime() - a.created_at.getTime()
+                    });
                 }
-                fragment.appendChild(this.createListComponent(detail));
-            });
-            
-            balanceList.innerHTML = '';
-            balanceList.appendChild(fragment);
 
-            this.balanceDifference = this.totalIncome - this.totalExpense;
-            incomeTotal.textContent = `Income = Rp ${this.totalIncome.toLocaleString()}`;
-            expenseTotal.textContent = `Expense = Rp ${this.totalExpense.toLocaleString()}`;
-            income_expense.textContent = `Both Total = Rp ${this.balanceDifference.toLocaleString()}`;
-        } else {
+                modifiedData.forEach(detail => {
+                    if (detail.type.toLowerCase() === 'income') {
+                        this.totalIncome += detail.amount;
+                    } else if (detail.type.toLowerCase() === 'expense') {
+                        this.totalExpense += detail.amount;
+                    }
+                    fragment.appendChild(this.createListComponent(detail));
+                });
+                
+                balanceList.innerHTML = '';
+                balanceList.appendChild(fragment);
+
+                this.balanceDifference = this.totalIncome - this.totalExpense;
+                incomeTotal.textContent = `Income = Rp ${this.totalIncome.toLocaleString()}`;
+                expenseTotal.textContent = `Expense = Rp ${this.totalExpense.toLocaleString()}`;
+                income_expense.textContent = `Both Total = Rp ${this.balanceDifference.toLocaleString()}`;
+            } else {
+                this.totalIncome = 0;
+                this.totalExpense = 0;
+                this.balanceDifference = 0;
+
+                incomeTotal.textContent = `Income = Rp 0`;
+                expenseTotal.textContent = `Expense = Rp 0`;
+                income_expense.textContent = `Both Total = Rp 0`;
+                
+                balanceList.innerHTML = '';
+                balanceList.textContent = "...Empty...";
+            }
+        } catch (error) {
             this.totalIncome = 0;
             this.totalExpense = 0;
             this.balanceDifference = 0;
@@ -119,7 +132,7 @@ const Displayer = (
             income_expense.textContent = `Both Total = Rp 0`;
             
             balanceList.innerHTML = '';
-            balanceList.textContent = "...Empty...";
+            balanceList.textContent = `Failed to load balance: ${error}`;
         }
     },
 
@@ -259,7 +272,7 @@ const Displayer = (
             deleteButton.textContent = "Delete";
             deleteButton.className = "delete-button";
             deleteButton.onclick = async () => {
-                const balanceData = Array.from(storage.currentData.values());
+                const balanceData = storage.toArray();
                 try {
                     if (balanceData.length > 0) {
                         await this.deleteSelectedBalance(detail.id);
@@ -283,7 +296,7 @@ const Displayer = (
     },
 
     async deleteSelectedBalance(id: string): Promise<void> {
-        const balanceData = Array.from(storage.currentData.values());
+        const balanceData = storage.toArray();
         try {
             if (balanceData.length > 0) {
                 await storage.deleteSelectedData(id);
@@ -298,7 +311,7 @@ const Displayer = (
     },
 
     async deleteAllBalanceList(): Promise<void> {
-        const balanceData = Array.from(storage.currentData.values());
+        const balanceData = storage.toArray();
         try {
             if (balanceData.length > 0) {
                 await storage.deleteAllData();
@@ -323,7 +336,7 @@ const Displayer = (
 
     updateExistingComponent(balanceId: string): void {
         const existingComponent = balanceList.querySelector(`.balance-wrap[data-id="${balanceId}"]`);
-        const balanceData = Array.from(storage.currentData.values());
+        const balanceData = storage.toArray();
         if (existingComponent) {
             const detail = storage.currentData.get(balanceId);
             if (detail) {

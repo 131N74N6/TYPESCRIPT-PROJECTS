@@ -1,15 +1,9 @@
 import DatabaseStorage from "./storage";
 import Modal from "./modal";
+import deleteFromSupabaseStorage from "./supabase-remover";
+import type { GalleryDetails } from "./interfaces";
 
-interface DetailData {
-    id: string;
-    image_url: string[];
-    uploader_name: string;
-    title: string;
-    created_at: Date;
-}
-
-class GalleryDetail extends DatabaseStorage<DetailData> {
+class GalleryDetail extends DatabaseStorage<GalleryDetails> {
     private controller = new AbortController();
     private urlParams = new URLSearchParams(window.location.search);
     private imageId: string | null;
@@ -42,6 +36,10 @@ class GalleryDetail extends DatabaseStorage<DetailData> {
             } else if (target.closest(".right-button")) {
                 if (this.totalSlide > 1) { // Hanya geser jika ada lebih dari 1 slide
                     this.nextSlide();
+                }
+            } else if (target.closest(".delete-button")) {
+                if (this.imageId) {
+                    this.deletePost(this.imageId);
                 }
             }
         }, { signal: this.controller.signal });
@@ -77,8 +75,8 @@ class GalleryDetail extends DatabaseStorage<DetailData> {
         }
     }
 
-    private createSliderComponent(detail: DetailData): void {
-        this.carouselContainer.innerHTML = ''; // Pastikan carousel bersih sebelum mengisi
+    private createSliderComponent(detail: GalleryDetails): void {
+        this.carouselContainer.innerHTML = ''; 
 
         detail.image_url.forEach((image, index) => {
             const imageWrap = document.createElement("div") as HTMLDivElement;
@@ -149,6 +147,42 @@ class GalleryDetail extends DatabaseStorage<DetailData> {
         this.imageTitle.textContent = '';
         this.uploadedAt.textContent = '';
         this.navigationContainer.style.display = 'none';
+    }
+
+    private async deletePost(id: string) {
+        try {
+            // 1. Ambil detail postingan untuk mendapatkan daftar URL gambar
+            // Gunakan currentDataMap yang sudah di-cache oleh DatabaseStorage
+            const postDetail = this.currentData.get(id);
+            const storageBucketName = 'gallery';
+
+            if (!postDetail) {
+                this.carouselContainer.innerHTML = '';
+                this.carouselContainer.textContent = 'This post has been deleted.';
+                return;
+            }
+
+            await deleteFromSupabaseStorage(postDetail, storageBucketName);
+
+            // 3. Hapus data postingan dari tabel database
+            await this.deleteSelectedData(id); // Metode ini mewarisi dari DatabaseStorage
+            this.carouselContainer.innerHTML = '';
+            this.carouselContainer.textContent = '⚠️ This post has been deleted. ⚠️';
+            console.log(`Post with ID ${id} deleted from database.`);
+
+            // 4. Perbarui UI setelah penghapusan
+            // Setelah deleteSelectedData, realtimeInit akan memicu callback
+            // yang akan memanggil showGalleryDetail lagi.
+            // Jika postDetail sudah tidak ada di currentDataMap, showGalleryDetail akan menampilkan pesan 'not found'.
+            // Opsional: Redirect ke halaman galeri utama
+            // setTimeout(() => {
+            //     window.location.href = '/gallery.html'; // Ganti dengan URL halaman galeri Anda
+            // }, 2000);
+
+        } catch (error: any) {
+            this.galleryDetailModal.createComponent(`Failed to delete post: ${error.message || error}`);
+            this.galleryDetailModal.showComponent();
+        }
     }
 }
 

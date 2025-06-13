@@ -1,13 +1,8 @@
 import DatabaseStorage from "./storage";
 import Modal from "./modal";
+import type { GalleryDisplayer } from "./interfaces";
 
-interface ImageMedia {
-    id: string;
-    title: string;
-    image_url: string[];
-}
-
-class ImageGalleryDisplayer extends DatabaseStorage<ImageMedia> {
+class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
     private controller = new AbortController();
     private galleryNotification = document.getElementById("gallery-notification") as HTMLElement;
     private makeNotification = new Modal(this.galleryNotification);
@@ -18,10 +13,11 @@ class ImageGalleryDisplayer extends DatabaseStorage<ImageMedia> {
 
     constructor() {
         super("image_gallery");
-        this.realtimeInit(() => this.showAllImages());
     }
+    
+    async initEventListener(): Promise<void> {
+        await this.realtimeInit((data) => this.showAllImages(data));
 
-    initEventListener(): void {
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
             if (target.closest("#reset-filter")) this.resetFilter();
@@ -47,7 +43,7 @@ class ImageGalleryDisplayer extends DatabaseStorage<ImageMedia> {
         this.showFilteredPost(filteredData);
     }
 
-    showFilteredPost(filtered: ImageMedia[]): void {
+    showFilteredPost(filtered: GalleryDisplayer[]): void {
         this.imagesGallery.innerHTML = '';
         const filteredFragment = document.createDocumentFragment();
 
@@ -55,20 +51,26 @@ class ImageGalleryDisplayer extends DatabaseStorage<ImageMedia> {
         this.imagesGallery.appendChild(filteredFragment);
     }
 
-    showAllImages(): void {
-        const data = Array.from(this.currentData.values());
+    showAllImages(images: GalleryDisplayer[]): void {
         const fragment = document.createDocumentFragment();
-        if (data.length > 0) {
-            data.forEach(dt => fragment.appendChild(this.createComponent(dt)));
-            this.imagesGallery.innerHTML = '';
-            this.imagesGallery.appendChild(fragment);
-        } else {
+        try {    
+            if (images.length > 0) {
+                images.forEach(image => fragment.appendChild(this.createComponent(image)));
+                this.imagesGallery.innerHTML = '';
+                this.imagesGallery.appendChild(fragment);
+            } else {
+                this.imagesGallery.innerHTML = '';
+                this.imagesGallery.textContent = 'No Image Uploaded';
+            }
+        } catch (error: any) {
+            this.makeNotification.createComponent(`Error: ${error.message || error}`);
+            this.makeNotification.showComponent();
             this.imagesGallery.innerHTML = '';
             this.imagesGallery.textContent = 'No Image Uploaded';
         }
     }
 
-    private createComponent(detail: ImageMedia): HTMLDivElement {
+    private createComponent(detail: GalleryDisplayer): HTMLDivElement {
         const link = document.createElement("a") as HTMLAnchorElement;
         link.href = `detail.html?id=${detail.id}`;
         
@@ -91,7 +93,7 @@ class ImageGalleryDisplayer extends DatabaseStorage<ImageMedia> {
 
     private resetFilter(): void {
         this.searchImageField.reset();
-        this.showAllImages();
+        this.showAllImages(this.toArray());
     }
 
     teardown(): void {
@@ -101,8 +103,8 @@ class ImageGalleryDisplayer extends DatabaseStorage<ImageMedia> {
 
 const imageGallery = new ImageGalleryDisplayer();
 
-function initGallery(): void {
-    imageGallery.initEventListener();
+async function initGallery(): Promise<void> {
+    await imageGallery.initEventListener();
 }
 
 function teardownGallery(): void {

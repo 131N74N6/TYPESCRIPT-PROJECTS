@@ -4,22 +4,38 @@ import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/
 class DatabaseStorage <MBK extends { id: string }> {
     protected currentData: Map<string, MBK>;
     private table_name: string;
+    private isInitialized: boolean = false;
+    private realtimeChannel: RealtimeChannel | null = null;
 
     constructor(table_name: string) {
         this.table_name = table_name
         this.currentData = new Map<string, MBK>();
     }
 
-    protected realtimeInit(
-        callback: (data: MBK[]) => void, initialQuery?: (query: any) => any): RealtimeChannel {
-        const channel = supabase.channel('any');
-        channel.on(
+    protected async realtimeInit(
+        callback: (data: MBK[]) => void, initialQuery?: (query: any) => any): Promise<void> {
+        if (this.isInitialized && this.realtimeChannel) {
+            console.warn(`Realtime channel for ${this.table_name} is already initialized.`);
+            callback(this.toArray());
+            return;
+        }
+
+        if (this.realtimeChannel) {
+            this.realtimeChannel.unsubscribe();
+            this.realtimeChannel = null;
+        }
+        
+        this.realtimeChannel = supabase.channel('any');
+        this.realtimeChannel.on(
             'postgres_changes',
             { event: '*', schema: 'public', table: this.table_name },
             (payload: RealtimePostgresChangesPayload<MBK>) => {
-                const processData = (dt: any): MBK => ({ 
-                    ...dt, created_at: new Date(dt.created_at) 
-                });
+                const processData = (dt: any): MBK => {
+                    if (dt && dt.created_at && typeof dt.created_at === 'string') {
+                        return { ...dt, created_at: new Date(dt.created_at) } as MBK;
+                    }
+                    return dt as MBK;
+                }
 
                 switch(payload.eventType) {
                     case "INSERT": {
@@ -34,47 +50,40 @@ class DatabaseStorage <MBK extends { id: string }> {
                     }
                     case "DELETE": {
                         const deletedId = payload.old.id;
-                        if (deletedId) {
-                            this.currentData.delete(deletedId);
-                        }
+                        if (deletedId) this.currentData.delete(deletedId);
                         break;
                     }
                 }
-                callback(Array.from(this.currentData.values()));
+                callback(this.toArray());
             }
         );
-        (async () => {
-            try {
-                let query = supabase
-                .from(this.table_name)
-                .select('*');
+        try {
+            let query = supabase
+            .from(this.table_name)
+            .select('*');
 
-                if (initialQuery) {
-                    query = initialQuery(query);
-                }
+            if (initialQuery) query = initialQuery(query);
 
-                const { data, error } = await query;
+            const { data, error } = await query;
 
-                if (error) {
-                    callback([]);
-                    throw new Error(`Error fetching data: ${error.message}`);
-                }
-
-                this.currentData.clear();
-                data.forEach(dt => {
-                    const processed = { ...dt, created_at: new Date(dt.created_at) } as MBK;
-                    this.currentData.set(processed.id, processed);
-                });
-
-                callback(Array.from(this.currentData.values()));
-                channel.subscribe();
-            } catch (error) {
+            if (error) {
                 callback([]);
-                throw new Error(`Failed to show data: ${error}`);
+                throw new Error(`Error fetching data: ${error.message}`);
             }
-        })();
 
-        return channel;
+            this.currentData.clear();
+            data.forEach(dt => {
+                const processed = { ...dt, created_at: new Date(dt.created_at) } as MBK;
+                this.currentData.set(processed.id, processed);
+            });
+
+            callback(this.toArray());
+            this.realtimeChannel.subscribe();
+            this.isInitialized = true;
+        } catch (error) {
+            callback([]);
+            throw new Error(`Failed to show data: ${error}`);
+        }
     }
 
     protected async addToDatabase(newData: Omit<MBK, 'id'>): Promise<string> {
@@ -128,6 +137,15 @@ class DatabaseStorage <MBK extends { id: string }> {
 
     teardownStorage(): void {
         this.currentData.clear();
+        this.isInitialized = false;
+        if (this.realtimeChannel) {
+            this.realtimeChannel.unsubscribe();
+            this.realtimeChannel = null;
+        }
+    }
+
+    protected toArray(): MBK[] {
+        return Array.from(this.currentData.values());
     }
 }
 

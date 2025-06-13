@@ -4,16 +4,29 @@ import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/
 export default class TableStorage<DXD extends { id: string }> {
     protected currentData: Map<string, DXD>;
     protected tableName: string;
+    private isInitialized: boolean = false;
+    private realtimeChannel: RealtimeChannel | null = null;
 
     constructor(tableName: string) {
         this.tableName = tableName;
         this.currentData = new Map<string, DXD>();
     }
 
-    protected realtimeInit(
-        callback: (data: DXD[]) => void, initialQuery?: (query: any) => any): RealtimeChannel {
-        const channel = supabase.channel('any');
-        channel.on(
+    protected async realtimeInit(
+        callback: (data: DXD[]) => void, initialQuery?: (query: any) => any): Promise<void> {
+        if (this.isInitialized && this.realtimeChannel) {
+            console.warn(`Realtime channel for table ${this.tableName} is already initialized.`);
+            callback(this.toArray());
+            return;
+        }
+
+        if (this.realtimeChannel) {
+            this.realtimeChannel.unsubscribe();
+            this.realtimeChannel = null;
+        }
+
+        this.realtimeChannel = supabase.channel('any');
+        this.realtimeChannel.on(
             'postgres_changes',
             { event: '*', schema: 'public', table: this.tableName },
             (payload: RealtimePostgresChangesPayload<DXD>) => {
@@ -40,36 +53,34 @@ export default class TableStorage<DXD extends { id: string }> {
                 callback(Array.from(this.currentData.values()));
             }
         );
-        (async () => {
-            try {
-                let query = supabase
-                .from(this.tableName)
-                .select('*');
 
-                if (initialQuery) query = initialQuery(query);
+        try {
+            let query = supabase
+            .from(this.tableName)
+            .select('*');
 
-                const { data, error } = await query;
+            if (initialQuery) query = initialQuery(query);
 
-                if (error) {
-                    callback([]);
-                    throw new Error(`Error fetching data: ${error.message}`);
-                }
+            const { data, error } = await query;
 
-                this.currentData.clear();
-                data.forEach(dt => {
-                    const processed = { ...dt, created_at: new Date(dt.created_at) } as DXD;
-                    this.currentData.set(processed.id, processed);
-                });
-
-                callback(Array.from(this.currentData.values()));
-                channel.subscribe();
-            } catch (error) {
+            if (error) {
                 callback([]);
-                throw new Error(`Failed to show data: ${error}`);
+                throw new Error(`Error fetching data: ${error.message}`);
             }
-        })();
 
-        return channel;
+            this.currentData.clear();
+            data.forEach(dt => {
+                const processed = { ...dt, created_at: new Date(dt.created_at) } as DXD;
+                this.currentData.set(processed.id, processed);
+            });
+
+            callback(Array.from(this.currentData.values()));
+            this.realtimeChannel.subscribe();
+            this.isInitialized = true;
+        } catch (error) {
+            callback([]);
+            throw new Error(`Failed to show data: ${error}`);
+        }
     }
 
     protected processData(data: any): DXD {
@@ -157,7 +168,16 @@ export default class TableStorage<DXD extends { id: string }> {
         if (error) throw error;
     }
 
-    teardown(): void {
+    teardownTable(): void {
         this.currentData.clear();
+        this.isInitialized = false;
+        if (this.realtimeChannel) {
+            this.realtimeChannel.unsubscribe();
+            this.realtimeChannel = null;
+        }
+    }
+
+    protected toArray(): DXD[] {
+        return Array.from(this.currentData.values());
     }
 }

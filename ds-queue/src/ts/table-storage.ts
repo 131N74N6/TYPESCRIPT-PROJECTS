@@ -16,7 +16,7 @@ const TableStorage = <ZZZ extends BaseData>(tableName: string) => ({
         if (this.isInitialized && this.realtimeChannel) {
             console.warn(`TableStorage for ${tableName} is already initialized.`);
             // Panggil callback dengan data yang sudah ada jika sudah diinisialisasi
-            callback(Array.from(this.currentData.values()));
+            callback(this.toArray());
             return;
         }
 
@@ -47,7 +47,7 @@ const TableStorage = <ZZZ extends BaseData>(tableName: string) => ({
                         break;
                     }
                 }
-                callback(Array.from(this.currentData.values()));
+                callback(this.toArray());
             }
         );
 
@@ -69,7 +69,7 @@ const TableStorage = <ZZZ extends BaseData>(tableName: string) => ({
                 this.currentData.set(processed.id, processed);
             });
 
-            callback(Array.from(this.currentData.values()));
+            callback(this.toArray());
             this.realtimeChannel.subscribe();
             this.isInitialized = true;
         } catch (error) {
@@ -142,6 +142,10 @@ const TableStorage = <ZZZ extends BaseData>(tableName: string) => ({
         }
         this.isInitialized = false;
         this.currentData.clear();
+    },
+
+    toArray(): ZZZ[] {
+        return Array.from(this.currentData.values());
     }
 });
 

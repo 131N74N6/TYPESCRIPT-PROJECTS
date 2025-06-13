@@ -28,10 +28,11 @@ class HobbiesStacks extends TableStorage<UserInfo> {
 
     constructor() {
         super("hobbies_list");
-        this.realtimeInit(() => this.showAlluserDataAndHobby());
     }
 
-    initEventListeners(): void {
+    async initEventListeners(): Promise<void> {
+        await this.realtimeInit((data) => this.showAlluserDataAndHobby(data));
+
         document.addEventListener('click', async (event) => {
             const target = event.target as HTMLElement;
             if (target.closest('#close-filter')) this.resetfilter();
@@ -62,9 +63,8 @@ class HobbiesStacks extends TableStorage<UserInfo> {
 
     async addData(event: SubmitEvent): Promise<void> {
         event.preventDefault();
-        const data = Array.from(this.currentData.values());
         const trimmedValue = this.inputName.value.trim().toLowerCase();
-        const isExist = data.some(dt => dt.name.toLowerCase() === trimmedValue);
+        const isExist = this.toArray().some(dt => dt.name.toLowerCase() === trimmedValue);
         
         const selectedGenderElement = document.querySelector<HTMLInputElement>('input[name="gender"]:checked');
         const selectedGender = selectedGenderElement?.value as Gender;
@@ -100,8 +100,8 @@ class HobbiesStacks extends TableStorage<UserInfo> {
                     hobbies: selectedHobbies
                 });
             }
-        } catch (error) {
-            this.hobbiesModal.createModal(`Failed to add/change data: ${error}`);
+        } catch (error: any) {
+            this.hobbiesModal.createModal(`Failed to add/change data: ${error.message || error}`);
             this.hobbiesModal.showModal();
         } finally {
             this.resetHobbyForm();
@@ -109,10 +109,9 @@ class HobbiesStacks extends TableStorage<UserInfo> {
         }
     }
 
-    showAlluserDataAndHobby(): void {
+    showAlluserDataAndHobby(hobbies: UserInfo[]): void {
         const fragment = document.createDocumentFragment();
-        const data = Array.from(this.currentData.values())
-        .sort((a,b) => b.created_at.getTime() - a.created_at.getTime());
+        const data = hobbies.sort((a,b) => b.created_at.getTime() - a.created_at.getTime());
         
         try {
             if (data.length > 0) {
@@ -123,8 +122,8 @@ class HobbiesStacks extends TableStorage<UserInfo> {
                 this.dataList.innerHTML = '';
                 this.dataList.textContent = 'Empty';
             }
-        } catch (error) {
-            this.hobbiesModal.createModal(`Failed to load data: ${error}`);
+        } catch (error: any) {
+            this.hobbiesModal.createModal(`Error: ${error.message || error}`);
             this.hobbiesModal.showModal();
             this.dataList.innerHTML = '';
             this.dataList.textContent = 'Empty';
@@ -167,8 +166,7 @@ class HobbiesStacks extends TableStorage<UserInfo> {
     private async handleFilterData(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         const trimmedValue = this.searchInput.value.trim().toLowerCase();
-        const getData = Array.from(this.currentData.values());
-        const filtered = getData.filter(user => user.name.toLowerCase().includes(trimmedValue));
+        const filtered = this.toArray().filter(user => user.name.toLowerCase().includes(trimmedValue));
 
         if (trimmedValue === "" || !trimmedValue) {
             this.hobbiesModal.createModal("Fill the search input");
@@ -182,7 +180,6 @@ class HobbiesStacks extends TableStorage<UserInfo> {
 
     showFilteredUser(users: UserInfo[]): void {
         const fragment = document.createDocumentFragment();
-        // const getAllData = Array.from(this.currentData.values());
 
         this.dataList.innerHTML = '';
         users.forEach(user => fragment.appendChild(this.createComponent(user)));
@@ -203,13 +200,13 @@ class HobbiesStacks extends TableStorage<UserInfo> {
     resetfilter(): void {
         this.searchForm.reset();
         this.getSelectedId = null;
-        this.showAlluserDataAndHobby();
+        this.showAlluserDataAndHobby(this.toArray());
     }
 
     private selectedUserData(id: string): void {
         this.getSelectedId = id;
         this.submitBtn.textContent = 'Change';
-        const data = Array.from(this.currentData.values());
+        const data = this.toArray();
         const detail = data.find(dt => dt.id === this.getSelectedId);
         
         if (!detail) return;
@@ -240,8 +237,8 @@ class HobbiesStacks extends TableStorage<UserInfo> {
                 this.dataList.innerHTML = '';
                 this.dataList.textContent = 'Empty';
             }
-        } catch (error) {
-            this.hobbiesModal.createModal(`Failed to delete all: ${error}`);
+        } catch (error: any) {
+            this.hobbiesModal.createModal(`Failed to delete all: ${error.message || error}`);
             this.hobbiesModal.showModal();
         }
     }
@@ -249,12 +246,12 @@ class HobbiesStacks extends TableStorage<UserInfo> {
 
 const hobbyStack = new HobbiesStacks();
 
-function initHobbiesStacks(): void {
-    hobbyStack.initEventListeners();
+async function initHobbiesStacks(): Promise<void> {
+    await hobbyStack.initEventListeners();
 }
 
 function teardownHobbiesStacks(): void {
-    hobbyStack.teardown(); 
+    hobbyStack.teardownTable(); 
     hobbyStack.resetHobbyForm();
     hobbyStack.teardownHobby();
 }

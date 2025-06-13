@@ -264,12 +264,12 @@ const balanceWithQueueDS = () => ({
                 }
             }
         } else {
-            this.showAllBalance(Array.from(dataStorage.currentData.values()));
+            this.showAllBalance(dataStorage.toArray());
         }
     },
 
     async dequeueBalanceData(): Promise<void> {
-        const balanceData = Array.from(dataStorage.currentData.values());
+        const balanceData = dataStorage.toArray();
         try {
             if (balanceData.length > 0) await dataStorage.dequeue();
             else {
@@ -283,7 +283,7 @@ const balanceWithQueueDS = () => ({
     },
 
     async removeAllBalance(): Promise<void> {
-        const balanceData = Array.from(dataStorage.currentData.values());
+        const balanceData = dataStorage.toArray();
         try {
             if (balanceData.length > 0) {
                 await dataStorage.clearQueue();
