@@ -46,10 +46,8 @@ class UserRating extends DataManager<Rating> {
         this.modalComponent = new Modal(notification);
     }
 
-    setupEventListeners(): void {
-        this.realtimeInit(() => {
-            this.showAllRatings();
-        });
+    async setupEventListeners(): Promise<void> {
+        await this.realtimeInit(() => this.showAllRatings());
 
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;

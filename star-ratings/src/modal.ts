@@ -33,6 +33,8 @@ class Modal {
         if (this.content.parentElement) {
             this.content.parentElement.removeChild(this.content);
         }
+
+        this.notification.innerHTML = '';
     }
 }
 

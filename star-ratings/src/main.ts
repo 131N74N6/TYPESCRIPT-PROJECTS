@@ -17,8 +17,8 @@ const user: UserRating = new UserRating(
     ascendSort, descendSort, ratingFilter
 );
 
-function init(): void {
-    user.setupEventListeners();
+async function init(): Promise<void> {
+    await user.setupEventListeners();
 }
 
 function teardown(): void {

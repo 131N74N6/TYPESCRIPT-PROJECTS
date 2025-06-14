@@ -164,8 +164,8 @@ class ActivityStack extends TableStorage<Activity> {
 
 const activityStack = new ActivityStack();
 
-function initActivityStack(): void {
-    activityStack.initEventListeners();
+async function initActivityStack(): Promise<void> {
+    await activityStack.initEventListeners();
 }
 
 function teardownActivityStack(): void {
