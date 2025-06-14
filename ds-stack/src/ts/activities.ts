@@ -1,11 +1,6 @@
 import Modal from "./modal";
 import TableStorage from "./storage";
-
-interface Activity {
-    id: string;
-    created_at: Date;
-    act_name: string;
-}
+import type { Activity } from "./interface";
 
 class ActivityStack extends TableStorage<Activity> {
     private controller = new AbortController();

@@ -12,7 +12,9 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: resolve(root, 'html', 'index.html'),
-                hobbies: resolve(root, 'html', 'hobbies.html')
+                activites: resolve(root, 'html', 'activities.html'),
+                hobbies: resolve(root, 'html', 'hobbies.html'),
+                hobbies_form: resolve(root, 'html', 'hobbies-form.html')
             }
         }
     },

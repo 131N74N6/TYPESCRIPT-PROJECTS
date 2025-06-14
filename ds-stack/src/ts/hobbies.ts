@@ -1,29 +1,16 @@
 import TableStorage from "./storage";
 import Modal from "./modal";
+import type { Gender, NameAndTheirHobbies } from "./interface";
 
-const Gender = { Male: "Male", Female: "Female" } as const;
-
-type Gender = typeof Gender[keyof typeof Gender];
-
-interface UserInfo {
-    id: string;
-    created_at: Date;
-    name: string;
-    gender: Gender;
-    hobbies: string[];
-}
-
-class HobbiesStacks extends TableStorage<UserInfo> {
-    private dataForm = document.getElementById("dataForm") as HTMLFormElement;
-    private inputName = document.getElementById("name") as HTMLInputElement;
+class HobbiesStacks extends TableStorage<NameAndTheirHobbies> {
     private controller: AbortController = new AbortController();
     private getSelectedId: string | null = null;
+    private notification = document.getElementById("hobby-notification") as HTMLElement;
+    private hobbiesModal = new Modal(this.notification);
     
     private dataList = document.getElementById("data-list") as HTMLElement;
     private searchForm = document.getElementById("searchForm") as HTMLFormElement;
     private searchInput = document.getElementById("searched-name") as HTMLInputElement;
-    private notification = document.getElementById("notification") as HTMLElement;
-    private hobbiesModal = new Modal(this.notification);
 
     constructor() {
         super("hobbies_list");
@@ -36,66 +23,15 @@ class HobbiesStacks extends TableStorage<UserInfo> {
             const target = event.target as HTMLElement;
             if (target.closest('#close-filter')) this.resetfilter();
             else if (target.closest('#delete-all')) await this.deleteAllUser();
+            else if (target.closest('#pop-name-and-hobby')) await this.popNameAndHobby();
         }, { signal: this.controller.signal });
-
-        this.dataForm.addEventListener('submit', async (event) => this.addData(event), {
-            signal: this.controller.signal
-        });
 
         this.searchForm.addEventListener('submit', async (event) => this.handleFilterData(event), {
             signal: this.controller.signal
         });
     }
 
-    async addData(event: SubmitEvent): Promise<void> {
-        event.preventDefault();
-        const trimmedValue = this.inputName.value.trim().toLowerCase();
-        const isExist = this.toArray().some(dt => dt.name.toLowerCase() === trimmedValue);
-        
-        const selectedGenderElement = document.querySelector<HTMLInputElement>('input[name="gender"]:checked');
-        const selectedGender = selectedGenderElement?.value as Gender;
-
-        const selectedHobbiesElements = document.querySelectorAll<HTMLInputElement>('input[name="hobbies"]:checked');
-        const selectedHobbies = Array.from(selectedHobbiesElements).map(hobby => hobby.value);
-        
-        try {
-            if (trimmedValue === "" || !selectedGender || !selectedHobbies) {
-                this.hobbiesModal.createModal("Missing required data...");
-                this.hobbiesModal.showModal();
-                return;
-            }
-
-            if (isExist) {
-                this.hobbiesModal.createModal("Name already exist...");
-                this.dataForm.reset();
-                this.hobbiesModal.showModal();
-                return;
-            }
-
-            if (this.getSelectedId === null) {
-                await this.push({
-                    created_at: new Date(),
-                    name: trimmedValue,
-                    gender: selectedGender,
-                    hobbies: selectedHobbies
-                });
-            } else {
-                await this.changeSelectedData(this.getSelectedId, {
-                    name: trimmedValue,
-                    gender: selectedGender,
-                    hobbies: selectedHobbies
-                });
-            }
-        } catch (error: any) {
-            this.hobbiesModal.createModal(`Failed to add/change data: ${error.message || error}`);
-            this.hobbiesModal.showModal();
-        } finally {
-            this.resetHobbyForm();
-            this.hobbiesModal.teardownModal();
-        }
-    }
-
-    showAlluserDataAndHobby(hobbies: UserInfo[]): void {
+    showAlluserDataAndHobby(hobbies: NameAndTheirHobbies[]): void {
         const fragment = document.createDocumentFragment();
         const data = hobbies.sort((a,b) => b.created_at.getTime() - a.created_at.getTime());
         
@@ -116,7 +52,7 @@ class HobbiesStacks extends TableStorage<UserInfo> {
         }
     }
 
-    private createComponent(detail: UserInfo): HTMLDivElement {
+    private createComponent(detail: NameAndTheirHobbies): HTMLDivElement {
         const card = document.createElement("div") as HTMLDivElement;
         card.dataset.id = detail.id;
         card.className = "card";
@@ -124,7 +60,7 @@ class HobbiesStacks extends TableStorage<UserInfo> {
         if (this.getSelectedId !== detail.id) {
             const username = document.createElement("div") as HTMLDivElement;
             username.className = "username";
-            username.textContent = detail.name;
+            username.textContent = `Name: ${detail.name}`;
 
             const usergender = document.createElement("div") as HTMLDivElement;
             usergender.className = "user-gender";
@@ -137,9 +73,6 @@ class HobbiesStacks extends TableStorage<UserInfo> {
             const createdAt = document.createElement("div") as HTMLDivElement;
             createdAt.className = "created-at";
             createdAt.textContent = `Added at: ${detail.created_at.toLocaleString()}`;
-
-            const buttonWrap = document.createElement("div") as HTMLDivElement;
-            buttonWrap.className = 'button-wrap';
 
             const selectButton = document.createElement("button") as HTMLButtonElement;
             selectButton.className = 'select-button';
@@ -155,7 +88,11 @@ class HobbiesStacks extends TableStorage<UserInfo> {
                 }
             }
 
-            card.append(username, usergender, userhobbies, createdAt, selectButton);
+            const buttonWrap = document.createElement("div") as HTMLDivElement;
+            buttonWrap.className = 'button-wrap';
+            buttonWrap.appendChild(selectButton);
+
+            card.append(username, usergender, userhobbies, createdAt, buttonWrap);
         } else {
             const newUserName = document.createElement("input") as HTMLInputElement;
             newUserName.type = "text";
@@ -170,6 +107,7 @@ class HobbiesStacks extends TableStorage<UserInfo> {
             maleRadioButton.type = "radio";
             maleRadioButton.id = `male-${detail.id}`;
             maleRadioButton.name = `gender-${detail.id}`;
+            maleRadioButton.value = "Male";
             maleRadioButton.checked = (detail.gender === "Male");
 
             const choice1 = document.createElement("div") as HTMLDivElement;
@@ -184,6 +122,7 @@ class HobbiesStacks extends TableStorage<UserInfo> {
             femaleRadioButton.type = "radio";
             femaleRadioButton.id = `female-${detail.id}`;
             femaleRadioButton.name = `gender-${detail.id}`;
+            femaleRadioButton.value = "Female";
             femaleRadioButton.checked = (detail.gender === "Female");
 
             const choice2 = document.createElement("div") as HTMLDivElement;
@@ -197,7 +136,9 @@ class HobbiesStacks extends TableStorage<UserInfo> {
             const hobbiesWrap = document.createElement("div") as HTMLDivElement;
             hobbiesWrap.className = "hobbies-wrap";
 
-            const hobbies = ["Membaca", "Olahraga", "Musik", "Melukis/Menggambar"];
+            const hobbies = [
+                "Reading", "Sports", "Playing Guitar", "Dance", "Listening Music", "Painting/Drawing"
+            ];
             hobbies.forEach((hobby) => {
                 const hobbyCheckbox = document.createElement("input") as HTMLInputElement;
                 hobbyCheckbox.type = "checkbox";
@@ -220,12 +161,18 @@ class HobbiesStacks extends TableStorage<UserInfo> {
             saveChanges.onclick = async () => {
                 try {
                     const trimmedUserName = newUserName.value.trim();
-                    const selectedGender = genderWrap
+                    const newGender = genderWrap
                     .querySelector(`input[name="gender-${detail.id}"]:checked`) as HTMLInputElement;
+                    const newHobbies = hobbiesWrap
+                    .querySelectorAll<HTMLInputElement>(`input[name="hobby-${detail.id}"]:checked`);
+                    const getHobbyValue = Array.from(newHobbies).map(hobby => hobby.value);
                     await this.changeSelectedData(detail.id, {
                         name: trimmedUserName,
-                        
+                        gender: newGender.value as Gender,
+                        hobbies: getHobbyValue
                     });
+                    this.getSelectedId = null;
+                    this.updateExistingComponent(detail.id);
                 } catch (error: any) {
                     this.hobbiesModal.createModal(`Failed to save change: ${error.message || error}`);
                     this.hobbiesModal.showModal();
@@ -265,7 +212,7 @@ class HobbiesStacks extends TableStorage<UserInfo> {
         this.showFilteredUser(filtered);
     }
 
-    showFilteredUser(users: UserInfo[]): void {
+    showFilteredUser(users: NameAndTheirHobbies[]): void {
         const fragment = document.createDocumentFragment();
 
         this.dataList.innerHTML = '';
@@ -274,20 +221,29 @@ class HobbiesStacks extends TableStorage<UserInfo> {
     }
 
     teardownHobby(): void {
-        this.resetHobbyForm();
         this.controller.abort();
         this.hobbiesModal.teardownModal();
-    }
-
-    resetHobbyForm(): void {
-        this.dataForm.reset();
-        this.getSelectedId = null;
     }
 
     resetfilter(): void {
         this.searchForm.reset();
         this.getSelectedId = null;
         this.showAlluserDataAndHobby(this.toArray());
+    }
+
+    private async popNameAndHobby(): Promise<void> {
+        try {
+            if (this.toArray().length > 0) {
+                await this.pop();
+                this.dataList.innerHTML = '';
+                this.dataList.textContent = 'No Data Added...';
+            } else {
+                throw new Error('No Data Added!');
+            }
+        } catch (error: any) {
+            this.hobbiesModal.createModal(`Failed to delete: ${error.message || error}`);
+            this.hobbiesModal.showModal();
+        }
     }
 
     private async deleteAllUser(): Promise<void> {
@@ -337,8 +293,7 @@ async function initHobbiesStacks(): Promise<void> {
 }
 
 function teardownHobbiesStacks(): void {
-    hobbyStack.teardownTable(); 
-    hobbyStack.resetHobbyForm();
+    hobbyStack.teardownTable();
     hobbyStack.teardownHobby();
 }
 

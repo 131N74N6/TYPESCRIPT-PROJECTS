@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/hobbies-form.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Name+Hobby</title>
+</head>
+<body>
+    <section id="hobby-form-modal"></section>
+    <header>
+        <a href="hobbies.html"><span>See All</span></a>
+    </header>
+    <main id="hobby-form">
+        <form id="data-form" title="data-form">
+            <section class="form-group">
+                <input type="text" id="name" placeholder="insert your name"/>
+            </section>
+            <section class="gender-wrap">
+                <span>Gender: </span>
+                <input type="radio" name="gender" id="Male" value="Male"/>
+                <label for="Male">Male</label>
+                <input type="radio" name="gender" id="Female" value="Female"/>
+                <label for="Female">Female</label>
+            </section>
+            <section class="hobby-wrap">
+                <span>Hobby/Talent:</span>
+                <input type="checkbox" id="Reading" name="hobbies" value="Reading"/> 
+                <label for="Reading">Reading</label>
+                <input type="checkbox" id="Sports" name="hobbies" value="Sports"/> 
+                <label for="Sports">Sports</label>
+                <input type="checkbox" id="Playing Guitar" name="hobbies" value="Playing Guitar"/>
+                <label for="Playing Guitar">Playing Guitar</label>
+                <input type="checkbox" id="Dance" name="hobbies" value="Dance"/>
+                <label for="Dance">Dance</label>
+                <input type="checkbox" id="Listening Music" name="hobbies" value="Listening Music"/>
+                <label for="Listening Music">Listening Music</label>
+                <input type="checkbox" id="Painting/Drawing" name="hobbies" value="Painting/Drawing"/>
+                <label for="Painting/Drawing">Painting/Drawing</label>
+            </section>
+            <section>
+                <button type="submit" id="submit-btn">Add Data</button>
+            </section>
+        </form>
+    </main>
+    <script type="module" src="../ts/hobbies-form.ts"></script>
+</body>
+</html>

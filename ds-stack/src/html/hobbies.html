@@ -8,55 +8,24 @@
     <title>DS-STACK-HOBBIES</title>
 </head>
 <body>
-    <section id="notification"></section>
+    <section id="hobby-notification"></section>
     <header>
-        <a href="index.html">Activity (Stack)</a>
+        <a href="index.html"><span>Home</span></a>
+        <a href="hobbies-form.html"><span>Add +</span></a>
     </header>
     <main id="hobbies">
-        <section id="notification"></section>
-            <form id="dataForm" title="dataForm">
-                <section class="form-group">
-                    <label for="name">Nama:</label>
-                    <input type="text" id="name"/>
-                </section>
-                
-                <section class="form-group">
-                    <div>
-                        <input type="radio" name="gender" id="Laki-laki" value="Laki-laki">
-                        <label for="Laki-laki">Laki-laki</label>
-                    </div>
-                    <div>
-                        <input type="radio" name="gender" id="Perempuan" value="Perempuan">
-                        <label for="Perempuan">Perempuan</label>
-                    </div>
-                </section>
-                
-                <section class="form-group">
-                    <label>Hobi:</label>
-                    <label><input type="checkbox" name="hobbies" value="Membaca"> Membaca</label>
-                    <label><input type="checkbox" name="hobbies" value="Olahraga"> Olahraga</label>
-                    <label><input type="checkbox" name="hobbies" value="Musik"> Musik</label>
-                    <label><input type="checkbox" name="hobbies" value="Melukis/Menggambar"> Melukis/Menggambar</label>
-                </section>
-                
-                <button type="submit" id="submit-btn">Add Data</button>
-                <button type="button" id="close-form">Tutup</button>
-            </form>
-
-            <form id="searchForm" title="searchForm">
-                <input type="text" id="searched-name" required/>
-                <button type="submit">Cari</button>
-                <button type="button" id="close-filter">Tutup</button>
-            </form>
-
-        <section id="data-list">Empty</section>
+        <form id="searchForm" title="searchForm">
+            <input type="text" id="searched-name" required/>
+            <button type="submit">Find Name</button>
+        </form>
+        <section id="data-list-wrap">
+            <div class="button-wrap">
+                <button type="button" id="pop-name-and-hobby">Delete</button>
+                <button type="button" id="delete-all">Delete All Name</button>
+            </div>
+            <section id="data-list">Empty</section>
+        </section>
     </main>
-
-    <header id="form-controller">
-        <button type="button" id="addDataMode">Add Data</button>
-        <button type="button" id="searchMode">Search</button>
-        <button type="button" id="delete-all">Delete All User</button>
-    </header>
     <script type="module" src="../ts/hobbies.ts"></script>
 </body>
 </html>
