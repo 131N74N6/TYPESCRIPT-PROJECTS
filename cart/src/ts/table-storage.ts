@@ -1,38 +1,39 @@
 import supabase from "./supabase-config";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-const Storage = <HSR extends { id: string }>(tableName: string) => {
-    async function insert(new_data: Omit<HSR, 'id'>): Promise<string>;
-    async function insert(id?: string): Promise<string>;
+const TableStorage = <HSR extends { id: string }>(tableName: string, tableName2?: string) => {
+    async function insertData(new_data: Omit<HSR, 'id'>): Promise<string>;
+    async function insertData(new_data: HSR): Promise<string>;
 
-    async function insert(new_data: Omit<HSR, 'id'>, id?: string): Promise<string> {
-        let insertPayload: Partial<HSR>;
-        if (id !== undefined) {
-            // Jika ID disediakan, gunakan ID tersebut
-            insertPayload = { ...new_data, id } as HSR;
+    async function insertData(new_data: any): Promise<string> {
+        if (tableName2 !== undefined && 'id' in new_data && typeof new_data.id === 'string') {
+            const { data, error } = await supabase
+                .from(tableName2)
+                .insert([new_data])
+                .select();
+
+            if (error) throw error;
+            return data[0].id;
         } else {
-            // Jika tidak, biarkan database generate ID
-            insertPayload = new_data;
+            const { data, error } = await supabase
+                .from(tableName)
+                .insert([new_data])
+                .select();
+
+            if (error) throw error;
+            return data[0].id;
         }
-
-        const { data, error } = await supabase
-            .from(tableName)
-            .insert([insertPayload])
-            .select();
-
-        if (error) throw error;
-        return data[0].id;
     }
 
     return {
-        insert,
+        insertData,
         isInitialize: false as boolean,
         realtimeChannel: null as RealtimeChannel | null,
         currentData: new Map<string, HSR>() as Map<string, HSR>,
 
         async realtimeInit(callback: (data: HSR[]) => void): Promise<void> {
             if (this.realtimeChannel && this.isInitialize) {
-                console.warn(`Storage for ${tableName} has been initialized`);
+                console.warn(`TableStorage for ${tableName} has been initialized`);
                 callback(this.toArray());
                 return;
             }
@@ -138,4 +139,4 @@ const Storage = <HSR extends { id: string }>(tableName: string) => {
     }
 }
 
-export default Storage;
+export default TableStorage;
