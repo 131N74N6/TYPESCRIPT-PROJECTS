@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
     <link rel="stylesheet" href="../css/style.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Document</title>
+    <title>Add Note</title>
 </head>
 <body class="bg-[#31081F]">
     <header class="p-[1rem] flex gap-[0.5rem] bg-[#B91372]">
@@ -16,10 +16,11 @@
             <span class="border-[#B91372] border-[1.9px] p-[0.4rem]">Saved Notes</span>
         </a>
     </header>
+    <section id="add-note-notification"></section>
     <main id="note-input-field">
         <form id="note-form" class="p-[1rem] flex flex-col gap-[1rem]">
-            <input type="text" id="note-title" placeholder="title..." class="p-[0.5rem] text-[1rem] outline-0 border-[#FA198B] border-[1.8px] shadow[4px_4px_#B91372] rounded-[0.5rem]"/>
-            <textarea id="note-content" class="p-[0.5rem] text-[1rem] outline-0 border-[#FA198B] border-[1.8px] shadow[4px_4px_#B91372] resize-none h-[580px] overflow-y-auto rounded-[0.5rem]"></textarea>
+            <input type="text" id="note-title" placeholder="title..." class="p-[0.5rem] text-[1rem] outline-0 border-[#FA198B] border-[1.8px] shadow[4px_4px_#B91372] rounded-[0.5rem] text-[#FA198B]"/>
+            <textarea id="note-content" class="p-[0.5rem] text-[1rem] outline-0 border-[#FA198B] border-[1.8px] shadow[4px_4px_#B91372] resize-none h-[580px] overflow-y-auto rounded-[0.5rem] text-[#FA198B]"></textarea>
             <button id="add-note" type="submit" class="cursor-pointer rounded-[0.4rem] bg-[#B91372] text-[#0E0004] p-[0.4rem] text-[0.9rem] font-[550]">Save Note</button>
         </form>
     </main>

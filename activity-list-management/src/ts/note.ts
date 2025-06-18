@@ -36,10 +36,12 @@ const NoteManager = () => {
         const cardNote = document.createElement('div') as HTMLDivElement;
         cardNote.id = 'note-card';
         cardNote.dataset.id = note.id;
+        cardNote.className = 'border-[1.9px] p-[0.5rem] rounded-[0.5rem] text-[#FA198B] text-[0.9rem] bg-[#6B0F1A]';
 
         const noteTitle = document.createElement('div') as HTMLDivElement;
         noteTitle.id = 'note-title';
         noteTitle.textContent = note.note_title;
+        noteTitle.className = 'font-[580] text-[1.3rem] capitalize';
 
         const createdAt = document.createElement('div') as HTMLDivElement;
         createdAt.id = 'created-at';
@@ -49,6 +51,26 @@ const NoteManager = () => {
         noteContent.id = 'note-content';
         noteContent.textContent = note.note_content;
 
+        const viewButton = document.createElement('button') as HTMLButtonElement;
+        viewButton.type = 'button';
+        viewButton.id = 'view-button';
+        viewButton.className = 'bg-[#31081F] p-[0.4rem] text-[#FA198B] cursor-pointer text-[0.9rem] rounded-[0.4rem]';
+        viewButton.textContent = 'View';
+        viewButton.onclick = () => window.location.href = `detail-notes.html?id=${note.id}`;
+
+        const removeButton = document.createElement('button') as HTMLButtonElement;
+        removeButton.id = 'remove-button';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Delete';
+        removeButton.className = 'bg-[#31081F] p-[0.4rem] text-[#FA198B] cursor-pointer text-[0.9rem] rounded-[0.4rem]';
+        removeButton.onclick = async () => await tableStorage.deleteSelectedData(note.id);
+
+        const burronWrap = document.createElement('div') as HTMLDivElement;
+        burronWrap.id = 'button-wrap';
+        burronWrap.className = 'flex gap-[0.5rem] mt-[0.5rem]';
+        burronWrap.append(viewButton, removeButton);
+
+        cardNote.append(noteTitle, noteContent, burronWrap);
         return cardNote;
     }
 
@@ -57,7 +79,9 @@ const NoteManager = () => {
 
 const noteManager = NoteManager();
 
-const teardownNote = () => {}
+const teardownNote = () => {
+    tableStorage.teardownStorage();
+}
 
 document.addEventListener("DOMContentLoaded", noteManager.initEventListeners);
 window.addEventListener("beforeunload", teardownNote);

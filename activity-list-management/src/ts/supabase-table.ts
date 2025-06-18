@@ -123,6 +123,16 @@ function TableStorage<SS extends { id: string }>(tableName: string) {
         return Array.from(currentData.values());
     }
 
+    async function selectedData(id: string) {
+        const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('id', id);
+
+        if (error) throw error;
+        return data
+    }
+
     return { 
         changeSelectedData, 
         currentData, 
@@ -130,6 +140,7 @@ function TableStorage<SS extends { id: string }>(tableName: string) {
         deleteAllData, 
         insert, 
         realtimeInit, 
+        selectedData,
         teardownStorage,
         toArray
     }

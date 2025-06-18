@@ -15,6 +15,7 @@ export default defineConfig({
             input: {
                 main: resolve(root, 'html', 'index.html'),
                 add_note: resolve(root, 'html', 'add-note.html'),
+                detail_note: resolve(root, 'html', 'detail-note.html'),
                 activity: resolve(root, 'html', 'activity.html'),
                 note: resolve(root, 'html', 'note.html')
             }
