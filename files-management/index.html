@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Management</title>
+    <link rel="stylesheet" href="./src/style.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" 
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" 
+        crossorigin="anonymous" referrerpolicy="no-referrer" 
+    />
+</head>
+<body>
+    <div id="app">
+        <section id="modal"></section>
+        <header id="header">
+            <button type="button" id="show-form">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Data</span>
+            </button>
+            <button type="button" id="show-search-form">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Search</span>
+            </button>
+            <button type="button" id="delete-all-files">
+                <i class="fa-solid fa-trash"></i>
+                <span>Delete All</span>
+            </button>
+            <button type="button" id="open-features">
+                <i class="fa-solid fa-gears"></i>
+                <span>Features</span>
+            </button>
+        </header>
+        <main class="container">
+            <form id="upload-file-section" title="upload-section">
+                <input type="text" id="username" placeholder="input-your-username..." autocomplete="username"/>
+                <input type="file" id="file-input" title="file" accept=".pdf,.doc,.docx,.txt,.jpg,.png,.jpeg"/>
+                <div id="preview">Click here to upload your file</div>
+                <div id="fileName"></div>
+                <div class="button-wrap">
+                    <button type="button" id="reset-form">Reset Form</button>
+                    <button type="submit" id="submit-btn">Add File</button>
+                </div>
+            </form>
+            <form id="search-file-section" title="search-section">
+                <input type="text" id="searched-data" placeholder="search here..."/>
+                <div class="button-wrap">
+                    <button type="button" id="reset-search">Clear</button>
+                    <button type="submit" id="search-button">Search</button>
+                </div>
+            </form>
+            <section id="features-list">
+                <div class="sorting-container">
+                    <input type="checkbox" id="asc-sorting" class="sorting-checkbox"/>
+                    <label for="asc-sorting"><span>A-Z</span></label>
+                    <input type="checkbox" id="dsc-sorting" class="sorting-checkbox"/>
+                    <label for="dsc-sorting"><span>Z-A</span></label>
+                </div>
+                <div class="wrapper">
+                    <input type="checkbox" name="file-type" id="pdf" value="application/pdf" checked/>
+                    <label for="pdf">PDF</label>
+                    <input type="checkbox" name="file-type" id="jpg" value="image/jpg" checked/>
+                    <label for="jpg">JPG</label>
+                    <input type="checkbox" name="file-type" id="jpeg" value="image/jpeg" checked/>
+                    <label for="jpeg">JPEG</label>
+                    <input type="checkbox" name="file-type" id="png" value="image/png" checked/>
+                    <label for="png">PNG</label>
+                    <input type="checkbox" name="file-type" id="txt" value="text/plain" checked/>
+                    <label for="txt">TXT</label>
+                    <input type="checkbox" name="file-type" id="word/doc" value="application/vnd.openxmlformats-officedocument.wordprocessingml.document" checked/>
+                    <label for="word/doc">WORD/DOC</label>
+                </div>
+                <button type="button" id="close-features">X</button>
+            </section>
+            <section class="documents-list" id="documents-list">No files added...</section>
+        </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

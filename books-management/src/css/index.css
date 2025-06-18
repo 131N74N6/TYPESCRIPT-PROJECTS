@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root {
+    --eva-awakened-primary: #1A1A1A;
+    --eva-awakened-secondary: #4B0082;
+    --eva-awakened-accent: #8A2BE2;
+    --eva-awakened-highlight: #FF00FF;
+    --eva-awakened-bg: #FFFFFF;
+    
+    --eva-unawakened-primary: #3D3D3D;
+    --eva-unawakened-secondary: #2C0033; 
+    --eva-unawakened-accent: #4B0082;
+    --eva-unawakened-highlight: #8B0000;
+    --eva-unawakened-bg: #1A1A1A;
+}
+
+body {
+    background-color: var(--eva-awakened-bg);
+    color: var(--eva-awakened-primary);
+    transition: all 0.3s ease;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+}
+
+body[dark-mode="active"] {
+    background-color: var(--eva-unawakened-secondary);
+}
+
+main#books {
+    max-width: 920px;
+    margin: 0 auto;
+}

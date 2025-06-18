@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="../css/index.css"/>
+    <title>Add Books</title>
+</head>
+<body>
+    <main id="books">
+        <section id="message"></section>
+        <header>
+            <a href="books.html">See All Books</a>
+            <input type="checkbox" id="dark-mode" title="dark-toggle"/>
+            <label for="dark-mode">🌕</label>
+        </header>
+        <form id="book-form">
+            <input type="text" id="title" placeholder="Judul">
+            <input type="text" id="author" placeholder="Penulis">
+            <input type="text" id="year" placeholder="Tahun">
+            <button type="submit" id="tambah-buku">+</button>
+            <button type="button" id="reset-form">Reset</button>
+        </form>
+    </main>
+    <script type="module" src="../ts/form.ts"></script>
+</body>
+</html>

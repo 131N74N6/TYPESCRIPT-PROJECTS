@@ -1,0 +1,78 @@
+:root {
+    --anti-flash-white: #E7ECEF;
+    --yin-mn-blue: #274C77;
+    --air-superiority-blue: #6096BA;
+    --uranian-blue: #A3CEF1;
+    --battleship-gray: #8B8C89;
+}
+
+input[type="radio"], input[type="checkbox"] {
+    display: none;
+}
+
+label {
+    background-color: var(--yin-mn-blue);
+    color: var(--anti-flash-white);
+    padding: 0.4rem;
+    font-size: 0.9rem;
+    font-family: monospace;
+    font-weight: 600;
+    border-radius: 0.4rem;
+    border: 1px solid var(--uranian-blue);
+    cursor: pointer;
+}
+
+input[type="radio"]:checked + label,
+input[type="checkbox"]:checked + label {
+    background-color: var(--uranian-blue);
+    color: var(--yin-mn-blue);
+}
+
+input[type="text"] {
+    padding: 0.5rem;
+    font-size: 1rem;
+    font-family: monospace;
+    outline: none;
+    border-radius: 0.5rem;
+    color: var(--uranian-blue);
+    font-weight: 600;
+    border: 1px solid var(--uranian-blue);
+    background-color: var(--yin-mn-blue);
+}
+
+input[type="text"]::placeholder {
+    color: var(--air-superiority-blue);
+}
+
+body {
+    background-color: var(--yin-mn-blue);
+    padding: 0;
+    margin: 0;
+}
+
+header {
+    background-color: var(--uranian-blue);
+    padding: 1rem;
+}
+
+main#hobby-form {
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    color: var(--anti-flash-white);
+    font-family: monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    align-items: center;
+    height: 89dvh;
+}
+
+main#hobby-form form#data-form {
+    display: flex;
+    gap: 1rem;
+    flex-direction: column;
+    padding: 1rem;
+    border: 2px solid var(--uranian-blue);
+    border-radius: 1rem;
+    box-shadow: 4px 4px var(--uranian-blue);
+}

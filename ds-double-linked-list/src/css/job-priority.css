@@ -1,0 +1,98 @@
+:root {
+    --dark-green: #1F2F16;
+    --feldgrau: #395B50;
+    --payne-gray: #5A7684;
+    --powder-blue: #92AFD7;
+    --lavender: #C5D1EB;
+}
+
+body {
+    background-color: var(--payne-gray);
+    padding: 0;
+    margin: 0;
+}
+
+main#app {
+    padding: 1rem;
+    display: flex;
+    gap: 1rem;
+}
+
+#job-form {
+    flex: 0.3;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 4px var(--lavender);
+    border: 1px solid var(--lavender);
+    border-radius: 1rem;
+    background-color: var(--dark-green);
+    padding: 1rem;
+    gap: 1rem;
+}
+
+#jobs-list {
+    display: flex;
+    flex-direction: column;
+    flex: 0.7;
+    overflow-y: auto;
+    height: 88dvh;
+    gap: 1rem;
+    padding: 1.1rem;
+}
+
+#jobs-list::-webkit-scrollbar {
+    display: none;
+}
+
+#jobs-list .job-item {
+    font-family: monospace;
+    font-size: 1rem;
+    font-weight: 550;
+    padding: 1rem;
+    border-radius: 1rem;
+    background-color: var(--dark-green);
+    color: var(--powder-blue);
+    box-shadow: 4px 4px var(--lavender);
+    border: 1px solid var(--lavender);
+}
+
+input[type="text"] {
+    outline: none;
+    border: 1px solid var(--powder-blue);
+    background-color: var(--feldgrau);
+    color: var(--lavender);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: var(--powder-blue) 2px 2px;
+}
+
+textarea {
+    height: 200px;
+    outline: none;
+    border: 1px solid var(--powder-blue);
+    background-color: var(--feldgrau);
+    color: var(--lavender);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: var(--powder-blue) 2px 2px;
+    resize: none;
+}
+
+button {
+    border: 1px solid var(--powder-blue);
+    background-color: var(--feldgrau);
+    color: var(--lavender);
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: var(--powder-blue) 2px 2px;
+}

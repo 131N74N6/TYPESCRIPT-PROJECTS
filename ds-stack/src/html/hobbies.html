@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/hobbies.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DS-STACK-HOBBIES</title>
+</head>
+<body>
+    <section id="hobby-notification"></section>
+    <header>
+        <a href="index.html"><span>Home</span></a>
+        <a href="hobbies-form.html"><span>Add +</span></a>
+    </header>
+    <main id="hobbies">
+        <form id="searchForm" title="searchForm">
+            <input type="text" id="searched-name" required/>
+            <button type="submit">Find Name</button>
+        </form>
+        <section id="data-list-wrap">
+            <div class="button-wrap">
+                <button type="button" id="pop-name-and-hobby">Delete</button>
+                <button type="button" id="delete-all">Delete All Name</button>
+            </div>
+            <section id="data-list">Empty</section>
+        </section>
+    </main>
+    <script type="module" src="../ts/hobbies.ts"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+:root {
+    --dark-purple: #420039;
+    --magenta-haze: #932F6D;
+    --orchid: #E07BE0;
+    --periwinkle: #DCCCFF;
+    --magnolia: #F6F2FF;
+}
+
+header {
+    background-color: var(--dark-purple);
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+header a {
+    text-decoration: none;
+    font-family: Arial;
+    color: var(--magnolia);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--orchid);
+}
+
+#images-gallery {
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 0.5rem;
+}
+
+#images-gallery .image-post .image-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+#images-gallery .image-post .image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}

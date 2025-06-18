@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/index.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Add Post</title>
+</head>
+<body>
+    <header><a href="gallery.html">See All Images</a></header>
+    <main id="app">
+        <section id="notification_"></section>
+        <form id="image-upload-field" title="image-upload-field">
+            <input type="text" id="uploader-name" placeholder="enter-name..."/>
+            <input type="text" id="image-title" placeholder="enter-image-title..."/>
+            <input type="file" id="media-file" multiple accept=".jpg,.png,.jpeg" placeholder="select-your-file"/>
+            <section id="image-preview-container"></section>
+            <button type="submit" id="add-post-button">Add Post</button>
+        </form>
+    </main>
+    <script type="module" src="../ts/index.ts"></script>
+</body>
+</html>

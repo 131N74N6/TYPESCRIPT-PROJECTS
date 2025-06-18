@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/gallery.css"/>
+    <title>Image Gallery</title>
+</head>
+<body>
+    <header>
+        <a href="index.html">Add Post</a>
+    </header>
+    <section id="gallery-notification"></section>
+    <main id="gallery">
+        <form id="search-image-field" title="search-image-field">
+            <input type="text" id="search-image" placeholder="search here..."/>
+            <button type="submit">Find</button>
+            <button type="button" id="reset-filter">Reset</button>
+        </form>
+        <section id="images-gallery"></section>
+    </main>
+    <script type="module" src="../ts/gallery.ts"></script>
+</body>
+</html>

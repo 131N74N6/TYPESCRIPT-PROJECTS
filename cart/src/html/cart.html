@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/cart.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cart</title>
+</head>
+<body>
+    <header>
+        <a href="index.html"><span>Home</span></a>
+        <a href="customer.html"><span>See-Product</span></a>
+        <button id="remove-all-from-cart" type="button">Remove All</button>
+    </header>
+    <main id="home">
+        <section id="cart-notification"></section>
+        <section id="chosen-products-list">
+            <div class="error-message">No Product Selected</div>
+        </section>
+    </main>
+    <footer id="cart-footer">
+        <section id="price-total">IDR: 0</section>
+        <button type="button" id="check-out">Check Out</button>
+    </footer>
+    <script src="../ts/cart.ts" type="module"></script>
+</body>
+</html>

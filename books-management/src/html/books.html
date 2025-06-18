@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg" />
+    <link rel="stylesheet" href="../css/books.css"/>
+    <title>Books</title>
+</head>
+<body>
+    <main id="books">
+        <section id="message"></section>
+        <header>
+            <a href="index.html">home</a>
+            <input type="checkbox" id="dark-mode" title="dark-toggle"/>
+            <label for="dark-mode">🌕</label>
+            <button type="button" class="delete-all">Delete All Books</button>
+            <section class="sorting">
+                <input type="checkbox" name="sorting" id="newest-year"/>
+                <label for="newest-year">Terbaru</label>
+                <input type="checkbox" name="sorting" id="oldest-year"/>
+                <label for="oldest-year">Terlama</label>
+            </section>
+        </header>
+        <section id="book-wrap">
+            <form id="search-form">
+                <input type="text" id="search-title" placeholder="cari judul buku"/>
+                <button type="submit" class="search-btn">Cari</button>
+                <button type="button" id="reset-search">Reset</button>
+            </form>
+            <section id="book-list">No Books</section>
+        </section>
+    </main>
+    <script type="module" src="../ts/books.ts"></script>
+</body>
+</html>

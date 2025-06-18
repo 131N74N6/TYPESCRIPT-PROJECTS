@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/job-priority.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>DSDLL-JOB-PRIORITY</title>
+</head>
+<body>
+    <header><a href="index.html">Home</a></header>
+    <section id="notification"></section>
+    <main id="app">
+        <section id="jobs-list">
+            <div class="empty-message">No jobs available.</div>
+        </section>
+        <form id="job-form">
+            <input type="text" id="job-name" placeholder="Enter job name"/>
+            <textarea id="job-description" placeholder="Enter job description"></textarea>
+            <select id="job-priority">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+                <option value="immediate">Immediate</option>
+                <option value="critical">Critical</option>
+                <option value="emergency">Emergency</option>
+                <option value="blocker">Blocker</option>
+                <option value="fatal">Fatal</option>
+                <option value="catastrophic">Catastrophic</option>
+                <option value="disaster">Disaster</option>
+                <option value="trivial">Trivial</option>
+                <option value="optional">Optional</option>
+            </select>
+            <button type="submit" id="add-job">Add Job</button>
+            <button type="button" id="remove-all-jobs">Remove All</button>
+        </form>
+    </main>
+    <script type="module" src="../ts/job-priority.ts"></script>
+</body>
+</html>

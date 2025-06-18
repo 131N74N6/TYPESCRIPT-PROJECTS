@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="./src/style.css"/>
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" 
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" 
+        crossorigin="anonymous" 
+        referrerpolicy="no-referrer" 
+    />
+    <title>Ratings</title>
+</head>
+<body>
+    <section id="notification"></section>
+    <section class="header">
+        <input type="checkbox" name="sorting" id="ascend-sort" value="ascend"/>
+        <label for="ascend-sort">Oldest</label>
+        
+        <input type="checkbox" name="sorting" id="descend-sort" value="descend"/>
+        <label for="descend-sort">Newest</label>
+
+        <input type="checkbox" name="rate-filter" id="show-1" value="1" checked/>
+        <label for="show-1">1</label>
+
+        <input type="checkbox" name="rate-filter" id="show-2" value="2" checked/>
+        <label for="show-2">2</label>
+
+        <input type="checkbox" name="rate-filter" id="show-3" value="3" checked/>
+        <label for="show-3">3</label>
+        
+        <input type="checkbox" name="rate-filter" id="show-4" value="4" checked/>
+        <label for="show-4">4</label>
+        
+        <input type="checkbox" name="rate-filter" id="show-5" value="5" checked/>
+        <label for="show-5">5</label>
+    </section>
+    <main id="app">
+        <section class="sidebar">
+            <form id="star-widgets" title="rating-fields">
+                <section class="stars">
+                    <input type="radio" name="rate" title="rating-radio" id="rate-5" value="5"/>
+                    <label for="rate-5"><i class="fa-solid fa-star"></i></label>
+
+                    <input type="radio" name="rate" title="rating-radio" id="rate-4" value="4"/>
+                    <label for="rate-4"><i class="fa-solid fa-star"></i></label>
+
+                    <input type="radio" name="rate" title="rating-radio" id="rate-3" value="3"/>
+                    <label for="rate-3"><i class="fa-solid fa-star"></i></label>
+
+                    <input type="radio" name="rate" title="rating-radio" id="rate-2" value="2"/>
+                    <label for="rate-2"><i class="fa-solid fa-star"></i></label>
+
+                    <input type="radio" name="rate" title="rating-radio" id="rate-1" value="1"/>
+                    <label for="rate-1"><i class="fa-solid fa-star"></i></label>
+                </section>
+                <section id="writing">
+                    <input type="text" id="username" placeholder="insert-name..."/>
+                    <textarea id="comment" placeholder="insert-your-opinion"></textarea>
+                    <div class="button-wrap">
+                        <button type="submit" id="save-btn">Send</button>
+                        <button type="button" id="clear-form">Clear Form</button>
+                        <button type="button" id="delete-all-ratings">Delete All</button>
+                    </div>
+                </section>
+            </form>
+        </section>
+        <section id="ratings-list">...No Rating Added...</section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

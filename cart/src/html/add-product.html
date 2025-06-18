@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/add-product.css"/>
+    <title>Add Product</title>
+</head>
+<body>
+    <main id="customer">
+        <section id="add-product-notification"></section>
+        <header>
+            <a href="seller.html"><span>See Product</span></a>
+            <a href="index.html">Home</a>
+        </header>
+        <form id="add-product">
+            <input type="text" id="product-name" placeholder="insert product name..."/>
+            <input type="text" id="product-price" placeholder="insert product price..."/>
+            <input type="file" id="product-image" title="product-image"/>
+            <div id="product-image-preview"></div>
+            <button type="submit" id="submit-button">Add</button>
+        </form>
+    </main>
+    <script type="module" src="../ts/add-product.ts"></script>
+</body>
+</html>

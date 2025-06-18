@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+:root {
+    --licorice: #0E0004;
+    --dark-purple: #31081F;
+    --rosewood: #6B0F1A;
+    --red-violet: #B91372;
+    --magenta: #FA198B;
+}

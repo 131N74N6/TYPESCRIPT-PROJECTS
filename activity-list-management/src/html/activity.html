@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/style.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Activity</title>
+</head>
+<body class="font-mono bg-[#0E0004]">
+    <header class="p-[1rem]">
+        <a href="index.html" class="text-[#FA198B] decoration-0">
+            <span class="border-[1.8px] border-[#B91372] p-[0.5rem]">Home</span>
+        </a>
+    </header>
+    <section id="notification" class="bg-[#0267C1] text-[#EFA00B]"></section>
+    <main id="app" class="flex gap-[1rem] p-[1rem]">
+        <form 
+            id="activity-form" title="activity-form" 
+            class="border-[#6B0F1A] shadow-[3px_3px_#6B0F1A] border-[2px] rounded-[1rem] p-[1rem] flex-[0.3]">
+            <textarea 
+                id="activity-name" placeholder="enter activity...." 
+                class="resize-none p-[0.5rem] rounded-[0.5rem] h-[190px] outline-0 w-[100%] border-[#6B0F1A] border-[1.5px] text-[#FA198B]">
+            </textarea>
+            <div id="controller" class="flex gap-[0.6rem]">
+                <button 
+                    id="submit-btn" 
+                    type="submit" 
+                    class="cursor-pointer bg-[#0E0004] text-[#FA198B] border-[1.8px] border-[#B91372] shadow-[3px_3px_#B91372] p-[0.4rem] rounded-[0.4rem]">
+                    Add Data
+                </button>
+                <button 
+                    id="delete-all-button" 
+                    type="button" 
+                    class="cursor-pointer bg-[#0E0004] text-[#FA198B] border-[1.8px] border-[#B91372] shadow-[3px_3px_#B91372] p-[0.4rem] rounded-[0.4rem]">
+                    Delete All
+                </button>
+                <button 
+                    id="reset-form-btn" 
+                    type="button" 
+                    class="cursor-pointer bg-[#0E0004] text-[#FA198B] border-[1.8px] border-[#B91372] shadow-[3px_3px_#B91372] p-[0.4rem] rounded-[0.4rem]">
+                    Clear Form
+                </button>
+            </div>
+        </form>
+        <section 
+            id="activity-list" 
+            class="h-[88dvh] overflow-y-auto flex flex-col gap-[1rem] p-[1rem] shadow-[3px_3px_#6B0F1A] border-[#6B0F1A] border-[2px] rounded-[1rem] flex-[0.7]">
+            No activities yet...
+        </section>
+    </main>
+    <script type="module" src="../ts/activity.ts"></script>
+</body>
+</html>

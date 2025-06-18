@@ -1,0 +1,78 @@
+:root {
+    --royal-purple: #7B4B94;
+    --glaucous: #7D82B8;
+    --celadon: #B7E3CC;
+    --tea-green: #C4FFB2;
+    --mindaro: #D6F7A3;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--glaucous);
+}
+
+header {
+    background-color: var(--royal-purple);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+header a {
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--celadon);
+}
+
+main#customer {
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+main#customer #product-list {
+    padding: 1rem;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+main#customer #product-list .product-card {
+    border-radius: 1.1rem;
+    box-shadow: 0 4px var(--tea-green);
+    background-color: var(--royal-purple);
+    font-weight: 600;
+    font-size: 1rem;
+    font-family: monospace;
+    color: var(--celadon);
+    padding: 1rem;
+}
+
+main#customer #product-list .product-card .product-image-wrapper {
+    width: 100%;
+    height: 200px;
+}
+
+main#customer #product-list .product-card .product-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+
+main#customer #product-list .product-card button {
+    background-color: var(--mindaro);
+    border: none;
+    border-radius: 0.4rem;
+    box-shadow: 3px 3px var(--glaucous);
+    color: var(--royal-purple);
+    cursor: pointer;
+    padding: 0.4rem;
+    font-family: monospace;
+    font-weight: 600;
+    font-size: 1rem;
+    width: 80px;
+}

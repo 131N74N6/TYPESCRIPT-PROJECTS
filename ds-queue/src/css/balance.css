@@ -1,0 +1,112 @@
+:root {
+    --rich-balck: #0D1821;
+    --indigo-dye: #344966;
+    --lavender-pink: #E6AACE;
+    --baby-powder: #F0F4EF;
+    --sage: #BFCC94;
+}
+
+body {
+    background-color: var(--rich-balck);
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: var(--sage);
+    padding: 1rem;
+}
+
+header a {
+    color: var(--indigo-dye);
+    font-family: Arial;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+main#balance {
+    padding: 1rem;
+    display: flex;
+    gap: 1rem;
+}
+
+main#balance #balance-input-field {
+    border: 2px solid var(--baby-powder);
+    padding: 1rem;
+    color: var(--lavender-pink);
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    font-family: monospace;
+    font-size: 1rem;
+    flex: 0.3;
+    box-shadow: 4px 4px var(--lavender-pink);
+}
+
+main#balance .show-data {
+    border: 2px solid var(--baby-powder);
+    padding: 1rem;
+    border-radius: 1rem;
+    flex: 1;
+    box-shadow: 4px 4px var(--lavender-pink);
+}
+
+main#balance .show-data .detail-inform {
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--sage);
+    font-size: 1rem;
+    font-weight: 500;
+    font-family: monospace;
+    color: var(--baby-powder);
+}
+
+main#balance .show-data #balance-list {
+    padding-top: 1rem;
+    height: 63dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+main#balance .show-data #balance-list::-webkit-scrollbar {
+    display: none;
+}
+
+main#balance .show-data #balance-list .balance-card {
+    padding: 1rem;
+    font-family: monospace;
+    border-radius: 1rem;
+    font-size: 1rem;
+    color: var(--lavender-pink);
+    font-weight: 500;
+    border: 2px solid var(--sage);
+}
+
+input[type="text"] {
+    outline: none;
+    border: 1px solid var(--baby-powder);
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    font-family: monospace;
+    font-size: 1rem;
+    background-color: var(--rich-balck);
+    color: var(--sage);
+    font-weight: 510;
+    box-shadow: 3px 3px var(--baby-powder);
+}
+
+button {
+    border: none;
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    margin-top: 0.6rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+    background-color: var(--indigo-dye);
+    color: var(--sage);
+    font-weight: 510;
+    box-shadow: 3px 3px var(--sage);
+}

@@ -1,0 +1,119 @@
+:root {
+    --anti-flash-white: #E7ECEF;
+    --yin-mn-blue: #274C77;
+    --air-superiority-blue: #6096BA;
+    --uranian-blue: #A3CEF1;
+    --battleship-gray: #8B8C89;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--battleship-gray);
+}
+
+header {
+    background-color: var(--air-superiority-blue);
+    padding: 1rem;
+}
+
+main#hobbies {
+    padding: 1rem;
+    display: flex;
+    gap: 1rem;
+}
+
+input[type="text"] {
+    padding: 0.5rem;
+    font-size: 1rem;
+    font-family: monospace;
+    outline: none;
+    border-radius: 0.5rem;
+    color: var(--uranian-blue);
+    font-weight: 600;
+    border: 1px solid var(--uranian-blue);
+    background-color: var(--yin-mn-blue);
+}
+
+main#hobbies #searchForm {
+    flex: 0.3;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border: 2px solid var(--anti-flash-white);
+    box-shadow: 4px 4px var(--anti-flash-white);
+    border-radius: 1rem;
+}
+
+main#hobbies #data-list-wrap {
+    padding: 1rem;
+    flex: 0.7;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border: 2px solid var(--anti-flash-white);
+    box-shadow: 4px 4px var(--anti-flash-white);
+    border-radius: 1rem;
+}
+
+main#hobbies #data-list-wrap #data-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: 76.5dvh;
+    overflow-y: auto;
+}
+
+main#hobbies #data-list-wrap #data-list::-webkit-scrollbar {
+    display: none;
+}
+
+main#hobbies #data-list-wrap #data-list .card:nth-child(even) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-family: monospace;
+    text-transform: capitalize;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 1px solid var(--yin-mn-blue);
+    border-radius: 1rem;
+    background-color: var(--uranian-blue);
+    padding: 1rem;
+    color: var(--yin-mn-blue);
+}
+ 
+main#hobbies #data-list-wrap #data-list .card:nth-child(odd) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-family: monospace;
+    text-transform: capitalize;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 1px solid var(--yin-mn-blue);
+    border-radius: 1rem;
+    background-color: var(--yin-mn-blue);
+    padding: 1rem;
+    color: var(--anti-flash-white);
+}
+
+.button-wrap {
+    display: flex;
+    gap: 1rem;
+}
+
+button {
+    border-radius: 8px;
+    border: 2px solid var(--uranian-blue);
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: monospace;
+    box-shadow: 4px 4px var(--uranian-blue);
+    color: var(--anti-flash-white);
+    background-color: var(--air-superiority-blue);
+    transition: 0.3s ease-in-out;
+    cursor: pointer;
+}

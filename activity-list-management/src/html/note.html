@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/style.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Note</title>
+</head>
+<body class="bg-[#31081F]">
+    <header class="p-[1rem] flex gap-[0.5rem] bg-[#B91372]">
+        <a href="index.html" class="text-[#31081F] text-[1rem] decoration-0 font-[550]">
+            <span class="border-[#B91372] border-[1.9px] p-[0.4rem]">Home</span>
+        </a>
+        <a href="add-note.html" class="text-[#31081F] text-[1rem] decoration-0 font-[550]">
+            <span class="border-[#B91372] border-[1.9px] p-[0.4rem]">Make New Note +</span>
+        </a>
+    </header>
+    <main id="note">
+        <section id="note-list">
+            <div class="h-[90dvh] text-[#B91372] flex justify-center align-middle text-[2rem] font-[550]" id="error-message">
+                No Note Added...
+            </div>
+        </section>
+    </main>
+    <script type="module" src="../ts/note.ts"></script>
+</body>
+</html>

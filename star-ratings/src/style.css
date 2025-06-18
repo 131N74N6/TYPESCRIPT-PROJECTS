@@ -1,0 +1,233 @@
+:root {
+    --add-color-1: #1d1d1b;
+    --eva-mark-09A: #272726;
+    --nerv-jp-logo: #ff0000;
+    --eva-unit-13-awaken: #f2faed;
+    --eva-unit-08: #db819e;
+    --eva-unit-13: #5a5384;
+}
+
+.show {
+    display: block !important;
+}
+
+body {
+    background-color: var(--add-color-1);
+    margin: 0;
+    padding: 0;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+section#notification .content {
+    display: none;
+    border: 2px solid var(--nerv-jp-logo);
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    color: var(--nerv-jp-logo);
+    background-color: var(--add-color-1);
+    animation: slide-in 0.3s ease-in-out;
+}
+
+@keyframes slide-in {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0%); }
+}
+
+section.header {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 1rem;
+    background-color: var(--add-color-1);
+    border-radius: 1rem;
+    border: 2px solid var(--nerv-jp-logo);
+}
+
+section.header label {
+    background-color: var(--eva-mark-09A);
+    color: var(--eva-unit-08);
+    border: 1px solid var(--eva-unit-08);
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    text-align: center;
+    width: 90px;
+    font-size: 0.9rem;
+    font-family: Arial;
+    cursor: pointer;
+}
+
+section.header input:checked+label {
+    background-color: var(--eva-unit-08);
+    color: var(--eva-mark-09A);
+}
+
+main#app {
+    display: flex;
+    gap: 1rem;
+}
+
+input[type="radio"], input[type="checkbox"] {
+    display: none;
+}
+
+section.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 30%;
+    padding: 1rem;
+    background-color: var(--eva-mark-09A);
+    border: 2px solid var(--nerv-jp-logo);
+    border-radius: 1rem;
+    height: 81dvh;
+}
+
+section.sidebar form#star-widgets {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+section.sidebar form#star-widgets section.stars {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-direction: row-reverse;
+    font-size: 3rem;
+}
+
+section.sidebar form#star-widgets section.stars input:checked ~ label {
+    color: var(--eva-unit-13-awaken);
+}
+
+section.sidebar form#star-widgets section.stars input:not(:checked) ~ label:hover,
+section.sidebar form#star-widgets section.stars input:not(:checked) ~ label:hover ~ label {
+    color: var(--eva-unit-13-awaken);
+}
+
+section.sidebar form#star-widgets section#writing {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+section.sidebar form#star-widgets section#writing input#username {
+    border: 1.5px solid var(--nerv-jp-logo);
+    background-color: var(--add-color-1);
+    resize: none;
+    padding: 0.5rem;
+    outline: none;
+    font-family: Arial;
+    color: var(--nerv-jp-logo);
+}
+
+section.sidebar form#star-widgets section#writing textarea#comment {
+    height: 100px;
+    border: 1.5px solid var(--nerv-jp-logo);
+    background-color: var(--add-color-1);
+    resize: none;
+    padding: 0.5rem;
+    outline: none;
+    font-family: Arial;
+    color: var(--nerv-jp-logo);
+}
+
+section.sidebar form#star-widgets section#writing div.button-wrap {
+    display: flex;
+    gap: 0.5rem;
+}
+
+section.sidebar form#star-widgets section#writing div.button-wrap button {
+    cursor: pointer;
+    background-color: var(--eva-unit-13);
+    color: var(--add-color-1);
+    border: none;
+    padding: 0.4rem;
+    font-size: 0.9rem;
+    width: 90px;
+    border-radius: 0.4rem;
+}
+
+section#ratings-list {
+    display: flex;
+    flex-direction: column; 
+    gap: 1rem;
+    width: 70%;
+    border: 2px solid var(--nerv-jp-logo);
+    padding: 1rem; 
+    border-radius: 1rem;
+    background-color: var(--eva-mark-09A);
+    overflow-y: scroll;
+    height: 81dvh;
+}
+
+section#ratings-list div.opinion {
+    background-color: var(--add-color-1);
+    font-family: Arial;
+    font-size: 1rem;
+    color: var(--nerv-jp-logo);
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+section#ratings-list div.opinion:hover {
+    border: 2px solid var(--nerv-jp-logo);
+}
+
+section#ratings-list div.opinion div.star-wrap {
+    margin-top: 0.7rem;
+}
+
+section#ratings-list div.opinion div.button-wrap {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+section#ratings-list div.opinion div.button-wrap button.select-button {
+    cursor: pointer;
+    background-color: var(--eva-unit-08);
+    color: var(--add-color-1);
+    border: none;
+    padding: 0.4rem;
+    font-size: 0.9rem;
+    width: 90px;
+    border-radius: 0.4rem;
+}
+
+section#ratings-list div.opinion div.button-wrap button.delete-button {
+    cursor: pointer;
+    background-color: var(--eva-unit-13);
+    color: var(--add-color-1);
+    border: none;
+    padding: 0.4rem;
+    font-size: 0.9rem;
+    width: 90px;
+    border-radius: 0.4rem;
+}
+
+section#ratings-list::-webkit-scrollbar {
+    display: none;
+}
+
+@media (max-width: 769px) {
+    main#app {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    section.sidebar {
+        width: 91.5%;
+        height: 40dvh;
+    }
+
+    section#ratings-list {
+        width: 91.5%;
+        height: 80dvh;
+    }
+}

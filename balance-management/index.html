@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="./src/style.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Balance</title>
+</head>
+<body>
+    <section id="notification"></section>
+    <main id="app">
+        <section class="show-data">
+            <section>
+                <button type="button" id="delete-all-list">Delete All</button>
+                <input type="checkbox" id="oldest" value="oldest-sorting"/>
+                <label for="oldest">Oldest</label>
+                <input type="checkbox" id="newest" value="newest-sorting"/>
+                <label for="newest">Newest</label>
+            </section>
+            <section class="detail-inform">
+                <section class="income-total"></section>
+                <section class="expense-total"></section>
+                <section class="income_expense"></section>
+            </section>
+            <section id="balance-list"></section>
+        </section>
+        <form id="balance-input-field">
+            <input type="text" id="balance" placeholder="enter balance..."/>
+            <input type="text" id="description" placeholder="enter description..."/>
+            <div class="radio-button-wrap">
+                <input type="radio" name="category" id="income" value="income"/>
+                <label for="income">Income</label>
+                <input type="radio" name="category" id="expense" value="expense"/>
+                <label for="expense">Expense</label>
+            </div>
+            <div class="form-button-wrap">
+                <button type="submit" id="add-balance">Add</button>
+                <button type="button" id="clear-form">Clear</button>
+            </div>
+        </form>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
