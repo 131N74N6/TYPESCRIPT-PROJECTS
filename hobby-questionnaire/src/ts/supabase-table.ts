@@ -40,6 +40,7 @@ function TableStorage<P extends { id: string }>(table_name: string) {
                         break;
                     }
                 }
+                callback(toArray());
             }
         );
 
@@ -111,7 +112,16 @@ function TableStorage<P extends { id: string }>(table_name: string) {
         }
     }
 
-    return { changeData, currentData, deleteData, insertData, realtimeInit }
+    function teardownTable(): void {
+        currentData.clear();
+        isInitialize = false;
+        if (realtimeChannel) {
+            realtimeChannel.unsubscribe();
+            realtimeChannel = null;
+        }
+    }
+
+    return { changeData, currentData, deleteData, insertData, realtimeInit, teardownTable, toArray }
 }
 
 export default TableStorage;

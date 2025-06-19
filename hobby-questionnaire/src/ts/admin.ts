@@ -2,10 +2,17 @@ import TableStorage from "./supabase-table";
 import Notification from "./notification";
 import type { Human } from "./types";
 
-// const controller = new AbortController();
 const tableStorage = TableStorage<Human>('hobbies_list');
 const hobbyQuestionnaire = document.getElementById('hobby-questionnaire') as HTMLFormElement;
 const humanName = document.getElementById('name') as HTMLInputElement;
+const openHobbyQuestionnaire = document.getElementById('open-hobby-questionnaire') as HTMLButtonElement;
+const closeHobbyQuestionnaire = document.getElementById('close-hobby-questionnaire') as HTMLButtonElement;
+
+const editHobbyQuestionnaire = document.getElementById('edit-hobby-questionnaire') as HTMLFormElement;
+const newHumanName = document.getElementById('new-name') as HTMLInputElement;
+const newMaleRadioButton = document.getElementById('new-Male') as HTMLInputElement;
+const newFemaleRadioButton = document.getElementById('new-Female') as HTMLInputElement;
+const closePlaceForEdit = document.getElementById('close-edit-hobby-questionnaire') as HTMLButtonElement;
 
 const hobbyFilter = document.getElementById('hobby-filter') as HTMLFormElement;
 const searchedName = document.getElementById('searched-name') as HTMLInputElement;
@@ -19,8 +26,14 @@ const adminNotification = Notification(notification);
 function AdminRole() {
     async function initAdminRole(): Promise<void> {
         hobbyQuestionnaire.onsubmit = async (event) => await insertNewHuman(event);
-        deleteAllButton.onclick = async () => await deleteAllHuman();
         hobbyFilter.onsubmit = async (event) => await searchHuman(event);
+        editHobbyQuestionnaire.onsubmit = async (event) => changeHumanId(event);
+        deleteAllButton.onclick = async () => await deleteAllHuman();
+
+        openHobbyQuestionnaire.onclick = () => openInsertForm();
+        closeHobbyQuestionnaire.onclick = () => hideInsertForm();
+        closePlaceForEdit.onclick = () => hideEditForm();
+
         await tableStorage.realtimeInit((humans) => showAllHumanId(humans));
     }
 
@@ -50,44 +63,128 @@ function AdminRole() {
         const trimmedHumanName = humanName.value.trim();
         const selectedGender = document.querySelector('input[name="gender"]:checked') as HTMLInputElement;
         const humanGender = selectedGender.value;
-        const selectedHobby = document.querySelectorAll<HTMLInputElement>('input[name="hobbies"]: checked');
+        const selectedHobby = document.querySelectorAll<HTMLInputElement>('input[name="hobbies"]:checked');
         const humanHobby = Array.from(selectedHobby).map(hobby => hobby.value);
 
-        await tableStorage.insertData({
-            created_at: new Date(),
-            name: trimmedHumanName,
-            gender: humanGender,
-            hobbies: humanHobby
-        });
+        if (trimmedHumanName === '' || !selectedGender || !selectedHobby) {
+            adminNotification.createNotification('Missing required data!');
+            adminNotification.showNotification();
+            return;
+        }
+
+        try {
+            await tableStorage.insertData({
+                created_at: new Date(),
+                name: trimmedHumanName,
+                gender: humanGender,
+                hobbies: humanHobby
+            });
+            hideInsertForm();
+        } catch (error: any) {
+            adminNotification.createNotification(`Error: ${error.message || error}`);
+            adminNotification.showNotification();
+        }
     }
 
     function humanIdDisplayer(identities: Human): HTMLDivElement {
         const humanIdCard = document.createElement('div') as HTMLDivElement;
+        humanIdCard.className = 'bg-[#0C2D48] text-[#2E8BC0] p-[1rem] rounded-[1rem] flex flex-col gap-[0.5rem] border-[2px] border-[#B1D4E0] shadow-[4px_4px_#B1D4E0]';
         humanIdCard.dataset.id = identities.id;
 
         const name = document.createElement('div') as HTMLDivElement;
-        name.id = `human-name-${identities.id}`;
+        name.className = 'human-name';
         name.textContent = `Name: ${identities.name}`;
 
         const gender = document.createElement('div') as HTMLDivElement;
-        gender.id = `human-gender-${identities.id}`;
+        gender.className = 'human-gender';
         gender.textContent = `Gender: ${identities.gender}`;
 
         const hobby = document.createElement('div') as HTMLDivElement;
-        hobby.id = `human-hobby-${identities.id}`;
+        hobby.className = 'human-hobby';
         hobby.textContent = `Hobby: ${identities.hobbies.join(', ')}`;
         
         const createdAt = document.createElement('div') as HTMLDivElement;
-        createdAt.id = `human-created-at-${identities.id}`;
+        createdAt.className = 'human-created-at';
         createdAt.textContent = `Created at: ${identities.created_at.toLocaleString()}`;
 
-        humanIdCard.append(name, gender, hobby, createdAt);
+        const changeButton = document.createElement('button') as HTMLButtonElement;
+        changeButton.type = 'button';
+        changeButton.className = 'border-[1.9px] border-[#2E8BC0] p-[0.4rem] text-[0.9rem] cursor-pointer rounded-[0.4rem] w-[80px] hover:bg-[#2E8BC0] hover:text-[#0C2D48] font-[500]';
+        changeButton.textContent = 'Change';
+        changeButton.onclick = () => {
+            newHumanName.value = identities.name;
+            newMaleRadioButton.checked = (identities.gender === 'Male');
+            newFemaleRadioButton.checked = (identities.gender === 'Female');
+            const hobbies = [
+                "Reading", "Sports", "Playing Guitar", "Dance", "Listening Music", "Painting/Drawing"
+            ];
+            hobbies.forEach(hobby => {
+                const getHobby = document.querySelector('input[name="new-hobbies"]') as HTMLInputElement;
+                getHobby.checked = identities.hobbies.includes(hobby);
+            });
+            openEditForm();
+        }
+
+        const deleteButton = document.createElement('button') as HTMLButtonElement;
+        deleteButton.type = 'button';
+        deleteButton.className = 'border-[1.9px] border-[#2E8BC0] p-[0.4rem] text-[0.9rem] cursor-pointer rounded-[0.4rem] w-[80px] hover:bg-[#2E8BC0] hover:text-[#0C2D48] font-[500]';
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = async () => await tableStorage.deleteData(identities.id);
+
+        const buttonWrap = document.createElement('div') as HTMLDivElement;
+        buttonWrap.className = 'flex flex-row gap-[0.5rem]';
+        buttonWrap.append(changeButton, deleteButton);
+
+        humanIdCard.append(name, gender, hobby, createdAt, buttonWrap);
         return humanIdCard;
     }
 
     async function searchHuman(event: SubmitEvent): Promise<void> {
         event.preventDefault();
-        searchedName.value.trim();
+        const trimmedSearched = searchedName.value.trim().toLowerCase();
+
+        if (trimmedSearched === '') {
+            adminNotification.createNotification('Missing required data!');
+            adminNotification.showNotification();
+            return;
+        }
+        
+        const filtered = tableStorage.toArray().filter(human => human.name.toLowerCase().includes(trimmedSearched));
+        showAllHumanId(filtered);
+    }
+
+    function openInsertForm(): void {
+        hobbyQuestionnaire.classList.remove('hidden');
+        hobbyQuestionnaire.classList.add('flex');
+    }
+
+    function hideInsertForm(): void {
+        hobbyQuestionnaire.classList.remove('flex');
+        hobbyQuestionnaire.classList.add('hidden');
+    }
+
+    async function changeHumanId(event: SubmitEvent): Promise<void> {
+        event.preventDefault();
+        // const trimmedNewName = newHumanName.value.trim();
+        // const getNewGender = newHumanName.value.trim();
+        
+        // try {
+        //     await tableStorage.changeData();
+        //     editHobbyQuestionnaire.classList.remove('flex');
+        // } catch (error: any) {
+        //     adminNotification.createNotification(`Error: ${error.message || error}`);
+        //     adminNotification.showNotification();
+        // }
+    }
+
+    function openEditForm(): void {
+        editHobbyQuestionnaire.classList.remove('hidden');
+        editHobbyQuestionnaire.classList.add('flex');
+    }
+
+    function hideEditForm(): void {
+        editHobbyQuestionnaire.classList.remove('flex');
+        editHobbyQuestionnaire.classList.add('hidden');
     }
 
     async function deleteAllHuman(): Promise<void> {
@@ -106,9 +203,15 @@ function AdminRole() {
         }
     }
 
-    return { initAdminRole }
+    function teradownAdmin(): void {
+        tableStorage.teardownTable();
+        adminNotification.teardownNotification();
+    }
+
+    return { initAdminRole, teradownAdmin }
 }
 
 const adminRole = AdminRole();
 
 document.addEventListener('DOMContentLoaded', adminRole.initAdminRole);
+window.addEventListener('beforeunload', adminRole.teradownAdmin);
