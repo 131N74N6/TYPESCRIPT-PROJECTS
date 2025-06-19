@@ -1,7 +1,6 @@
 import supabase from "./supabase-config";
 import { RealtimeChannel, type RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-
 function TableStorage<SS extends { id: string }>(tableName: string) {
     let currentData: Map<string, SS> = new Map<string, SS>();
     let isInitialized: boolean = false;
@@ -83,6 +82,18 @@ function TableStorage<SS extends { id: string }>(tableName: string) {
         return inserted[0].id;
     }
 
+    async function selectData(id: string): Promise<SS> {
+        const { data, error } = await supabase
+        .from(tableName)
+        .select("*") 
+        .eq('id', id);
+
+        if (error) throw new Error(`Failed to show selected data: ${error}`);
+
+        const item = data[0];
+        return { ...item, created_at: new Date(item.created_at) } as SS;
+    }
+
     async function changeSelectedData(id: string, newData: Partial<Omit<SS, 'id'>>): Promise<void> {
         const { error } = await supabase
         .from(tableName)
@@ -123,16 +134,6 @@ function TableStorage<SS extends { id: string }>(tableName: string) {
         return Array.from(currentData.values());
     }
 
-    async function selectedData(id: string) {
-        const { data, error } = await supabase
-        .from(tableName)
-        .select('*')
-        .eq('id', id);
-
-        if (error) throw error;
-        return data
-    }
-
     return { 
         changeSelectedData, 
         currentData, 
@@ -140,7 +141,7 @@ function TableStorage<SS extends { id: string }>(tableName: string) {
         deleteAllData, 
         insert, 
         realtimeInit, 
-        selectedData,
+        selectData,
         teardownStorage,
         toArray
     }

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/index.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Hobby Questionnaire</title>
+</head>
+<body class="bg-[#145DA0] z-10">
+    <main id="admin" class="relative">
+        <form id="hobby-questionnaire" title="hobby-questionnaire" class="absolute left-[50%] top-[50%] z-20 translate-[-50%,-50%]">
+            <input type="text" id="name" placeholder="insert your name"/>
+            <section id="gender-wrap">
+                <span>Gender: </span>
+                <input type="radio" name="gender" id="Male" value="Male"/>
+                <label for="Male">Male</label>
+                <input type="radio" name="gender" id="Female" value="Female"/>
+                <label for="Female">Female</label>
+            </section>
+            <section id="hobby-group">
+                <span>Hobby/Talent:</span>
+                <input type="checkbox" id="Reading" name="hobbies" value="Reading"/> 
+                <label for="Reading">Reading</label>
+                <input type="checkbox" id="Sports" name="hobbies" value="Sports"/> 
+                <label for="Sports">Sports</label>
+                <input type="checkbox" id="Playing Guitar" name="hobbies" value="Playing Guitar"/>
+                <label for="Playing Guitar">Playing Guitar</label>
+                <input type="checkbox" id="Dance" name="hobbies" value="Dance"/>
+                <label for="Dance">Dance</label>
+                <input type="checkbox" id="Listening Music" name="hobbies" value="Listening Music"/>
+                <label for="Listening Music">Listening Music</label>
+                <input type="checkbox" id="Painting/Drawing" name="hobbies" value="Painting/Drawing"/>
+                <label for="Painting/Drawing">Painting/Drawing</label>
+            </section>
+            <button type="submit" id="submit-btn">Save</button>
+            <button type="button" id="close-hobby-questionnaire">Close</button>
+        </form>
+        <form id="hobby-filter" title="hobby-filter" class="absolute left-[50%] top-[50%] z-20 translate-[-50%,-50%]">
+            <input type="text" id="searched-name"/>
+            <button type="submit">Find</button>
+            <button type="button" id="close-hobby-filter">Close</button>
+        </form>
+        <section id="admin-notification"></section>
+        <section id="data-list-wrap">
+            <section id="button-wrap">
+                <button type="button" id="open-hobby-questionnaire">Add New Data</button>
+                <button type="button" id="delete-all-data">Delete All</button>
+            </section>
+            <section id="human-list">No Human Added!</section>
+        </section>
+    </main>
+    <script src="../ts/admin.ts" type="module"></script>
+</body>
+</html>

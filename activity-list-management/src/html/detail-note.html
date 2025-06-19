@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Change Note</title>
 </head>
-<body>
+<body class="bg-[#0E0004]">
     <header class="p-[1rem] flex gap-[0.5rem] bg-[#B91372]">
         <a href="index.html" class="text-[#31081F] text-[1rem] decoration-0 font-[550]">
             <span class="border-[#B91372] border-[1.9px] p-[0.4rem]">Home</span>
@@ -22,9 +22,23 @@
     <section id="add-note-notification"></section>
     <main id="new-note-input-field">
         <form id="new-note-form" class="p-[1rem] flex flex-col gap-[1rem]">
-            <input type="text" id="new-note-title" placeholder="title..." class="p-[0.5rem] text-[1rem] outline-0 border-[#FA198B] border-[1.8px] shadow[4px_4px_#B91372] rounded-[0.5rem] text-[#FA198B]"/>
-            <textarea id="new-note-content" class="p-[0.5rem] text-[1rem] outline-0 border-[#FA198B] border-[1.8px] shadow[4px_4px_#B91372] resize-none h-[580px] overflow-y-auto rounded-[0.5rem] text-[#FA198B]"></textarea>
-            <button id="add-note" type="submit" class="cursor-pointer rounded-[0.4rem] bg-[#B91372] text-[#0E0004] p-[0.4rem] text-[0.9rem] font-[550]">Save Changes</button>
+            <input 
+                type="text" id="new-note-title" placeholder="title..." 
+                class="p-[0.5rem] text-[1rem] outline-0 border-[#FA198B] border-[1.8px] 
+                shadow[4px_4px_#B91372] rounded-[0.5rem] text-[#FA198B]"
+            />
+            <textarea 
+                id="new-note-content" 
+                class="p-[0.5rem] text-[1rem] outline-0 border-[#FA198B] border-[1.8px] 
+                shadow[4px_4px_#B91372] resize-none h-[580px] overflow-y-auto 
+                rounded-[0.5rem] text-[#FA198B]">
+            </textarea>
+            <button 
+                id="add-note" type="submit" 
+                class="cursor-pointer rounded-[0.4rem] bg-[#B91372] text-[#0E0004] p-[0.4rem] 
+                text-[0.9rem] font-[550]">
+                Save Changes
+            </button>
         </form>
     </main>
     <script src="../ts/detail-note.ts" type="module"></script>
