@@ -5,13 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
     <link rel="stylesheet" href="../css/index.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Hobby Questionnaire</title>
+    <title>Welcome Admin</title>
 </head>
-<body>
+<body class="bg-[#145DA0]">
     <header class="bg-[#2E8BC0] p-[0.8rem] flex items-center">
         <a href="index.html" class="text-[#0C2D48] font-[500]">Home</a>
     </header>
-    <main id="admin" class="p-[1rem] relative bg-[#145DA0] z-10">
+    <main id="admin" class="p-[1rem] relative z-10">
         <form id="hobby-questionnaire" title="hobby-questionnaire" 
             class="fixed inset-0 hidden items-center justify-center z-50 p-[0.7rem] bg-[#0000008e]">
             <div class="backdrop-blur-[18px] saturate-[161%] border-[2px] border-[#B1D4E0] p-8 
@@ -69,13 +69,13 @@
                 </section>
                 <div class="flex justify-between">
                     <button type="submit" id="submit-btn" 
-                        class="cursor-pointer bg-[#2E8BC0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
-                        font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                        font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">
                         Save
                     </button>
                     <button type="button" id="close-hobby-questionnaire" 
-                        class="cursor-pointer bg-[#2E8BC0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
-                        font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                        font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">
                         Close
                     </button>
                 </div>
@@ -138,13 +138,13 @@
                 </section>
                 <div class="flex justify-between">
                     <button type="submit" id="save-changes-btn" 
-                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded 
-                        focus:outline-none focus:shadow-outline">
+                        class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                        font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">
                         Save Changes
                     </button>
                     <button type="button" id="close-edit-hobby-questionnaire" 
-                        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded 
-                        focus:outline-none focus:shadow-outline">
+                        class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                        font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">
                         Close
                     </button>
                 </div>
@@ -152,24 +152,11 @@
         </form>
         <section id="admin-notification"></section>
         <section id="data-list-wrap">
-            <form id="hobby-filter" title="hobby-filter">
+            <form id="hobby-filter" title="hobby-filter" class="flex flex-wrap gap-[0.55rem]">
                 <input type="text" id="searched-name" placeholder="search here" 
-                    class="outline-0 border-[#B1D4E0] border-[2px] p-[0.4rem] rounded-[0.4rem] 
-                    text-[0.9rem] text-[#B1D4E0]"
+                    class="outline-0 border-[#2E8BC0] shadow-[3px_3px_#2E8BC0] border-[2px] p-[0.4rem] rounded-[0.4rem] 
+                    text-[0.9rem] text-[#B1D4E0] font-[500]"
                 />
-                <button type="submit" id="search-filter-button" 
-                    class="outline-0 border-[#B1D4E0] border-[2px] p-[0.4rem] rounded-[0.4rem] text-[0.9rem] 
-                    text-[#B1D4E0] font-[500] w-[80px] hover:bg-[#B1D4E0] hover:text-[#145DA0] cursor-pointer">
-                    Find
-                </button>
-                <button type="button" id="close-hobby-filter" 
-                    class="outline-0 border-[#B1D4E0] border-[2px] p-[0.4rem] rounded-[0.4rem] text-[0.9rem] 
-                    text-[#B1D4E0] font-[500] w-[80px] hover:bg-[#B1D4E0] hover:text-[#145DA0] 
-                    cursor-pointer">
-                    Close
-                </button>
-            </form>
-            <section id="button-wrap" class="flex gap-[0.9rem] pt-[0.9rem] items-center">
                 <button type="button" id="open-hobby-questionnaire" 
                     class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
                     font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">
@@ -182,11 +169,15 @@
                 </button>
                 <input type="checkbox" id="from-oldest" class="hidden" name="sorting-by-ages"/>
                 <label for="from-oldest" class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
-                    font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">Oldest</label>
+                    font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">
+                    Oldest
+                </label>
                 <input type="checkbox" id="from-youngest" class="hidden" name="sorting-by-ages"/>
                 <label for="from-youngest" class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
-                    font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">Youngest</label>
-            </section>
+                    font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">
+                    Youngest
+                </label>
+            </form>
             <section id="human-list" class="flex flex-col gap-[1rem] pt-[1rem]">No Human Added!</section>
         </section>
     </main>

@@ -18,7 +18,6 @@ const getHobby = document.querySelectorAll<HTMLInputElement>('input[name="new-ho
 const closePlaceForEdit = document.getElementById('close-edit-hobby-questionnaire') as HTMLButtonElement;
 
 let selectedId: string | null = null;
-const hobbyFilter = document.getElementById('hobby-filter') as HTMLFormElement;
 const searchedName = document.getElementById('searched-name') as HTMLInputElement;
 const fromOldest = document.getElementById('from-oldest') as HTMLInputElement;
 const fromYoungest = document.getElementById('from-youngest') as HTMLInputElement;
@@ -32,21 +31,22 @@ const adminNotification = Notification(notification);
 function AdminRole() {
     async function initAdminRole(): Promise<void> {
         hobbyQuestionnaire.onsubmit = async (event) => await insertNewHuman(event);
-        hobbyFilter.onsubmit = async (event) => await searchHuman(event);
         editHobbyQuestionnaire.onsubmit = async (event) => changeHumanId(event);
         deleteAllButton.onclick = async () => await deleteAllHuman();
-
+        searchedName.oninput = () => showAllHumanId(applySearchFilters());
+        
         openHobbyQuestionnaire.onclick = () => openInsertForm();
         closeHobbyQuestionnaire.onclick = () => hideInsertForm();
         closePlaceForEdit.onclick = () => hideEditForm();
 
         fromYoungest.onchange = () => {
             fromOldest.checked = false;
-            showAllHumanId(tableStorage.toArray());
+            showAllHumanId(applySearchFilters());
         }
+        
         fromOldest.onchange = () => {
             fromYoungest.checked = false;
-            showAllHumanId(tableStorage.toArray());
+            showAllHumanId(applySearchFilters());
         }
 
         await tableStorage.realtimeInit((humans) => showAllHumanId(humans));
@@ -54,13 +54,13 @@ function AdminRole() {
 
     function showAllHumanId(humans: Human[]): void {
         const fragment = document.createDocumentFragment();
-        let shuffle = humans
+        let shuffle = humans.sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
         try {
             if (tableStorage.currentData.size > 0) {
                 if (fromOldest.checked) {
-                    shuffle = [...humans].sort((a,b) => b.age - a.age);
+                    shuffle = [...humans].sort((a, b) => b.age - a.age);
                 } else if (fromYoungest.checked) {
-                    shuffle = [...humans].sort((a,b) => a.age - b.age);
+                    shuffle = [...humans].sort((a, b) => a.age - b.age);
                 }
                 humanList.innerHTML = '';
                 shuffle.forEach(human => fragment.appendChild(humanIdDisplayer(human)));
@@ -116,7 +116,7 @@ function AdminRole() {
 
         const name = document.createElement('div') as HTMLDivElement;
         name.className = 'human-name';
-        name.textContent = `Name: ${identities.name}`;
+        name.textContent = `Name: ${identities.name} (${identities.age} yo)`;
 
         const gender = document.createElement('div') as HTMLDivElement;
         gender.className = 'human-gender';
@@ -160,18 +160,17 @@ function AdminRole() {
         return humanIdCard;
     }
 
-    async function searchHuman(event: SubmitEvent): Promise<void> {
-        event.preventDefault();
+    function applySearchFilters(): Human[] {
+        let result = tableStorage.toArray();
         const trimmedSearched = searchedName.value.trim().toLowerCase();
+        result = result.filter(human => human.name.toLowerCase().includes(trimmedSearched));
 
-        if (trimmedSearched === '') {
-            adminNotification.createNotification('Missing required data!');
-            adminNotification.showNotification();
-            return;
+        if (fromOldest.checked) {
+            result = [...result].sort((a, b) => b.age - a.age);
+        } else if (fromYoungest.checked) {
+            result = [...result].sort((a, b) => a.age - b.age);
         }
-        
-        const filtered = tableStorage.toArray().filter(human => human.name.toLowerCase().includes(trimmedSearched));
-        showAllHumanId(filtered);
+        return result;
     }
 
     function openInsertForm(): void {

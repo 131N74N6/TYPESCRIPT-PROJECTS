@@ -3,12 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="stylesheet" href="../css/index.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Hobby Questionnaire</title>
+    <title>Anon</title>
 </head>
-<body>
-    <main id="anon">
-        <section id="data-list"></section>
+<body class="bg-[#145DA0]">
+    <header class="bg-[#2E8BC0] p-[0.8rem] flex items-center">
+        <a href="index.html" class="text-[#0C2D48] font-[500]">Home</a>
+    </header>
+    <main id="anon" class="px-[1rem] pb-[1rem] relative z-10">
+        <form id="hobby-questionnaire" title="hobby-questionnaire" 
+            class="fixed inset-0 hidden items-center justify-center z-50 p-[0.7rem] bg-[#0000008e]">
+            <div class="backdrop-blur-[18px] saturate-[161%] border-[2px] border-[#B1D4E0] p-8 
+                rounded-lg w-full max-w-md">
+                <h2 class="text-2xl font-bold mb-6 text-center text-[#B1D4E0]">Add New Data</h2>
+                <div class="mb-4">
+                    <label for="name" class="block text-[#B1D4E0] text-sm font-bold mb-2">Name</label>
+                    <input type="text" id="name" placeholder="Name" 
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-[#B1D4E0] 
+                        leading-tight focus:outline-none focus:shadow-outline"
+                    />
+                    <label for="age" class="block text-[#B1D4E0] text-sm font-bold mb-2">Age</label>
+                    <input type="text" id="age" placeholder="Age" 
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-[#B1D4E0] 
+                        leading-tight focus:outline-none focus:shadow-outline"
+                    />
+                </div>
+                <section id="gender-wrap" class="mb-4">
+                    <span class="block text-[#B1D4E0] text-sm font-bold mb-2">Gender: </span>
+                    <div class="flex items-center space-x-4">
+                        <input type="radio" name="gender" id="Male" value="Male" class="mr-1"/>
+                        <label for="Male" class="text-[#B1D4E0]">Male</label>
+                        <input type="radio" name="gender" id="Female" value="Female" class="ml-4 mr-1"/>
+                        <label for="Female" class="text-[#B1D4E0]">Female</label>
+                    </div>
+                </section>
+                <section id="hobby-group" class="mb-6">
+                    <span class="block text-[#B1D4E0] text-sm font-bold mb-2">Hobby/Talent:</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="Reading" name="hobbies" value="Reading" class="mr-2"/>
+                            <label for="Reading" class="text-[#B1D4E0]">Reading</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="Sports" name="hobbies" value="Sports" class="mr-2"/>
+                            <label for="Sports" class="text-[#B1D4E0]">Sports</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="Playing Guitar" name="hobbies" value="Playing Guitar" class="mr-2"/>
+                            <label for="Playing Guitar" class="text-[#B1D4E0]">Playing Guitar</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="Dance" name="hobbies" value="Dance" class="mr-2"/>
+                            <label for="Dance" class="text-[#B1D4E0]">Dance</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="Listening Music" name="hobbies" value="Listening Music" class="mr-2"/>
+                            <label for="Listening Music" class="text-[#B1D4E0]">Listening Music</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="Painting/Drawing" name="hobbies" value="Painting/Drawing" class="mr-2"/>
+                            <label for="Painting/Drawing" class="text-[#B1D4E0]">Painting/Drawing</label>
+                        </div>
+                    </div>
+                </section>
+                <div class="flex justify-between">
+                    <button type="submit" id="submit-btn" 
+                        class="cursor-pointer bg-[#2E8BC0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                        font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Save
+                    </button>
+                    <button type="button" id="close-hobby-questionnaire" 
+                        class="cursor-pointer bg-[#2E8BC0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                        font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </form>
+        <section id="anon-notification"></section>
+        <section id="button-wrap" class="flex gap-[0.9rem] pt-[1rem] items-center">
+            <button type="button" id="open-hobby-questionnaire" 
+                class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">
+                Add New Data
+            </button>
+        </section>
+        <section id="human-list" class="flex flex-col gap-[1rem] pt-[1rem]">No Human Added!</section>
     </main>
+    <script src="../ts/anon.ts" type="module"></script>
 </body>
 </html>
