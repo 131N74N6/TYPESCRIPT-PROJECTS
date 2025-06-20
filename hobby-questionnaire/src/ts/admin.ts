@@ -5,17 +5,23 @@ import type { Human } from "./types";
 const tableStorage = TableStorage<Human>('hobbies_list');
 const hobbyQuestionnaire = document.getElementById('hobby-questionnaire') as HTMLFormElement;
 const humanName = document.getElementById('name') as HTMLInputElement;
+const humanAge = document.getElementById('age') as HTMLInputElement;
 const openHobbyQuestionnaire = document.getElementById('open-hobby-questionnaire') as HTMLButtonElement;
 const closeHobbyQuestionnaire = document.getElementById('close-hobby-questionnaire') as HTMLButtonElement;
 
 const editHobbyQuestionnaire = document.getElementById('edit-hobby-questionnaire') as HTMLFormElement;
 const newHumanName = document.getElementById('new-name') as HTMLInputElement;
+const newHumanAge = document.getElementById('new-age') as HTMLInputElement;
 const newMaleRadioButton = document.getElementById('new-Male') as HTMLInputElement;
 const newFemaleRadioButton = document.getElementById('new-Female') as HTMLInputElement;
+const getHobby = document.querySelectorAll<HTMLInputElement>('input[name="new-hobbies"]');
 const closePlaceForEdit = document.getElementById('close-edit-hobby-questionnaire') as HTMLButtonElement;
 
+let selectedId: string | null = null;
 const hobbyFilter = document.getElementById('hobby-filter') as HTMLFormElement;
 const searchedName = document.getElementById('searched-name') as HTMLInputElement;
+const fromOldest = document.getElementById('from-oldest') as HTMLInputElement;
+const fromYoungest = document.getElementById('from-youngest') as HTMLInputElement;
 
 const deleteAllButton = document.getElementById('delete-all-data') as HTMLButtonElement;
 const humanList = document.getElementById('human-list') as HTMLElement;
@@ -34,15 +40,30 @@ function AdminRole() {
         closeHobbyQuestionnaire.onclick = () => hideInsertForm();
         closePlaceForEdit.onclick = () => hideEditForm();
 
+        fromYoungest.onchange = () => {
+            fromOldest.checked = false;
+            showAllHumanId(tableStorage.toArray());
+        }
+        fromOldest.onchange = () => {
+            fromYoungest.checked = false;
+            showAllHumanId(tableStorage.toArray());
+        }
+
         await tableStorage.realtimeInit((humans) => showAllHumanId(humans));
     }
 
     function showAllHumanId(humans: Human[]): void {
         const fragment = document.createDocumentFragment();
+        let shuffle = humans
         try {
             if (tableStorage.currentData.size > 0) {
+                if (fromOldest.checked) {
+                    shuffle = [...humans].sort((a,b) => b.age - a.age);
+                } else if (fromYoungest.checked) {
+                    shuffle = [...humans].sort((a,b) => a.age - b.age);
+                }
                 humanList.innerHTML = '';
-                humans.forEach(human => fragment.appendChild(humanIdDisplayer(human)));
+                shuffle.forEach(human => fragment.appendChild(humanIdDisplayer(human)));
                 humanList.appendChild(fragment);
             } else {
                 adminNotification.createNotification('No Human Added!');
@@ -61,12 +82,13 @@ function AdminRole() {
     async function insertNewHuman(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         const trimmedHumanName = humanName.value.trim();
+        const trimedHumanAge = Number(humanAge.value.trim());
         const selectedGender = document.querySelector('input[name="gender"]:checked') as HTMLInputElement;
         const humanGender = selectedGender.value;
         const selectedHobby = document.querySelectorAll<HTMLInputElement>('input[name="hobbies"]:checked');
         const humanHobby = Array.from(selectedHobby).map(hobby => hobby.value);
 
-        if (trimmedHumanName === '' || !selectedGender || !selectedHobby) {
+        if (trimmedHumanName === '' || isNaN(trimedHumanAge) || trimedHumanAge <= 6 || !selectedGender || !selectedHobby) {
             adminNotification.createNotification('Missing required data!');
             adminNotification.showNotification();
             return;
@@ -76,6 +98,7 @@ function AdminRole() {
             await tableStorage.insertData({
                 created_at: new Date(),
                 name: trimmedHumanName,
+                age: trimedHumanAge,
                 gender: humanGender,
                 hobbies: humanHobby
             });
@@ -88,7 +111,7 @@ function AdminRole() {
 
     function humanIdDisplayer(identities: Human): HTMLDivElement {
         const humanIdCard = document.createElement('div') as HTMLDivElement;
-        humanIdCard.className = 'bg-[#0C2D48] text-[#2E8BC0] p-[1rem] rounded-[1rem] flex flex-col gap-[0.5rem] border-[2px] border-[#B1D4E0] shadow-[4px_4px_#B1D4E0]';
+        humanIdCard.className = 'bg-[#0C2D48] text-[#B1D4E0] p-[1rem] rounded-[1rem] flex flex-col gap-[0.5rem] border-[2px] border-[#2E8BC0] shadow-[4px_4px_#2E8BC0]';
         humanIdCard.dataset.id = identities.id;
 
         const name = document.createElement('div') as HTMLDivElement;
@@ -112,15 +135,13 @@ function AdminRole() {
         changeButton.className = 'border-[1.9px] border-[#2E8BC0] p-[0.4rem] text-[0.9rem] cursor-pointer rounded-[0.4rem] w-[80px] hover:bg-[#2E8BC0] hover:text-[#0C2D48] font-[500]';
         changeButton.textContent = 'Change';
         changeButton.onclick = () => {
+            selectedId = identities.id;
             newHumanName.value = identities.name;
+            newHumanAge.value = identities.age.toString();
             newMaleRadioButton.checked = (identities.gender === 'Male');
             newFemaleRadioButton.checked = (identities.gender === 'Female');
-            const hobbies = [
-                "Reading", "Sports", "Playing Guitar", "Dance", "Listening Music", "Painting/Drawing"
-            ];
-            hobbies.forEach(hobby => {
-                const getHobby = document.querySelector('input[name="new-hobbies"]') as HTMLInputElement;
-                getHobby.checked = identities.hobbies.includes(hobby);
+            getHobby.forEach(hobby => {
+                hobby.checked = identities.hobbies.includes(hobby.value);
             });
             openEditForm();
         }
@@ -161,20 +182,38 @@ function AdminRole() {
     function hideInsertForm(): void {
         hobbyQuestionnaire.classList.remove('flex');
         hobbyQuestionnaire.classList.add('hidden');
+        hobbyQuestionnaire.reset();
     }
 
     async function changeHumanId(event: SubmitEvent): Promise<void> {
         event.preventDefault();
-        // const trimmedNewName = newHumanName.value.trim();
-        // const getNewGender = newHumanName.value.trim();
+        const trimmedNewName = newHumanName.value.trim();
+        const trimmedNewAge = Number(newHumanAge.value.trim());
+        const changeGender = document.querySelector('input[name="new-gender"]:checked') as HTMLInputElement;
+        const getNewGender = changeGender.value.trim();
+        const changeHobby = document.querySelectorAll<HTMLInputElement>('input[name="new-hobbies"]:checked');
+        const getNewHobby = Array.from(changeHobby).map(hobby => hobby.value);
+
+        if (trimmedNewName === '' || isNaN(trimmedNewAge) || trimmedNewAge <= 6 || !changeGender || !changeHobby) {
+            adminNotification.createNotification('Missing required data!');
+            adminNotification.showNotification();
+            return;
+        }
         
-        // try {
-        //     await tableStorage.changeData();
-        //     editHobbyQuestionnaire.classList.remove('flex');
-        // } catch (error: any) {
-        //     adminNotification.createNotification(`Error: ${error.message || error}`);
-        //     adminNotification.showNotification();
-        // }
+        try {
+            await tableStorage.changeData(selectedId as string, {
+                name: trimmedNewName,
+                age: trimmedNewAge,
+                gender: getNewGender,
+                hobbies: getNewHobby
+            });
+            hideEditForm();
+            selectedId = null;
+        } catch (error: any) {
+            selectedId = null;
+            adminNotification.createNotification(`Error: ${error.message || error}`);
+            adminNotification.showNotification();
+        }
     }
 
     function openEditForm(): void {
@@ -185,6 +224,7 @@ function AdminRole() {
     function hideEditForm(): void {
         editHobbyQuestionnaire.classList.remove('flex');
         editHobbyQuestionnaire.classList.add('hidden');
+        editHobbyQuestionnaire.reset();
     }
 
     async function deleteAllHuman(): Promise<void> {
@@ -206,6 +246,11 @@ function AdminRole() {
     function teradownAdmin(): void {
         tableStorage.teardownTable();
         adminNotification.teardownNotification();
+        hideInsertForm();
+        hideEditForm();
+        selectedId = null;
+        fromOldest.checked = false;
+        fromYoungest.checked = false;
     }
 
     return { initAdminRole, teradownAdmin }

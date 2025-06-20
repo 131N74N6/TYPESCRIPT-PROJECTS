@@ -7,16 +7,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Hobby Questionnaire</title>
 </head>
-<body class="bg-[#145DA0] z-10">
-    <main id="admin" class="p-[1rem] relative">
+<body>
+    <header class="bg-[#2E8BC0] p-[0.8rem] flex items-center">
+        <a href="index.html" class="text-[#0C2D48] font-[500]">Home</a>
+    </header>
+    <main id="admin" class="p-[1rem] relative bg-[#145DA0] z-10">
         <form id="hobby-questionnaire" title="hobby-questionnaire" 
-            class="fixed inset-0 hidden items-center justify-center z-50 p-[0.7rem] bg-[#00000051]">
+            class="fixed inset-0 hidden items-center justify-center z-50 p-[0.7rem] bg-[#0000008e]">
             <div class="backdrop-blur-[18px] saturate-[161%] border-[2px] border-[#B1D4E0] p-8 
                 rounded-lg w-full max-w-md">
                 <h2 class="text-2xl font-bold mb-6 text-center text-[#B1D4E0]">Add New Data</h2>
                 <div class="mb-4">
-                    <label for="name" class="block text-[#B1D4E0] text-sm font-bold mb-2">Name:</label>
-                    <input type="text" id="name" placeholder="Enter name" 
+                    <label for="name" class="block text-[#B1D4E0] text-sm font-bold mb-2">Name</label>
+                    <input type="text" id="name" placeholder="Name" 
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-[#B1D4E0] 
+                        leading-tight focus:outline-none focus:shadow-outline"
+                    />
+                    <label for="age" class="block text-[#B1D4E0] text-sm font-bold mb-2">Age</label>
+                    <input type="text" id="age" placeholder="Age" 
                         class="shadow appearance-none border rounded w-full py-2 px-3 text-[#B1D4E0] 
                         leading-tight focus:outline-none focus:shadow-outline"
                     />
@@ -74,13 +82,18 @@
             </div>
         </form>
         <form id="edit-hobby-questionnaire" title="edit-hobby-questionnaire" 
-            class="fixed inset-0 hidden items-center justify-center z-50 p-[0.7rem] bg-[#00000051]">
+            class="fixed inset-0 hidden items-center justify-center z-50 p-[0.7rem] bg-[#0000008e]">
             <div class="backdrop-blur-[18px] saturate-[161%] border-[2px] border-[#B1D4E0] p-8 
                 rounded-lg w-full max-w-md">
                 <h2 class="text-2xl font-bold mb-6 text-center text-[#B1D4E0]">Edit Data</h2>
                 <div class="mb-4">
-                    <label for="new-name" class="block text-[#B1D4E0] text-sm font-bold mb-2">Name:</label>
-                    <input type="text" id="new-name" placeholder="Enter new name" 
+                    <label for="new-name" class="block text-[#B1D4E0] text-sm font-bold mb-2">Name</label>
+                    <input type="text" id="new-name" placeholder="New name" 
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-[#B1D4E0] 
+                        leading-tight focus:outline-none focus:shadow-outline"
+                    />
+                    <label for="new-age" class="block text-[#B1D4E0] text-sm font-bold mb-2">Age</label>
+                    <input type="text" id="new-age" placeholder="New age" 
                         class="shadow appearance-none border rounded w-full py-2 px-3 text-[#B1D4E0] 
                         leading-tight focus:outline-none focus:shadow-outline"
                     />
@@ -156,17 +169,23 @@
                     Close
                 </button>
             </form>
-            <section id="button-wrap">
+            <section id="button-wrap" class="flex gap-[0.9rem] pt-[0.9rem] items-center">
                 <button type="button" id="open-hobby-questionnaire" 
-                    class="cursor-pointer bg-[#2E8BC0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
-                    font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                    font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">
                     Add New Data
                 </button>
                 <button type="button" id="delete-all-data" 
-                    class="cursor-pointer bg-[#2E8BC0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
-                    font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                    font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">
                     Delete All
                 </button>
+                <input type="checkbox" id="from-oldest" class="hidden" name="sorting-by-ages"/>
+                <label for="from-oldest" class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                    font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">Oldest</label>
+                <input type="checkbox" id="from-youngest" class="hidden" name="sorting-by-ages"/>
+                <label for="from-youngest" class="cursor-pointer bg-[#145DA0] hover:bg-[#B1D4E0] hover:text-[#2E8BC0] text-[#B1D4E0] 
+                    font-bold text-[0.9rem] shadow-[3px_3px_#2E8BC0] p-[0.4rem] rounded-[0.4rem] border-[1.8px] border-[#2E8BC0]">Youngest</label>
             </section>
             <section id="human-list" class="flex flex-col gap-[1rem] pt-[1rem]">No Human Added!</section>
         </section>
