@@ -8,14 +8,33 @@
     <title>Stopwatch</title>
 </head>
 <body class="bg-linear-65 from-purple-500 to-pink-500 p-[1rem] relative z-10">
-    <main id="app" class="fixed inset-0 hidden items-center justify-center z-50 p-[0.7rem] bg-[#0000008e] border-[1.8px] rounded-[1rem] border-[#000000]">
-        <section id="display-counter" class="font-[550] font-mono text-[3rem] text-center">00:00:00:00</section>
-        <section id="stopwatch-controller" class="flex gap-[0.6rem] justify-center flex-wrap">
-            <button type="button" id="start-stopwatch-button" class="border-[1.8px] border-[#000000] rounded-[0.4rem] cursor-pointer p-[0.4rem] text-[0.9rem] font-[500] w-[80px]">Start</button>
-            <button type="button" id="stop-stopwatch-button" class="border-[1.8px] border-[#000000] rounded-[0.4rem] cursor-pointer p-[0.4rem] text-[0.9rem] font-[500] w-[80px]">Stop</button>
-            <button type="button" id="reset-stopwatch-button" class="border-[1.8px] border-[#000000] rounded-[0.4rem] cursor-pointer p-[0.4rem] text-[0.9rem] font-[500] w-[80px]">Reset</button>
-        </section>
-    </main>
+    <div class="fixed inset-0 flex items-center justify-center z-50">
+        <main id="app" 
+            class="backdrop-blur-[16px] w-[400px] bg-[#0000008e]  p-[1rem] border-[1.8px] 
+            border-[#FFFFFF] rounded-[1rem]">
+            <section id="display-counter" 
+                class="font-[550] font-mono text-[3rem] text-center text-[#FFFFFF]">
+                00:00:00:00
+            </section>
+            <section id="stopwatch-controller" class="flex gap-[0.6rem] justify-center flex-wrap">
+                <button type="button" id="start-stopwatch-button" 
+                    class="border-[1.8px] border-[#FFFFFF] text-[#FFFFFF] rounded-[0.4rem] 
+                    cursor-pointer p-[0.4rem] text-[0.9rem] font-[500] w-[80px]">
+                    Start
+                </button>
+                <button type="button" id="stop-stopwatch-button" 
+                    class="border-[1.8px] border-[#FFFFFF] text-[#FFFFFF] rounded-[0.4rem] 
+                    cursor-pointer p-[0.4rem] text-[0.9rem] font-[500] w-[80px]">
+                    Stop
+                </button>
+                <button type="button" id="reset-stopwatch-button" 
+                    class="border-[1.8px] border-[#FFFFFF] text-[#FFFFFF] rounded-[0.4rem] 
+                    cursor-pointer p-[0.4rem] text-[0.9rem] font-[500] w-[80px]">
+                    Reset
+                </button>
+            </section>
+        </main>
+    </div>
     <script type="module" src="./src/stopwatch.ts"></script>
 </body>
 </html>

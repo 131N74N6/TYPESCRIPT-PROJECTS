@@ -15,16 +15,14 @@ const dscSortingCheckbox = document.getElementById("dsc-sorting") as HTMLInputEl
 const documentsList = document.getElementById("documents-list") as HTMLElement;
 
 const modal = document.getElementById("modal") as HTMLElement;
-const features = document.getElementById("features-list") as HTMLElement;
 
 const fileDataDisplayer = Displayer(
     fileUploaderForm, fileInput, documentsList, preview, submitButton, username, modal, 
-    ascSortingCheckbox, dscSortingCheckbox, searchFileSection, searchedData, features,
-    checkboxCategory
+    ascSortingCheckbox, dscSortingCheckbox, searchFileSection, searchedData, checkboxCategory
 );
 
-function init(): void {
-    fileDataDisplayer.initEventListeners();
+async function init(): Promise<void> {
+    await fileDataDisplayer.initDisplayer();
 }
 
 function teardown(): void {
