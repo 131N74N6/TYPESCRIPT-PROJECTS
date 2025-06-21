@@ -28,22 +28,15 @@
             <section class="flex flex-col gap-[0.7rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-md">
                 <input type="text" id="username" placeholder="uploader name" class="text-[#FF8C00] font-[310] border-[1.8px] border-b-[#FF8C00] font-mono outline-0 text-[1rem] p-[0.5rem] rounded-[0.5rem] flex flex-col gap-[0.6rem]"/>
                 <input type="file" class="hidden" id="file-input" title="file" accept=".pdf,.doc,.docx,.txt,.jpg,.png,.jpeg"/>
-                <div id="preview" class="h-[200px] border-[#FF8C00] border-[1.8px] text-[#FF8C00] p-[0.5rem]">Click here to upload your file</div>
+                <div id="preview" class="h-[300px] border-[#FF8C00] border-[1.8px] text-[#FF8C00] p-[0.5rem]">Click here to upload your file</div>
                 <div id="fileName"></div>
                 <div id="insert-button-wrap" class="flex flex-row gap-[0.6rem]">
-                    <button type="button" id="close-insert-form" class="cursor-pointer bg-[#B71C1C] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[80px] text-[#FFFFFF]">Close</button>
-                    <button type="submit" id="submit-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[80px] text-[#1A1A1A]">Add</button>
+                    <button type="button" id="close-insert-form" class="cursor-pointer bg-[#B71C1C] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#FFFFFF]">Close</button>
+                    <button type="submit" id="submit-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#1A1A1A]">Add</button>
                 </div>
             </section>
         </form>
-        <form id="search-file-section" title="search-section" class="hidden">
-            <input type="text" id="searched-data" placeholder="search here..."/>
-            <div class="button-wrap">
-                <button type="button" id="reset-search">Clear</button>
-                <button type="submit" id="search-button">Search</button>
-            </div>
-        </form>
-        <section id="features-list" class="bg-[#000000] p-[1rem] border-b-[#FFFFFF] border-x-[#FFFFFF] border-[1.8px] flex flex-wrap gap-[1rem]">
+        <section id="category-filter" class="bg-[#000000] p-[1rem] border-b-[#FFFFFF] border-x-[#FFFFFF] border-[1.8px] flex flex-wrap gap-[1rem]">
             <input class="hidden" type="checkbox" id="asc-sorting" class="sorting-checkbox"/>
             <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="asc-sorting"><span>A-Z</span></label>
             <input class="hidden" type="checkbox" id="dsc-sorting" class="sorting-checkbox"/>
@@ -61,7 +54,21 @@
             <input class="hidden" type="checkbox" name="file-type" id="word/doc" value="application/vnd.openxmlformats-officedocument.wordprocessingml.document" checked/>
             <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="word/doc">WORD/DOC</label>
         </section>
-        <section id="documents-list" class="grid gap-[1rem] md:grid-cols-4 sm:grid-cols-2 p-[1rem]">No files added...</section>
+        <section id="documents-list-wrap">
+            <form id="search-file-section" title="search-section" class="px-[1rem] pt-[1rem] flex flex-wrap gap-[0.65rem] justify-center">
+                <input type="text" id="searched-data" placeholder="search file name" class="border-[1.8px] border-[#FF8C00] text-[#FFFFFF] outline-0 p-[0.5rem] text-[1rem] font-[500] rounded-[0.5rem] w-[250px]"/>
+                <select name="sorting-data" id="sorting-data" class="bg-[#1A1A1A] p-[0.5rem] outline-0 border-[#FF8C00] border-[1.8px] text-[#FF8C00] rounded-[0.5rem] w-[250px]">
+                    <option class="text-[#FFFFFF]">Default</option>
+                    <option class="text-[#FFFFFF]" value="from-A-Z">Sort from A - Z</option>
+                    <option class="text-[#FFFFFF]" value="from-Z-A">Sort from Z - A</option>
+                    <option class="text-[#FFFFFF]" value="from-newest">Sort from newest</option>
+                    <option class="text-[#FFFFFF]" value="from-oldest">Sort from oldest</option>
+                </select>
+            </form>
+            <section id="documents-list" class="grid gap-[1rem] md:grid-cols-4 sm:grid-cols-2 p-[1rem]">
+                <div class="text-[2rem] text-[#FFFFFF]">No files added...</div>
+            </section>
+        </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
 </body>

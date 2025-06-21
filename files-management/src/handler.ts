@@ -14,13 +14,13 @@ type FileItem = {
 const tableStorages = DataStorages<FileItem>('files_list');
 const mediaStorage = SupabaseStorage();
 const storageName = 'file-example';
+let temp: FileItem[];
 
 function Displayer (
     fileUploaderForm: HTMLFormElement, fileInput: HTMLInputElement, documentsList: HTMLElement,
     preview: HTMLDivElement, submitButton: HTMLButtonElement, username: HTMLInputElement, 
-    modal: HTMLElement, ascSortingCheckbox: HTMLInputElement, dscSortingCheckbox: HTMLInputElement, 
-    searchFileSection: HTMLFormElement, searchInput: HTMLInputElement,
-    checkboxCategory: NodeListOf<HTMLInputElement>
+    modal: HTMLElement, searchInput: HTMLInputElement, checkboxCategory: NodeListOf<HTMLInputElement>,
+    sortingData: HTMLSelectElement
 ) { 
     return {
         setModal: Modal(modal),
@@ -34,9 +34,14 @@ function Displayer (
         ] as string[],
 
         async initDisplayer(): Promise<void> {
-            await tableStorages.realtimeInit((filesData) => this.showAllFiles(filesData));
+            await tableStorages.realtimeInit((filesData) => {
+                this.showAllFiles(filesData);
+                temp = filesData;
+            });
+            
             fileInput.onchange = (event) => this.changeFileToUrl(event);
             fileUploaderForm.onsubmit = async (event) => await this.handleSubmit(event);
+            searchInput.oninput = (event) => this.searchedData(event);
             
             document.addEventListener('click', async (event) => {
                 const target = event.target as HTMLElement;
@@ -46,18 +51,34 @@ function Displayer (
                 else if (target.closest('#preview')) fileInput.click();
             }, { signal: this.controller.signal });
 
-            searchFileSection.addEventListener('submit', (event) => this.searchedData(event), {
-                signal: this.controller.signal
-            });
-
-            ascSortingCheckbox.onchange = () => {
-                dscSortingCheckbox.checked = false;
-                this.showAllFiles(tableStorages.toArray());
-            }
-
-            dscSortingCheckbox.onchange = () => {
-                ascSortingCheckbox.checked = false;
-                this.showAllFiles(tableStorages.toArray());
+            sortingData.onchange = (event) => {
+                const getValue = event.target as HTMLInputElement;
+                switch (getValue.value) {
+                    case 'from-A-Z': {
+                        temp = [...temp].sort((a, b) => a.file_name.localeCompare(b.file_name));
+                        this.showAllFiles(temp);
+                        break;
+                    }
+                    case 'from-Z-A': {
+                        temp = [...temp].sort((a, b) => b.file_name.localeCompare(a.file_name));
+                        this.showAllFiles(temp);
+                        break;
+                    }
+                    case 'from-newest': {
+                        temp = [...temp].sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+                        this.showAllFiles(temp);
+                        break;
+                    }
+                    case 'from-oldest': {
+                        temp = [...temp].sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
+                        this.showAllFiles(temp);
+                        break;
+                    }
+                    default: {
+                        this.showAllFiles(tableStorages.toArray());
+                        break;
+                    }
+                }
             }
 
             checkboxCategory.forEach(checkbox => {
@@ -65,7 +86,7 @@ function Displayer (
                     this.selectedCategories = Array.from(checkboxCategory)
                     .filter(selected => selected.checked)
                     .map(get_value => get_value.value as FileItem['file_type']);
-                    this.showAllFiles(tableStorages.toArray());
+                    this.showAllFiles(temp);
                 }
             });
         },
@@ -77,24 +98,16 @@ function Displayer (
                     const filteredData = filesData.filter(data => this.selectedCategories.includes(data.file_type));
                     let sortedData = filteredData;
 
-                    if (ascSortingCheckbox.checked) {
-                        sortedData = [...filteredData].sort((a, b) => a.file_name.localeCompare(b.file_name));
-                    } else if (dscSortingCheckbox.checked) {
-                        sortedData = [...filteredData].sort((a, b) => b.file_name.localeCompare(a.file_name));
-                    }
-
                     sortedData.forEach(data => fileDataFragment.appendChild(this.createComponent(data)));
                     documentsList.innerHTML = '';
                     documentsList.appendChild(fileDataFragment);
                 } else {
-                    documentsList.innerHTML = '';
-                    documentsList.textContent = 'No file added..';
+                    documentsList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">No files added...</div>`;
                 }
             } catch (error: any) {
                 this.setModal.createModal(`Failed to load data: ${error.message || error}`);
                 this.setModal.showMessage();
-                documentsList.innerHTML = '';
-                documentsList.textContent = `Error ocured: ${error.message || error}`;
+                documentsList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">Error ${error.message || error}...</div>`;
             }
         },
 
@@ -108,7 +121,7 @@ function Displayer (
                 reader.onloadend = (event) => {
                     this.currentFileDataUrl = event.target?.result as string;
                     if (file.type.startsWith('image/')) {
-                        preview.innerHTML = `<img src="${this.currentFileDataUrl}" alt="Preview">`;
+                        preview.innerHTML = `<img src="${this.currentFileDataUrl}" class="w-[100%] h-[100%] object-cover" alt="Preview"/>`;
                     } else {
                         preview.textContent = file.name;
                     }
@@ -142,8 +155,7 @@ function Displayer (
                     // Cek apakah ada file baru yang dipilih (currentFile tidak null)
                     if (this.currentFile) {
                         // Ada file baru, hapus file lama dari storage
-                        const oldFilePath = existingFileItem.file_url.split(`${storageName}/`)[1];
-                        await mediaStorage.RemoveFile(oldFilePath, storageName);
+                        await mediaStorage.RemoveFile(existingFileItem.file_url, storageName);
 
                         // Upload file baru
                         uploadDate = existingFileItem.created_at;
@@ -187,10 +199,9 @@ function Displayer (
             } catch (error) {
                 this.setModal.createModal('Error uploading file');
                 this.setModal.showMessage();
-                this.resetForm();
+                this.closeForm();
             } finally {
-                this.resetForm();
-                fileUploaderForm.classList.remove('show');
+                this.closeForm();
             }
         },
 
@@ -212,8 +223,19 @@ function Displayer (
             uploadTime.textContent = `Uploaded at: ${detail.created_at.toLocaleString()}`;
 
             const selectButton = document.createElement('button');
-            selectButton.className = 'bg-[#FF8C00] p-[0.4rem] text-[0.9rem] text-[#1A1A1A] cursor-pointer w-[80px] rounded-[0.4rem]';
+            selectButton.className = 'bg-[#FF8C00] p-[0.4rem] text-[0.9rem] text-[#1A1A1A] cursor-pointer w-[88px] rounded-[0.4rem]';
             selectButton.textContent = 'Select';
+            selectButton.onclick = () => {
+                this.openForm();
+                this.selectedFileId = detail.id;
+                const fileData = tableStorages.currentData.get(detail.id);
+                
+                if (!fileData) return;
+                
+                username.value = fileData.uploader_name;
+                this.showPreview(fileData);
+                submitButton.textContent = 'Save Changes';
+            }
 
             const deleteButton = document.createElement('button');
             deleteButton.className = 'bg-[#B71C1C] p-[0.4rem] text-[0.9rem] text-[#FFFFFF] cursor-pointer w-[80px] rounded-[0.4rem]';
@@ -249,15 +271,12 @@ function Displayer (
             window.open(selectedData.file_url, '_blank');
         },
 
-        searchedData(event: SubmitEvent): void {
+        searchedData(event: Event): void {
             event.preventDefault();
-            const trimmedValue = (searchInput.value.trim()).toLowerCase();
-            if (trimmedValue === '') {
-                this.setModal.createModal('Please insert some text');
-                this.setModal.showMessage();
-            }
-            const searched = tableStorages.toArray().filter(data => data.file_name.includes(trimmedValue));
-            this.showAllFiles(searched);
+            const trimmedValue = searchInput.value.trim().toLowerCase();
+
+            temp = tableStorages.toArray().filter(data => data.file_name.includes(trimmedValue));
+            this.showAllFiles(temp);
         },
 
         fileIcon(file: FileItem): HTMLElement {
@@ -273,21 +292,9 @@ function Displayer (
             return icon;
         },
 
-        selectFile(id: number): void {
-            this.openForm();
-            this.selectedFileId = id;
-            const fileData = tableStorages.currentData.get(id);
-            
-            if (!fileData) return;
-            
-            username.value = fileData.uploader_name;
-            this.showPreview(fileData); 
-            submitButton.textContent = 'Save Changes';
-        },
-
         showPreview(detail: FileItem): void {
             preview.innerHTML = detail.file_type.startsWith('image/') ? 
-            `<img src="${detail.file_url}" alt="${detail.file_name}">` : 
+            `<img src="${detail.file_url}" class="w-[100%] h-[100%] object-cover" alt="${detail.file_name}"/>` : 
             `<div class='file-preview'>${detail.file_name}</div>`;
         },
 
@@ -310,10 +317,8 @@ function Displayer (
         },
 
         openForm(): void {
-            searchFileSection.classList.remove('show');
             fileUploaderForm.classList.remove('hidden');
             fileUploaderForm.classList.add('flex');
-            searchFileSection.reset();
         },
 
         closeForm(): void {
@@ -336,8 +341,6 @@ function Displayer (
             this.controller.abort;
             this.setModal.teardown();
             this.resetForm();
-            ascSortingCheckbox.checked = false;
-            dscSortingCheckbox.checked = false;
             tableStorages.teardownStorage();
         }
     }
