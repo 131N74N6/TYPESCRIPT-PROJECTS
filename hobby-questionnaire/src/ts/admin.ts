@@ -20,8 +20,7 @@ const closePlaceForEdit = document.getElementById('close-edit-hobby-questionnair
 let selectedId: string | null = null;
 let temp: Human[] = [];
 const searchedName = document.getElementById('searched-name') as HTMLInputElement;
-const fromOldest = document.getElementById('from-oldest') as HTMLInputElement;
-const fromYoungest = document.getElementById('from-youngest') as HTMLInputElement;
+const sortingMethod = document.getElementById('sorting-method') as HTMLSelectElement;
 
 const deleteAllButton = document.getElementById('delete-all-data') as HTMLButtonElement;
 const notification = document.getElementById('admin-notification') as HTMLElement;
@@ -38,31 +37,40 @@ function AdminRole() {
         hobbyQuestionnaire.onsubmit = async (event) => await insertNewHuman(event);
         editHobbyQuestionnaire.onsubmit = async (event) => changeHumanId(event);
         deleteAllButton.onclick = async () => await deleteAllHuman();
-        searchedName.oninput = () => showAllHumanId(applySearchFilters());
+        searchedName.oninput = (event) => searchedFiles(event);
         
         openHobbyQuestionnaire.onclick = () => openInsertForm();
         closeHobbyQuestionnaire.onclick = () => hideInsertForm();
         closePlaceForEdit.onclick = () => hideEditForm();
 
-        fromYoungest.onchange = (event: Event) => {
-            const isChecked = event.target as HTMLInputElement;
-            if (isChecked.checked) {
-                fromOldest.checked = false;
-                temp = [...temp].sort((a, b) => a.age - b.age);
-                showAllHumanId(temp);
-            } else {
-                showAllHumanId(tableStorage.toArray());
-            }
-        }
-        
-        fromOldest.onchange = (event: Event) => {
-            const isChecked = event.target as HTMLInputElement;
-            if (isChecked.checked) {
-                fromYoungest.checked = false;
-                temp = [...temp].sort((a, b) => b.age - a.age);
-                showAllHumanId(temp);
-            } else {
-                showAllHumanId(tableStorage.toArray());
+        sortingMethod.onchange = (event: Event) => {
+            const selected = event.target as HTMLInputElement;
+            switch(selected.value) {
+                case 'from-oldest': {
+                    temp = [...temp].sort((a, b) => b.age - a.age);
+                    showAllHumanId(temp);
+                    break;
+                }
+                case 'from-youngest': {
+                    temp = [...temp].sort((a, b) => a.age - b.age);
+                    showAllHumanId(temp);
+                    break;
+                }
+                case 'from-A-to-Z': {
+                    temp = [...temp].sort((a, b) => a.name.localeCompare(b.name));
+                    showAllHumanId(temp);
+                    break;
+                }
+                case 'from-Z-to-A': {
+                    temp = [...temp].sort((a, b) => b.name.localeCompare(a.name));
+                    showAllHumanId(temp);
+                    break;
+                }
+                default: {
+                    showAllHumanId(tableStorage.toArray());
+                    searchedName.value = '';
+                    break;
+                }
             }
         }
     }
@@ -77,14 +85,12 @@ function AdminRole() {
             } else {
                 adminNotification.createNotification('No Human Added!');
                 adminNotification.showNotification();
-                humanList.innerHTML = '';
-                humanList.textContent = 'No Human Added!';
+                humanList.innerHTML = `<div class="text-[2rem] text-[#B1D4E0] text-center">No Human Added!</div>`;
             }
         } catch (error: any) {
             adminNotification.createNotification(`Error: ${error.message || error}`);
             adminNotification.showNotification();
-            humanList.innerHTML = '';
-            humanList.textContent = 'An Error Ocured!';
+            humanList.innerHTML = `<div class="text-[2rem] text-[#B1D4E0] text-center">An Error Ocured!</div>`;
         }
     }
 
@@ -169,11 +175,11 @@ function AdminRole() {
         return humanIdCard;
     }
 
-    function applySearchFilters(): Human[] {
+    function searchedFiles(event: Event): void {
+        event.preventDefault();
         const trimmedSearched = searchedName.value.trim().toLowerCase();
-        let filtered = [...temp];
-        filtered = filtered.filter(human => human.name.toLowerCase().includes(trimmedSearched));
-        return filtered;
+        temp = tableStorage.toArray().filter(human => human.name.toLowerCase().includes(trimmedSearched));
+        showAllHumanId(temp);
     }
 
     function openInsertForm(): void {
@@ -233,8 +239,7 @@ function AdminRole() {
         try {
             if (tableStorage.currentData.size > 0) {
                 await tableStorage.deleteData();
-                humanList.innerHTML = '';
-                humanList.textContent = 'No Human Added!';
+                humanList.innerHTML = `<div class="text-[2rem] text-[#B1D4E0] text-center">No Human Added!</div>`;
             } else {
                 adminNotification.createNotification('No Human Added!');
                 adminNotification.showNotification();
@@ -252,8 +257,6 @@ function AdminRole() {
         hideInsertForm();
         hideEditForm();
         selectedId = null;
-        fromOldest.checked = false;
-        fromYoungest.checked = false;
     }
 
     return { initAdminRole, teradownAdmin }

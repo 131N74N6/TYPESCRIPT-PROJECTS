@@ -1,4 +1,4 @@
-import DataManager from "./storage";
+import DataManager from "./supabase-table";
 import Modal from "./modal";
 
 interface Rating {
@@ -47,7 +47,7 @@ class UserRating extends DataManager<Rating> {
     }
 
     async setupEventListeners(): Promise<void> {
-        await this.realtimeInit(() => this.showAllRatings());
+        await this.realtimeInit((ratings) => this.showAllRatings(ratings));
 
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
@@ -65,7 +65,7 @@ class UserRating extends DataManager<Rating> {
                         this.rating = Array.from(this.ratingFilter)
                         .filter(getData => getData.checked)
                         .map(getValue => Number(getValue.value) as Rating['rating']);
-                        this.showAllRatings();
+                        this.showAllRatings(this.toArray());
                     }, { signal: this.controllers.signal });
                 });
             }
@@ -78,26 +78,24 @@ class UserRating extends DataManager<Rating> {
 
     sortFromNewest(): void {
         this.ascendSort.checked = false;
-        this.showAllRatings();
+        this.showAllRatings(this.toArray());
     }
 
     sortFromOldest(): void {
         this.descendSort.checked = false;
-        this.showAllRatings();
+        this.showAllRatings(this.toArray());
     }
 
-    async showAllRatings(): Promise<void> {
+    async showAllRatings(ratings: Rating[]): Promise<void> {
         const opinionComponent = document.createDocumentFragment();
-        if (this.currentData.length > 0) {
-            const filteredData = this.currentData.filter(rate => this.rating.includes(rate.rating));
+        if (ratings.length > 0) {
+            const filteredData = this.toArray().filter(rate => this.rating.includes(rate.rating));
             let modifiedData = filteredData;
 
             if (this.ascendSort.checked) {
                 modifiedData = [...filteredData].sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
             } else if (this.descendSort.checked) {
                 modifiedData = [...filteredData].sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
-            } else {
-                modifiedData = this.currentData.filter(rate => this.rating.includes(rate.rating));
             }
 
             modifiedData.forEach(data => opinionComponent.appendChild(this.makeRatingList(data)));
@@ -166,7 +164,7 @@ class UserRating extends DataManager<Rating> {
                     comment: this.comment.value.trim()
                 });
             } else {
-                await this.addToStorage({
+                await this.insertData({
                     created_at: new Date(),
                     name: this.username.value.trim() || `user_${Date.now()}`,
                     rating: Number(createRating.value.trim()),
@@ -217,18 +215,19 @@ class UserRating extends DataManager<Rating> {
 
     private async selectedRating(id: string): Promise<void> {
         this.selectedId = id;
-        const index = this.currentData.findIndex(data => data.id === id);
-        const starTotal = String(this.currentData[index].rating);
+        const getData = this.currentData.get(id);
+        if (!getData) return;
+        const starTotal = String(getData.rating);
 
-        this.username.value = this.currentData[index].name;
+        this.username.value = getData.name;
         (document.querySelector(`input[value="${starTotal}"]`) as HTMLInputElement).checked = true;
-        this.comment.value = this.currentData[index].comment;
+        this.comment.value = getData.comment;
         this.saveButton.textContent = "Edit Data";
     }
 
     private async deleteRating(id: string): Promise<void> {
         try {
-            await this.deleteSelectedData(id);
+            await this.deleteData(id);
             if (this.selectedId === id) this.resetOpinionForm();
         } catch (error) {
             this.modalComponent.createModalComponent("Error when deleting rates");
@@ -238,8 +237,8 @@ class UserRating extends DataManager<Rating> {
 
     private async deleteAllRatings(): Promise<void> {
         try {
-            if (this.currentData.length > 0) {
-                await this.deleteAllData();
+            if (this.currentData.size > 0) {
+                await this.deleteData();
                 this.resetOpinionForm();
                 this.teardownStorage();
                 this.ratingsList.innerHTML = '';

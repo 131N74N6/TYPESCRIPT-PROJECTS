@@ -3,7 +3,7 @@ import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/
 
 class DataManager <V extends { id: string }> {
     protected tableName: string;
-    protected currentData: V[] = [];
+    protected currentData: Map<string, V> = new Map<string, V>();
     private isInitialized: boolean = false;
     private realtimeChannel: RealtimeChannel | null = null;
 
@@ -14,7 +14,7 @@ class DataManager <V extends { id: string }> {
     protected async realtimeInit(callback: (data: V[]) => void): Promise<void> {
         if (this.realtimeChannel && this.isInitialized) {
             console.warn(`Storage for ${this.tableName} has been initialized!`);
-            callback([...this.currentData]);
+            callback(this.toArray());
             return;
         }
 
@@ -28,32 +28,24 @@ class DataManager <V extends { id: string }> {
             'postgres_changes',
             { event: '*', schema: 'public', table: this.tableName },
             (payload: RealtimePostgresChangesPayload<V>) => {
-                const processItem = (item: any): V => {
-                    if (item && item.created_at && typeof item.created_at === "string") {
-                        return { ...item, created_at: new Date(item.created_at) } as V;
-                    }
-                    return item as V;
-                }
-
                 switch (payload.eventType) {
                     case 'INSERT': {
-                        const newItem = processItem(payload.new);
-                        this.currentData.push(newItem);
+                        const newItem = this.processItem(payload.new);
+                        this.currentData.set(newItem.id, newItem);
                         break;
                     }
                     case 'UPDATE': {
-                        const updatedItem = processItem(payload.new);
-                        const index = this.currentData.findIndex(item => item.id === updatedItem.id);
-                        if (index !== -1) this.currentData[index] = updatedItem;
+                        const updatedItem = this.processItem(payload.new);
+                        this.currentData.set(updatedItem.id, updatedItem);
                         break;
                     }
                     case 'DELETE': {
                         const deletedId = payload.old.id;
-                        this.currentData = this.currentData.filter(item => item.id !== deletedId);
+                        if (deletedId) this.currentData.delete(deletedId);
                         break;
                     }
                 }
-                callback([...this.currentData]);
+                callback(this.toArray());
             }
         );
         
@@ -67,16 +59,26 @@ class DataManager <V extends { id: string }> {
             return;
         }
 
-        this.currentData = data.map(item => ({
-            ...item, created_at: new Date(item.created_at)
-        })) as V[];
+        this.currentData.clear();
+        data.forEach(dt => {
+            const processed = this.processItem(dt);
+            this.currentData.set(processed.id, processed);
+        });
 
-        callback(this.currentData);
+        callback(this.toArray());
         this.realtimeChannel.subscribe(); 
         this.isInitialized = true;
     }
 
-    protected async addToStorage(new_data: Omit<V, 'id'>): Promise<string> {
+    
+    private processItem(item: any): V {
+        if (item && item.created_at && typeof item.created_at === "string") {
+            return { ...item, created_at: new Date(item.created_at) } as V;
+        }
+        return item as V;
+    }
+
+    protected async insertData(new_data: Omit<V, 'id'>): Promise<string> {
         const { data, error } = await supabase
         .from(this.tableName)
         .insert([new_data])
@@ -95,26 +97,32 @@ class DataManager <V extends { id: string }> {
         if (error) throw error;
     }
 
-    protected async deleteSelectedData(id: string): Promise<void> {
-        const { error } = await supabase
-        .from(this.tableName)
-        .delete()
-        .eq('id', id);
+    protected async deleteData(id: string): Promise<void>
+    protected async deleteData(id?: string): Promise<void>
+    protected async deleteData(id?: string): Promise<void> {
+        if (id !== undefined) {
+            const { error } = await supabase
+            .from(this.tableName)
+            .delete()
+            .eq('id', id);
 
-        if (error) throw error;
+            if (error) throw error;
+        } else {
+            const { error } = await supabase
+            .from(this.tableName)
+            .delete()
+            .not('id', 'is', null);
+
+            if (error) throw error;
+        }
     }
 
-    protected async deleteAllData(): Promise<void> {
-        const { error } = await supabase
-        .from(this.tableName)
-        .delete()
-        .not('id', 'is', null);
-
-        if (error) throw error;
+    protected toArray(): V[] {
+        return Array.from(this.currentData.values());
     }
 
     protected teardownStorage(): void {
-        this.currentData = [];
+        this.currentData.clear();
         this.isInitialized = false;
         if (this.realtimeChannel) {
             this.realtimeChannel.unsubscribe();
