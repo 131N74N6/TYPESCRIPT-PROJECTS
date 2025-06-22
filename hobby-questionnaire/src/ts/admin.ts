@@ -18,18 +18,23 @@ const getHobby = document.querySelectorAll<HTMLInputElement>('input[name="new-ho
 const closePlaceForEdit = document.getElementById('close-edit-hobby-questionnaire') as HTMLButtonElement;
 
 let selectedId: string | null = null;
+let temp: Human[] = [];
 const searchedName = document.getElementById('searched-name') as HTMLInputElement;
 const fromOldest = document.getElementById('from-oldest') as HTMLInputElement;
 const fromYoungest = document.getElementById('from-youngest') as HTMLInputElement;
 
 const deleteAllButton = document.getElementById('delete-all-data') as HTMLButtonElement;
-const humanList = document.getElementById('human-list') as HTMLElement;
-
 const notification = document.getElementById('admin-notification') as HTMLElement;
 const adminNotification = Notification(notification);
+const humanList = document.getElementById('human-list') as HTMLElement;
 
 function AdminRole() {
     async function initAdminRole(): Promise<void> {
+        await tableStorage.realtimeInit((humans) => {
+            showAllHumanId(humans);
+            temp = humans;
+        });
+
         hobbyQuestionnaire.onsubmit = async (event) => await insertNewHuman(event);
         editHobbyQuestionnaire.onsubmit = async (event) => changeHumanId(event);
         deleteAllButton.onclick = async () => await deleteAllHuman();
@@ -39,31 +44,35 @@ function AdminRole() {
         closeHobbyQuestionnaire.onclick = () => hideInsertForm();
         closePlaceForEdit.onclick = () => hideEditForm();
 
-        fromYoungest.onchange = () => {
-            fromOldest.checked = false;
-            showAllHumanId(applySearchFilters());
+        fromYoungest.onchange = (event: Event) => {
+            const isChecked = event.target as HTMLInputElement;
+            if (isChecked.checked) {
+                fromOldest.checked = false;
+                temp = [...temp].sort((a, b) => a.age - b.age);
+                showAllHumanId(temp);
+            } else {
+                showAllHumanId(tableStorage.toArray());
+            }
         }
         
-        fromOldest.onchange = () => {
-            fromYoungest.checked = false;
-            showAllHumanId(applySearchFilters());
+        fromOldest.onchange = (event: Event) => {
+            const isChecked = event.target as HTMLInputElement;
+            if (isChecked.checked) {
+                fromYoungest.checked = false;
+                temp = [...temp].sort((a, b) => b.age - a.age);
+                showAllHumanId(temp);
+            } else {
+                showAllHumanId(tableStorage.toArray());
+            }
         }
-
-        await tableStorage.realtimeInit((humans) => showAllHumanId(humans));
     }
 
     function showAllHumanId(humans: Human[]): void {
         const fragment = document.createDocumentFragment();
-        let shuffle = humans.sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
         try {
             if (tableStorage.currentData.size > 0) {
-                if (fromOldest.checked) {
-                    shuffle = [...humans].sort((a, b) => b.age - a.age);
-                } else if (fromYoungest.checked) {
-                    shuffle = [...humans].sort((a, b) => a.age - b.age);
-                }
                 humanList.innerHTML = '';
-                shuffle.forEach(human => fragment.appendChild(humanIdDisplayer(human)));
+                humans.forEach(human => fragment.appendChild(humanIdDisplayer(human)));
                 humanList.appendChild(fragment);
             } else {
                 adminNotification.createNotification('No Human Added!');
@@ -161,16 +170,10 @@ function AdminRole() {
     }
 
     function applySearchFilters(): Human[] {
-        let result = tableStorage.toArray();
         const trimmedSearched = searchedName.value.trim().toLowerCase();
-        result = result.filter(human => human.name.toLowerCase().includes(trimmedSearched));
-
-        if (fromOldest.checked) {
-            result = [...result].sort((a, b) => b.age - a.age);
-        } else if (fromYoungest.checked) {
-            result = [...result].sort((a, b) => a.age - b.age);
-        }
-        return result;
+        let filtered = [...temp];
+        filtered = filtered.filter(human => human.name.toLowerCase().includes(trimmedSearched));
+        return filtered;
     }
 
     function openInsertForm(): void {
@@ -243,6 +246,7 @@ function AdminRole() {
     }
 
     function teradownAdmin(): void {
+        temp = [];
         tableStorage.teardownTable();
         adminNotification.teardownNotification();
         hideInsertForm();
