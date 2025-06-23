@@ -5,7 +5,7 @@ let timeout: number | null = null;
 export default function Modal(notification: HTMLElement) {
     return {
         createNotification(message: string): void {
-            content.className = 'component';
+            content.className = 'm-[1rem] bg-[#7B4B94] text-[1rem] text-[#C4FFB2] font-[500] p-[0.5rem] border-[1.8px] border-[#C4FFB2]';
             text.textContent = message;
             content.appendChild(text);
             notification.appendChild(content);

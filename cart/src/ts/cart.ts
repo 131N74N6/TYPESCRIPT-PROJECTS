@@ -46,8 +46,8 @@ function showAllChosenProduct(chosenProducts: CartItem[]): void {
 
 function createProductComponent(chosenProduct: CartItem): HTMLDivElement {
     const productElement = document.createElement('div') as HTMLDivElement;
-    productElement.className = 'product-card';
-    productElement.dataset.id = chosenProduct.id;
+    productElement.className = 'bg-[#7B4B94] p-[1rem] rounded-[1rem] gap-[0.7rem] flex items-start text-[1rem] shadow-[0_4px_#C4FFB2] text-[#B7E3CC] font-mono';
+    productElement.id = `product-data-${chosenProduct.id}`;
 
     const goodsName = document.createElement('div') as HTMLDivElement;
     goodsName.textContent = `Name: ${chosenProduct.name}`;
@@ -60,26 +60,25 @@ function createProductComponent(chosenProduct: CartItem): HTMLDivElement {
     const goodsImage = document.createElement('img') as HTMLImageElement;
     goodsImage.src = chosenProduct.image_url;
     goodsImage.alt = chosenProduct.name;
-    goodsImage.className = 'product-image';
+    goodsImage.className = 'w-[100%] h-[100%] object-cover rounded-[0.5rem]';
 
     const imageWrapper = document.createElement('div') as HTMLDivElement;
-    imageWrapper.className = 'product-image-wrapper';
+    imageWrapper.className = 'w-[120px] h-[120px]';
     imageWrapper.appendChild(goodsImage);
 
     if (getSelectedId !== chosenProduct.id) {
         const goodsQuantity = document.createElement('div') as HTMLDivElement;
-        goodsQuantity.id = 'new-quantity';
         goodsQuantity.textContent = `Quantity: ${chosenProduct.quantity}`;
 
         const removeButton = document.createElement('button') as HTMLButtonElement;
-        removeButton.className = 'remove-button';
+        removeButton.className = 'shadow-[3px_3px_#7D82B8] bg-[#D6F7A3] border-[none] font-[550] w-[80px] rounded-[0.4rem] cursor-pointer text-[#7B4B94] text-[0.9rem] p-[0.4rem] font-mono font-[500]';
         removeButton.textContent = 'Remove';
         removeButton.type = 'button';
-        removeButton.onclick = async () => await cartStorage.deleteSelectedData(chosenProduct.id);
+        removeButton.onclick = async () => await cartStorage.deleteData(chosenProduct.id);
 
         const changeQuantity = document.createElement('button') as HTMLButtonElement;
         changeQuantity.type = 'button';
-        changeQuantity.className = 'change-button';
+        changeQuantity.className = 'shadow-[3px_3px_#7D82B8] bg-[#D6F7A3] border-[none] font-[550] w-[80px] rounded-[0.4rem] cursor-pointer text-[#7B4B94] text-[0.9rem] p-[0.4rem] font-mono font-[500]';
         changeQuantity.textContent = 'Change';
         changeQuantity.onclick = () => {
             const previousProductId = getSelectedId;
@@ -92,23 +91,24 @@ function createProductComponent(chosenProduct: CartItem): HTMLDivElement {
         }
 
         const buttonWrap = document.createElement('div') as HTMLDivElement;
-        buttonWrap.className = 'button-wrap';
+        buttonWrap.className = 'flex gap-[0.7rem]';
         buttonWrap.append(changeQuantity, removeButton);
 
         const metaData = document.createElement('div') as HTMLDivElement;
-        metaData.className = 'product-metadata';
+        metaData.className = 'flex flex-col gap-[0.4rem]';
         metaData.append(goodsName, goodsPrice, goodsQuantity, buttonWrap);
 
         productElement.append(imageWrapper, metaData);
     } else {
         const newQuantity = document.createElement('input') as HTMLInputElement;
-        newQuantity.id = 'new-quantity';
+        newQuantity.className = 'bg-[#D6F7A3] shadow-[3px_3px_#7D82B8] font-[500] outline-0 text-[#7B4B94] text-[0.9rem] p-[0.4rem] rounded-[0.4rem]';
         newQuantity.placeholder = 'Quantity';
+        newQuantity.name = `new-quantity-for-${chosenProduct.name}`;
         newQuantity.value = chosenProduct.quantity.toString();
 
         const cancelButton = document.createElement('button') as HTMLButtonElement;
         cancelButton.type = 'button';
-        cancelButton.className = 'cancel-button';
+        cancelButton.className = 'shadow-[3px_3px_#7D82B8] bg-[#D6F7A3] border-[none] font-[550] w-[80px] rounded-[0.4rem] cursor-pointer text-[#7B4B94] text-[0.9rem] p-[0.4rem] font-mono font-[500]';
         cancelButton.textContent = 'Cancel';
         cancelButton.onclick = () => {
             getSelectedId = null;
@@ -116,12 +116,11 @@ function createProductComponent(chosenProduct: CartItem): HTMLDivElement {
         }
 
         const saveChange = document.createElement('button') as HTMLButtonElement;
-        saveChange.className = 'save-change';
+        saveChange.className = 'shadow-[3px_3px_#7D82B8] bg-[#D6F7A3] border-[none] font-[550] w-[80px] rounded-[0.4rem] cursor-pointer text-[#7B4B94] text-[0.9rem] p-[0.4rem] font-mono font-[500]';
         saveChange.type = 'button';
         saveChange.textContent = 'Save';
         saveChange.onclick = async () => {
             const trimmedQuantity = Number(newQuantity.value.trim());
-            const newPrice = chosenProduct.price * trimmedQuantity;
 
             if (isNaN(trimmedQuantity)) {
                 cartNotification.createNotification('Invalid quantity!');
@@ -131,10 +130,15 @@ function createProductComponent(chosenProduct: CartItem): HTMLDivElement {
 
             try {
                 if (trimmedQuantity <= 0) {
-                    await cartStorage.deleteSelectedData(chosenProduct.id);
+                    await cartStorage.deleteData(chosenProduct.id);
                 } else {
+                    const unitPrice = chosenProduct.price / chosenProduct.quantity;
+            
+                    // 2. Hitung harga baru berdasarkan kuantitas baru
+                    const newPrice = unitPrice * trimmedQuantity;
+
                     await cartStorage.changeSelectedData(chosenProduct.id, {
-                        price: newPrice,
+                        price: newPrice, // Gunakan harga baru yang dihitung
                         quantity: trimmedQuantity
                     });
                 }
@@ -147,11 +151,11 @@ function createProductComponent(chosenProduct: CartItem): HTMLDivElement {
         }
 
         const buttonWrap = document.createElement('div') as HTMLDivElement;
-        buttonWrap.className = 'button-wrap';
+        buttonWrap.className = 'flex flex-wrap gap-[0.6rem]';
         buttonWrap.append(saveChange, cancelButton);
 
         const newMetaData = document.createElement('div') as HTMLDivElement;
-        newMetaData.className = 'product-metadata';
+        newMetaData.className = 'flex flex-col gap-[0.6rem]';
         newMetaData.append(imageWrapper, goodsName, goodsPrice, newQuantity, buttonWrap);
 
         productElement.append(newMetaData);
@@ -162,7 +166,7 @@ function createProductComponent(chosenProduct: CartItem): HTMLDivElement {
 async function removeProducts(): Promise<void> {
     try {
         if (cartStorage.toArray().length > 0) {
-            await cartStorage.deleteAllData();
+            await cartStorage.deleteData();
         } else {
             chosenProductsList.innerHTML = `<div class='error-message'>No products added.</div>`;
         }
@@ -182,7 +186,7 @@ function teardownCart(): void {
 }
 
 function changeExistingComponent(chosenProductId: string): void {
-    const component = chosenProductsList.querySelector(`product-card[data-id="${chosenProductId}"]`);
+    const component = chosenProductsList.querySelector(`#product-data-${chosenProductId}`);
     if (component) {
         const getData = cartStorage.currentData.get(chosenProductId);
         if (getData) {

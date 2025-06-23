@@ -87,7 +87,7 @@ function createProductComponent(goods: Product): HTMLDivElement {
         deleteButton.onclick = async () => {
             try {
                 if (dataStorage.toArray().length > 0) {
-                    await dataStorage.deleteSelectedData(goods.id);
+                    await dataStorage.deleteData(goods.id);
                     await RemoveFile(goods.image_url, storageName);
                 } else {
                     productList.innerHTML = `<div class="error-message">No products available.</div>`;
@@ -254,7 +254,7 @@ async function deleteAllProduct(): Promise<void> {
     try {
         if (dataStorage.toArray().length > 0) {
             const imageUrls: string[] = dataStorage.toArray().map(data => data.image_url);
-            await dataStorage.deleteAllData();
+            await dataStorage.deleteData();
             await Promise.all(imageUrls.map(url => RemoveFile(url, storageName)));
         } else {
             productList.innerHTML = `<div class="error-message">No products available.</div>`;

@@ -155,9 +155,7 @@ function AdminRole() {
             newHumanAge.value = identities.age.toString();
             newMaleRadioButton.checked = (identities.gender === 'Male');
             newFemaleRadioButton.checked = (identities.gender === 'Female');
-            getHobby.forEach(hobby => {
-                hobby.checked = identities.hobbies.includes(hobby.value);
-            });
+            getHobby.forEach(hobby => hobby.checked = identities.hobbies.includes(hobby.value));
             openEditForm();
         }
 

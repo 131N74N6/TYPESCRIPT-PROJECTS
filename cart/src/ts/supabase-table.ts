@@ -28,8 +28,30 @@ const TableStorage = <HSR extends { id: string }>(tableName: string) => {
         }
     }
 
+    async function deleteData(id: string): Promise<void>;
+    async function deleteData(id?: string): Promise<void>;
+
+    async function deleteData(id?: string): Promise<void> {
+        if (id !== undefined) {
+            const { error } = await supabase
+            .from(tableName)
+            .delete()
+            .eq('id', id);
+
+            if (error) throw error;
+        } else {
+            const { error } = await supabase
+            .from(tableName)
+            .delete()
+            .not('id', 'is', null);
+
+            if (error) throw error;
+        }
+    }
+
     return {
         insertData,
+        deleteData,
         isInitialize: false as boolean,
         realtimeChannel: null as RealtimeChannel | null,
         currentData: new Map<string, HSR>() as Map<string, HSR>,
@@ -84,7 +106,7 @@ const TableStorage = <HSR extends { id: string }>(tableName: string) => {
 
             this.currentData.clear();
             data.forEach(dt => {
-                const processed = { ...dt, created_at: new Date(dt.created_at) } as HSR;
+                const processed = this.processItem(dt);
                 this.currentData.set(processed.id, processed);
             });
 
@@ -105,24 +127,6 @@ const TableStorage = <HSR extends { id: string }>(tableName: string) => {
             .from(tableName)
             .update(new_data)
             .eq('id', id);
-
-            if (error) throw error;
-        },
-
-        async deleteSelectedData(id: string): Promise<void> {
-            const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .eq('id', id);
-
-            if (error) throw error;
-        },
-
-        async deleteAllData(): Promise<void> {
-            const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .not('id', 'is', null);
 
             if (error) throw error;
         },

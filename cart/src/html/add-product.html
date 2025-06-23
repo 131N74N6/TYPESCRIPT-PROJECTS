@@ -1,25 +1,30 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
-    <link rel="stylesheet" href="../css/add-product.css"/>
+    <link rel="stylesheet" href="../css/index.css"/>
     <title>Add Product</title>
 </head>
-<body>
-    <main id="customer">
-        <section id="add-product-notification"></section>
-        <header>
-            <a href="seller.html"><span>See Product</span></a>
-            <a href="index.html">Home</a>
-        </header>
-        <form id="add-product">
-            <input type="text" id="product-name" placeholder="insert product name..."/>
-            <input type="text" id="product-price" placeholder="insert product price..."/>
-            <input type="file" id="product-image" title="product-image"/>
-            <div id="product-image-preview"></div>
-            <button type="submit" id="submit-button">Add</button>
+<body class="bg-[#7D82B8]">
+    <header class="bg-[#7B4B94] p-[1rem] flex gap-[1rem]">
+        <a href="seller.html" class="decoration-0 text-[#D6F7A3]"><span>See Product</span></a>
+        <a href="index.html" class="decoration-0 text-[#D6F7A3]">Home</a>
+    </header>
+    <section id="add-product-notification"></section>
+    <main id="customer" class="flex justify-center items-center inset-0">
+        <form id="add-product" class="m-[1rem] flex flex-col rounded-[1rem] gap-[0.6rem] w-[555px] p-[1rem] border-[2px] border-[#C4FFB2] shadow-[3px_3px_#C4FFB2]">
+            <input type="text" id="product-name" placeholder="insert product name..." class="outline-0 rounded-[0.5rem] p-[0.5rem] text-[1rem] text-[#C4FFB2] border-[1.8px] border-[#C4FFB2]"/>
+            <input type="text" id="product-price" placeholder="insert product price..." class="outline-0 rounded-[0.5rem] p-[0.5rem] text-[1rem] text-[#C4FFB2] border-[1.8px] border-[#C4FFB2]"/>
+            <input type="file" id="product-image" title="product-image" class="hidden"/>
+            <div id="product-image-preview" class="rounded-[1rem] h-[300px] cursor-pointer border-[#D6F7A3] border-[1.8px] border-dashed">
+                <div class="text-[#D6F7A3] text-[1rem] font-[500] p-[1rem]">No Image Selected</div>
+            </div>
+            <div class="gap-[0.6rem] flex flex-wrap">
+                <button type="submit" id="submit-button" class="bg-[#C4FFB2] cursor-pointer p-[0.4rem] text-[0.9rem] rounded-[0.4rem] font-[500] w-[85px]">Add</button>
+                <button type="button" id="reset-inserted" class="bg-[#7B4B94] border-[1.5px] border-[#C4FFB2] text-[#C4FFB2] cursor-pointer p-[0.4rem] text-[0.9rem] rounded-[0.4rem] font-[500] w-[85px]">Reset</button>
+            </div>
         </form>
     </main>
     <script type="module" src="../ts/add-product.ts"></script>

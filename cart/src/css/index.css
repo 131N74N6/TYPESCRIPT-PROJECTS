@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+:root {
+    --royal-purple: #7B4B94;
+    --glaucous: #7D82B8;
+    --celadon: #B7E3CC;
+    --tea-green: #C4FFB2;
+    --mindaro: #D6F7A3;
+}
