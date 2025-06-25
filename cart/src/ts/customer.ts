@@ -66,6 +66,7 @@ function createProductComponent(goods: Product): HTMLDivElement {
 
 function teardown(): void {
     controller.abort();
+    dataStorage.teardownStorage();
     cartStorage.teardownStorage();
 }
 

@@ -183,6 +183,7 @@ function teardownCart(): void {
     priceTotal.textContent = 'IDR: 0';
     controller.abort();
     cartNotification.teardownNotivication();
+    cartStorage.teardownStorage();
 }
 
 function changeExistingComponent(chosenProductId: string): void {
@@ -191,7 +192,7 @@ function changeExistingComponent(chosenProductId: string): void {
         const getData = cartStorage.currentData.get(chosenProductId);
         if (getData) {
             const newComponent = createProductComponent(getData);
-            newComponent.dataset.id = chosenProductId;
+            newComponent.id = `product-data-${chosenProductId}`;
             component.replaceWith(newComponent);
         } else {
             component.remove();
