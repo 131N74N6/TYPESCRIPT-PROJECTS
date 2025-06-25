@@ -46,7 +46,7 @@ function showAllProducts(goods: Product[]): void {
 function createProductComponent(goods: Product): HTMLDivElement {
     const productElement = document.createElement('div') as HTMLDivElement;
     productElement.className = 'product-card';
-    productElement.dataset.id = goods.id;
+    productElement.id = `product-card-${goods.id}`;
 
     if (getSelectedId !== goods.id) {
         const goodsName = document.createElement('div') as HTMLDivElement;
@@ -113,11 +113,13 @@ function createProductComponent(goods: Product): HTMLDivElement {
         newImageProduct.alt = goods.image_name;
 
         const newImageWrap = document.createElement('div') as HTMLDivElement;
-        newImageWrap.className = 'product-image-wrapper';
+        newImageWrap.className = 'product-image-wrapper cursor-pointer';
+        newImageWrap.onclick = () => newImageInput.click();
         newImageWrap.appendChild(newImageProduct);
 
         const newImageInput = document.createElement('input') as HTMLInputElement;
         newImageInput.type = 'file';
+        newImageInput.className = 'hidden';
         newImageInput.id = 'new-product-image';
         newImageInput.accept = 'image/*';
         newImageInput.onchange = (event: Event) => {
@@ -136,7 +138,7 @@ function createProductComponent(goods: Product): HTMLDivElement {
                 const reader = new FileReader();
                 reader.onloadend = (event) => {
                     const newUrl = event.target?.result as string;
-                    newImageWrap.innerHTML = '';
+                    newImageInput.value = '';
                     newImageProduct.src = newUrl;
                     newImageProduct.alt = file.name;
                 }
@@ -144,6 +146,7 @@ function createProductComponent(goods: Product): HTMLDivElement {
                     sellerNotification.createNotification('Failed to read the file.');
                     sellerNotification.showNotivication();
                 }
+                reader.readAsDataURL(file);
             }
         }
 
@@ -210,6 +213,7 @@ function createProductComponent(goods: Product): HTMLDivElement {
         cancelButton.onclick = () => {
             getSelectedId = null;
             changeExistingComponent(goods.id);
+            newImageInput.value = '';
             newImageFile = null;
             newImageName = '';
             newImageUrl = '';
@@ -229,14 +233,12 @@ function createProductComponent(goods: Product): HTMLDivElement {
 }
 
 function changeExistingComponent(productId: string) {
-    const productCard = productList.querySelector(`.product-card[data-id="${productId}"]`);
-
+    const productCard = productList.querySelector(`#product-card-${productId}`);
     if (productCard) {
         const productData = dataStorage.currentData.get(productId);
-
         if (productData) {
             const newComponent = createProductComponent(productData);
-            newComponent.dataset.id = productId;
+            newComponent.id = `product-card-${productId}`;
             productCard.replaceWith(newComponent);
         } else {
             productCard.remove();

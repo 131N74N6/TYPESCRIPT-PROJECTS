@@ -1,7 +1,7 @@
 import DatabaseStorage from "./supabase-table";
 import { InsertFile } from "./supabase-storage";
 import Modal from "./modal";
-import type { GalleryPost } from "./interfaces";
+import type { GalleryPost } from "./custom-types";
 
 class ImageForm extends DatabaseStorage<GalleryPost> {
     controller: AbortController = new AbortController();

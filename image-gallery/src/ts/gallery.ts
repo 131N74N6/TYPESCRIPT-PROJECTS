@@ -1,6 +1,6 @@
 import DatabaseStorage from "./supabase-table";
 import Modal from "./modal";
-import type { GalleryDisplayer } from "./interfaces";
+import type { GalleryDisplayer } from "./custom-types";
 
 class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
     private controller = new AbortController();

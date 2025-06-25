@@ -1,22 +1,26 @@
 import supabase from "./supabase-config";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-class DatabaseStorage <MBK extends { id: string }> {
-    protected currentData: Map<string, MBK>;
+interface DatabaseProps<B> {
+    callback: (data: B[]) => void;
+    initialQuery?: (query: any) => any;
+}
+
+class DatabaseStorage <B extends { id: string }> {
+    protected currentData: Map<string, B>;
     private table_name: string;
     private isInitialized: boolean = false;
     private realtimeChannel: RealtimeChannel | null = null;
 
     constructor(table_name: string) {
         this.table_name = table_name
-        this.currentData = new Map<string, MBK>();
+        this.currentData = new Map<string, B>();
     }
 
-    protected async realtimeInit(
-        callback: (data: MBK[]) => void, initialQuery?: (query: any) => any): Promise<void> {
+    protected async realtimeInit(db: DatabaseProps<B>): Promise<void> {
         if (this.isInitialized && this.realtimeChannel) {
             console.warn(`Realtime channel for ${this.table_name} is already initialized.`);
-            callback(this.toArray());
+            db.callback(this.toArray());
             return;
         }
 
@@ -29,23 +33,14 @@ class DatabaseStorage <MBK extends { id: string }> {
         this.realtimeChannel.on(
             'postgres_changes',
             { event: '*', schema: 'public', table: this.table_name },
-            (payload: RealtimePostgresChangesPayload<MBK>) => {
-                const processData = (dt: any): MBK => {
-                    if (dt && dt.created_at && typeof dt.created_at === 'string') {
-                        return { ...dt, created_at: new Date(dt.created_at) } as MBK;
-                    }
-                    return dt as MBK;
-                }
-
+            (payload: RealtimePostgresChangesPayload<B>) => {
                 switch(payload.eventType) {
                     case "INSERT": {
-                        const newData = processData(payload.new);
-                        this.currentData.set(newData.id, newData);
+                        this.currentData.set(payload.new.id, payload.new);
                         break;
                     }
                     case "UPDATE": {
-                        const changeData = processData(payload.new);
-                        this.currentData.set(changeData.id, changeData);
+                        this.currentData.set(payload.new.id, payload.new);
                         break;
                     }
                     case "DELETE": {
@@ -54,7 +49,7 @@ class DatabaseStorage <MBK extends { id: string }> {
                         break;
                     }
                 }
-                callback(this.toArray());
+                db.callback(this.toArray());
             }
         );
         try {
@@ -62,31 +57,28 @@ class DatabaseStorage <MBK extends { id: string }> {
             .from(this.table_name)
             .select('*');
 
-            if (initialQuery) query = initialQuery(query);
+            if (db.initialQuery) query = db.initialQuery(query);
 
             const { data, error } = await query;
 
             if (error) {
-                callback([]);
+                db.callback([]);
                 throw new Error(`Error fetching data: ${error.message}`);
             }
 
             this.currentData.clear();
-            data.forEach(dt => {
-                const processed = { ...dt, created_at: new Date(dt.created_at) } as MBK;
-                this.currentData.set(processed.id, processed);
-            });
+            data.forEach(dt => this.currentData.set(dt.id, dt));
 
-            callback(this.toArray());
+            db.callback(this.toArray());
             this.realtimeChannel.subscribe();
             this.isInitialized = true;
         } catch (error) {
-            callback([]);
+            db.callback([]);
             throw new Error(`Failed to show data: ${error}`);
         }
     }
 
-    protected async addToDatabase(newData: Omit<MBK, 'id'>): Promise<string> {
+    protected async addToDatabase(newData: Omit<B, 'id'>): Promise<string> {
         const { data, error } = await supabase
         .from(this.table_name)
         .insert([newData])
@@ -96,7 +88,7 @@ class DatabaseStorage <MBK extends { id: string }> {
         return data[0].id;
     }
 
-    protected async selectedData(id: string): Promise<MBK> { 
+    protected async selectedData(id: string): Promise<B> { 
         const { data, error } = await supabase
         .from(this.table_name)
         .select("*") 
@@ -105,10 +97,10 @@ class DatabaseStorage <MBK extends { id: string }> {
         if (error) throw new Error(`Failed to show selected data: ${error}`);
 
         const item = data[0];
-        return { ...item, created_at: new Date(item.created_at) } as MBK;
+        return { ...item, created_at: new Date(item.created_at) } as B;
     }
 
-    protected async changeSelectedData(id: string, newData: Partial<Omit<MBK, 'id'>>): Promise<void> {
+    protected async changeSelectedData(id: string, newData: Partial<Omit<B, 'id'>>): Promise<void> {
         const { error } = await supabase
         .from(this.table_name)
         .update(newData)
@@ -117,22 +109,25 @@ class DatabaseStorage <MBK extends { id: string }> {
         if (error) throw error;
     }
 
-    protected async deleteSelectedData(id: string): Promise<void> {
-        const { error } = await supabase
-        .from(this.table_name)
-        .delete()
-        .eq('id', id);
+    protected async deleteData(id: string): Promise<void>;
+    protected async deleteData(id?: string): Promise<void>;
+    
+    protected async deleteData(id?: string): Promise<void> {
+        if (id !== undefined) {          
+            const { error } = await supabase
+            .from(this.table_name)
+            .delete()
+            .eq('id', id);
 
-        if (error) throw error;
-    }
+            if (error) throw error;
+        } else {
+            const { error } = await supabase
+            .from(this.table_name)
+            .delete()
+            .not('id', 'is', null);
 
-    protected async deleteAllData(): Promise<void> {
-        const { error } = await supabase
-        .from(this.table_name)
-        .delete()
-        .not('id', 'is', null);
-
-        if (error) throw error;
+            if (error) throw error;
+        }    
     }
 
     teardownStorage(): void {
@@ -144,7 +139,7 @@ class DatabaseStorage <MBK extends { id: string }> {
         }
     }
 
-    protected toArray(): MBK[] {
+    protected toArray(): B[] {
         return Array.from(this.currentData.values());
     }
 }

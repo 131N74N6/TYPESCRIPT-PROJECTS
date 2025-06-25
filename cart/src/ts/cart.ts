@@ -155,10 +155,10 @@ function createProductComponent(chosenProduct: CartItem): HTMLDivElement {
         buttonWrap.append(saveChange, cancelButton);
 
         const newMetaData = document.createElement('div') as HTMLDivElement;
-        newMetaData.className = 'flex flex-col gap-[0.6rem]';
-        newMetaData.append(imageWrapper, goodsName, goodsPrice, newQuantity, buttonWrap);
+        newMetaData.className = 'flex flex-col gap-[0.4rem]';
+        newMetaData.append(goodsName, goodsPrice, newQuantity, buttonWrap);
 
-        productElement.append(newMetaData);
+        productElement.append(imageWrapper, newMetaData);
     }
     return productElement;
 }
@@ -196,7 +196,6 @@ function changeExistingComponent(chosenProductId: string): void {
             component.replaceWith(newComponent);
         } else {
             component.remove();
-
             if (cartStorage.currentData.size === 0) {
                 chosenProductsList.innerHTML = `<div class="error-message">No products selected.</div>`;
             }

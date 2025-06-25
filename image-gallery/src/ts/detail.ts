@@ -1,6 +1,6 @@
 import DatabaseStorage from "./supabase-table";
 import Modal from "./modal";
-import type { GalleryDetails } from "./interfaces";
+import type { GalleryDetails } from "./custom-types";
 import { RemoveFile } from "./supabase-storage";
 
 class GalleryDetail extends DatabaseStorage<GalleryDetails> {
