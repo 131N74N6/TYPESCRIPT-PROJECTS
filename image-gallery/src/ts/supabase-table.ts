@@ -97,7 +97,7 @@ class DatabaseStorage <B extends { id: string }> {
         if (error) throw new Error(`Failed to show selected data: ${error}`);
 
         const item = data[0];
-        return { ...item, created_at: new Date(item.created_at) } as B;
+        return item;
     }
 
     protected async changeSelectedData(id: string, newData: Partial<Omit<B, 'id'>>): Promise<void> {

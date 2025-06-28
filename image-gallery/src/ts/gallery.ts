@@ -16,7 +16,7 @@ class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
     }
     
     async initEventListener(): Promise<void> {
-        await this.realtimeInit((data) => this.showAllImages(data));
+        await this.realtimeInit({ callback: (data: GalleryDisplayer[]) => this.showAllImages(data) });
 
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;

@@ -23,7 +23,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
     constructor() {
         super("image_gallery");
         this.imageId = this.urlParams.get('id');
-        this.realtimeInit(() => this.showGalleryDetail());
+        this.showGalleryDetail();
     }
 
     initEventListener(): void {
@@ -156,7 +156,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
             if (!getImageData) return;
 
             const paths: string[] = getImageData.image_url;
-            await this.deleteSelectedData(id); 
+            await this.deleteData(id); 
             await Promise.all(paths.map(path => RemoveFile(path, this.storageName)));
             
             this.carouselContainer.innerHTML = '';

@@ -7,15 +7,16 @@ export type GalleryPost = {
     title: string;
 }
 
-export type GalleryDisplayer = Exclude<GalleryPost, 'uploader_name' | 'created_at' | 'image_name'>;
+export type GalleryDisplayer = Pick<GalleryPost, 'id' | 'image_url' | 'title'>;
 
-export type GalleryDetails = Exclude<GalleryPost, 'image_name'>;
+export type GalleryDetails = Pick<GalleryPost, 'id' | 'created_at' | 'title' | 'uploader_name' | 'image_url'>;
 
 export type Users = {
     id: string;
-    created_at: string;
+    created_at: Date;
+    email: string;
     username: string;
     password: string;
 }
 
-export type PrivateUsers = Exclude<Users, 'password'>;
+export type PrivateUsers = Pick<Users, 'username' | 'created_at'>;
