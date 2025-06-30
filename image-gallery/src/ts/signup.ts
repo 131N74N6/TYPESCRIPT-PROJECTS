@@ -3,8 +3,9 @@ import supabase from "./supabase-config";
 import DatabaseStorage from "./supabase-table";
 
 class SignUp extends DatabaseStorage<Users> {
-    private signUpField = document.getElementById('sign-up-filed') as HTMLFormElement;
-    private username = document.getElementById('username') as HTMLInputElement;
+    private controller = new AbortController();
+    private signUpForm = document.querySelector('#sign-up-form') as HTMLFormElement;
+    private username = document.querySelector('#username') as HTMLInputElement;
     private email = document.getElementById('email') as HTMLInputElement;
     private password = document.getElementById('password') as HTMLInputElement;
     private signUpMessage = document.getElementById('message') as HTMLDivElement;
@@ -13,11 +14,13 @@ class SignUp extends DatabaseStorage<Users> {
         super('image_gallery_user');
     }
     
-    initSignUp() {
-        this.signUpField.onsubmit = async (event) => await this.signUp(event);
+    initSignUp(): void {
+        this.signUpForm.addEventListener("submit", async (event) => await this.insertNewUser(event), {
+            signal: this.controller.signal
+        }); 
     }
 
-    async signUp(event: SubmitEvent) {
+    async insertNewUser(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         try {
             const { data, error } = await supabase.auth.signUp({
@@ -36,21 +39,28 @@ class SignUp extends DatabaseStorage<Users> {
         } catch (error) {
             this.signUpMessage.textContent = error instanceof Error ? error.message : 'Sign up failed';
         } finally {
-            this.signUpField.reset();
+            this.signUpForm.reset();
         }
     }
 
-    async saveUserData(userData: any) {
-        await this.addToDatabase({
-            created_at: new Date(),
+    async saveUserData(userData: any): Promise<void> {
+        await this.insertData({
             email: userData.email,
-            username: userData.username,
-            password: userData.password,
+            username: userData.user_metadata.username,
+            password: userData.user_metadata.password
         });
+    }
+
+    teardownSignUp(): void {
+        this.controller.abort();
+        this.signUpForm.reset();
+        this.teardownStorage();
     }
 }
 
 const signUp = new SignUp();
+const init = () => signUp.initSignUp();
+const teradown = () => signUp.teardownSignUp();
 
-document.addEventListener('DOMContentLoaded', signUp.initSignUp);
-window.addEventListener('beforeunload', signUp.teardownStorage);
+document.addEventListener('DOMContentLoaded', init);
+window.addEventListener('beforeunload', teradown);

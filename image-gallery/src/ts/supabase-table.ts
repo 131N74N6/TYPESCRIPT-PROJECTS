@@ -78,7 +78,7 @@ class DatabaseStorage <B extends { id: string }> {
         }
     }
 
-    protected async addToDatabase(newData: Omit<B, 'id'>): Promise<string> {
+    protected async insertData(newData: Omit<B, 'id' | 'created_at'>): Promise<string> {
         const { data, error } = await supabase
         .from(this.table_name)
         .insert([newData])
@@ -100,7 +100,7 @@ class DatabaseStorage <B extends { id: string }> {
         return item;
     }
 
-    protected async changeSelectedData(id: string, newData: Partial<Omit<B, 'id'>>): Promise<void> {
+    protected async changeSelectedData(id: string, newData: Partial<Omit<B, 'id' | 'created_at'>>): Promise<void> {
         const { error } = await supabase
         .from(this.table_name)
         .update(newData)

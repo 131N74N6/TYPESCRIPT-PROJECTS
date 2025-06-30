@@ -82,8 +82,7 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
             const imageUrls = await Promise.all(uploadPromises);
             const imageNames = this.imageFiles.map(file => file.name);
             
-            await this.addToDatabase({
-                created_at: new Date(),
+            await this.insertData({
                 uploader_name: this.uploaderName.value.trim() || `user_${Date.now()}`,
                 title: this.imageTitle.value.trim() || `gallery_${Date.now()}`,
                 image_name: imageNames,
