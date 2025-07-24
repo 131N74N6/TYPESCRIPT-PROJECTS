@@ -1,5 +1,5 @@
 import supabase from "./supabase-config";
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";;
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 class DataManager <V extends { id: string }> {
     protected tableName: string;
@@ -30,13 +30,13 @@ class DataManager <V extends { id: string }> {
             (payload: RealtimePostgresChangesPayload<V>) => {
                 switch (payload.eventType) {
                     case 'INSERT': {
-                        const newItem = this.processItem(payload.new);
-                        this.currentData.set(newItem.id, newItem);
+                        const transformedNewData = this.transformsData(payload.new);
+                        this.currentData.set(transformedNewData.id, transformedNewData);
                         break;
                     }
                     case 'UPDATE': {
-                        const updatedItem = this.processItem(payload.new);
-                        this.currentData.set(updatedItem.id, updatedItem);
+                        const transformedChangeData = this.transformsData(payload.new);
+                        this.currentData.set(transformedChangeData.id, transformedChangeData);
                         break;
                     }
                     case 'DELETE': {
@@ -61,8 +61,8 @@ class DataManager <V extends { id: string }> {
 
         this.currentData.clear();
         data.forEach(dt => {
-            const processed = this.processItem(dt);
-            this.currentData.set(processed.id, processed);
+            const transformedData = this.transformsData(dt)
+            this.currentData.set(transformedData.id, transformedData);
         });
 
         callback(this.toArray());
@@ -70,15 +70,14 @@ class DataManager <V extends { id: string }> {
         this.isInitialized = true;
     }
 
-    
-    private processItem(item: any): V {
+    private transformsData(item: any): V {
         if (item && item.created_at && typeof item.created_at === "string") {
             return { ...item, created_at: new Date(item.created_at) } as V;
         }
         return item as V;
     }
 
-    protected async insertData(new_data: Omit<V, 'id'>): Promise<string> {
+    protected async insertData(new_data: Omit<V, 'id' | 'created_at'>): Promise<string> {
         const { data, error } = await supabase
         .from(this.tableName)
         .insert([new_data])

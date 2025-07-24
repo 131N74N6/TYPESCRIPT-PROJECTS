@@ -52,6 +52,7 @@ class DatabaseStorage <B extends { id: string }> {
                 db.callback(this.toArray());
             }
         );
+        
         try {
             let query = supabase
             .from(this.table_name)

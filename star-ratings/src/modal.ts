@@ -7,7 +7,7 @@ class Modal {
 
     constructor(notification: HTMLElement) {
         this.showModal();
-        this.notification = notification
+        this.notification = notification;
     }
 
     createModalComponent(message: string): void {

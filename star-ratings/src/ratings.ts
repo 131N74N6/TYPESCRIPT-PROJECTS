@@ -9,6 +9,19 @@ interface Rating {
     created_at: Date;
 }
 
+interface RatingProps {
+    starWidgets: HTMLFormElement; 
+    username: HTMLInputElement; 
+    comment: HTMLTextAreaElement; 
+    ratingsList: HTMLElement; 
+    saveButton: HTMLButtonElement; 
+    notification: HTMLElement; 
+    header: HTMLElement; 
+    ascendSort: HTMLInputElement; 
+    descendSort: HTMLInputElement; 
+    ratingFilter: NodeListOf<HTMLInputElement>
+}
+
 class UserRating extends DataManager<Rating> {
     private header: HTMLElement;
     private ascendSort: HTMLInputElement; 
@@ -25,25 +38,20 @@ class UserRating extends DataManager<Rating> {
     private controllers: AbortController;
     private selectedId: string | null = null;
 
-    constructor(
-        starWidgets: HTMLFormElement, username: HTMLInputElement, comment: HTMLTextAreaElement, 
-        ratingsList: HTMLElement, saveButton: HTMLButtonElement, notification: HTMLElement, 
-        header: HTMLElement, ascendSort: HTMLInputElement, descendSort: HTMLInputElement, 
-        ratingFilter: NodeListOf<HTMLInputElement>
-    ) {
+    constructor(props: RatingProps) {
         super("ratings_list");
-        this.header = header;
-        this.ascendSort = ascendSort;
-        this.descendSort = descendSort;
-        this.ratingFilter = ratingFilter;
+        this.header = props.header;
+        this.ascendSort = props.ascendSort;
+        this.descendSort = props.descendSort;
+        this.ratingFilter = props.ratingFilter;
 
-        this.starWidgets = starWidgets;
-        this.username = username;
-        this.comment = comment;
-        this.ratingsList = ratingsList;
-        this.saveButton = saveButton;
+        this.starWidgets = props.starWidgets;
+        this.username = props.username;
+        this.comment = props.comment;
+        this.ratingsList = props.ratingsList;
+        this.saveButton = props.saveButton;
         this.controllers = new AbortController();
-        this.modalComponent = new Modal(notification);
+        this.modalComponent = new Modal(props.notification);
     }
 
     async setupEventListeners(): Promise<void> {
@@ -60,14 +68,11 @@ class UserRating extends DataManager<Rating> {
             if (target.closest("#ascend-sort")) this.sortFromOldest();
             else if (target.closest("#descend-sort")) this.sortFromNewest();
             else if (target.closest('.header input[type="checkbox"]')) {
-                this.ratingFilter.forEach(rateFilter => {
-                    rateFilter.addEventListener("change", () => {
-                        this.rating = Array.from(this.ratingFilter)
-                        .filter(getData => getData.checked)
-                        .map(getValue => Number(getValue.value) as Rating['rating']);
-                        this.showAllRatings(this.toArray());
-                    }, { signal: this.controllers.signal });
-                });
+                this.rating = Array.from(this.ratingFilter)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => Number(checkbox.value) as Rating['rating']);
+                
+                this.showAllRatings(this.toArray());
             }
         }, { signal: this.controllers.signal });
 
@@ -165,7 +170,6 @@ class UserRating extends DataManager<Rating> {
                 });
             } else {
                 await this.insertData({
-                    created_at: new Date(),
                     name: this.username.value.trim() || `user_${Date.now()}`,
                     rating: Number(createRating.value.trim()),
                     comment: this.comment.value.trim()

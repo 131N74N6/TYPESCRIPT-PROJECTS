@@ -12,10 +12,11 @@ const username = document.getElementById("username") as HTMLInputElement;
 const userOpinion = document.getElementById("comment") as HTMLTextAreaElement;
 const submitButton = document.getElementById("save-btn") as HTMLButtonElement;
 
-const user: UserRating = new UserRating(
-    starWidgets, username, userOpinion, ratingsList, submitButton, notification, header,
-    ascendSort, descendSort, ratingFilter
-);
+const user: UserRating = new UserRating({ 
+    starWidgets: starWidgets, username: username, comment: userOpinion, ratingsList: ratingsList, 
+    saveButton: submitButton, notification: notification, header: header, ascendSort: ascendSort, 
+    descendSort: descendSort, ratingFilter: ratingFilter 
+});
 
 async function init(): Promise<void> {
     await user.setupEventListeners();

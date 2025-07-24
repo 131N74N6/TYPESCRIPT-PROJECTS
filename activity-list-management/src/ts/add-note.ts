@@ -55,7 +55,6 @@ function NoteFormHnadler() {
 
         try {
             await tableStorage.insert({
-                created_at: new Date(),
                 note_title: trimmedTitle,
                 note_content: noteContent.value
             });

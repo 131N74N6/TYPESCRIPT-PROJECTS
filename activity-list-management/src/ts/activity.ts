@@ -81,10 +81,7 @@ function ActivityManagement() {
             return;
         }
 
-        const newActivity: Omit<Activity, 'id'> = {
-            act_name: inputValue,
-            created_at: new Date()
-        }
+        const newActivity = { act_name: inputValue }
 
         if (selectedId === null) {
             if (!isExist) {

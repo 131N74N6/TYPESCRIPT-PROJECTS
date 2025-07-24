@@ -29,13 +29,6 @@ const DataStorages = <N extends { id: number }>(tableName: string) => {
         realtimeChannel: null as RealtimeChannel | null,
         deleteData,
 
-        processItem(item: any): N {
-            if (item && item.created_at && typeof item.created_at === 'string') {
-                return { ...item, created_at: new Date(item.created_at) } as N;
-            }
-            return item as N;
-        },
-
         async realtimeInit(callback: (data: N[]) => void): Promise<void>  {
             if (this.isInitialize && this.realtimeChannel) {
                 console.warn(`Storage for ${tableName} has been initialized`);
@@ -55,13 +48,11 @@ const DataStorages = <N extends { id: number }>(tableName: string) => {
                 (payload: RealtimePostgresChangesPayload<N>) => {
                     switch (payload.eventType) {
                         case 'INSERT': {
-                            const newItem = this.processItem(payload.new);
-                            this.currentData.set(newItem.id, newItem);
+                            this.currentData.set(payload.new.id, payload.new);
                             break;
                         }
                         case 'UPDATE': {
-                            const updatedItem = this.processItem(payload.new);
-                            this.currentData.set(updatedItem.id, updatedItem);
+                            this.currentData.set(payload.new.id, payload.new);
                             break;
                         }
                         case 'DELETE': {
@@ -85,17 +76,14 @@ const DataStorages = <N extends { id: number }>(tableName: string) => {
             }
 
             this.currentData.clear();
-            data.forEach(dt => {
-                const processed = this.processItem(dt);
-                this.currentData.set(processed.id, processed);
-            });
+            data.forEach(dt => this.currentData.set(dt.id, dt));
 
             callback(this.toArray());
-            this.realtimeChannel.subscribe(); // Mulai subscribe setelah data awal dimuat
+            this.realtimeChannel.subscribe();
             this.isInitialize = true;
         },
 
-        async addToStorage(data: Omit<N, 'id'>): Promise<number> {
+        async addToStorage(data: Omit<N, 'id' | 'created_at'>): Promise<number> {
             const { data: inserted, error } = await supabase
             .from(tableName)
             .insert([data])

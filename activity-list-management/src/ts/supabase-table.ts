@@ -23,22 +23,15 @@ function TableStorage<SS extends { id: string }>(tableName: string) {
             'postgres_changes',
             { event: '*', schema: 'public', table: tableName },
             (payload: RealtimePostgresChangesPayload<SS>) => {
-                const processItem = (item: any): SS => {
-                    if (item && item.created_at && typeof item.created_at === 'string') {
-                        return { ...item, created_at: new Date(item.created_at) } as SS;
-                    } 
-                    return item as SS;
-                }
-
                 switch (payload.eventType) {
                     case 'INSERT': {
-                        const newItem = processItem(payload.new);
-                        currentData.set(newItem.id, newItem);
+                        const transformedNewData = payload.new;
+                        currentData.set(transformedNewData.id, transformedNewData);
                         break;
                     }
                     case 'UPDATE': {
-                        const updatedItem = processItem(payload.new);
-                        currentData.set(updatedItem.id, updatedItem);
+                        const transformedChangeData = payload.new;
+                        currentData.set(transformedChangeData.id, transformedChangeData);
                         break;
                     }
                     case 'DELETE': {
@@ -63,8 +56,8 @@ function TableStorage<SS extends { id: string }>(tableName: string) {
 
         currentData.clear();
         data.forEach(dt => {
-            const processed = { ...dt, created_at: new Date(dt.created_at) } as SS;
-            currentData.set(processed.id, processed);
+            const transformedData = transformData(dt);
+            currentData.set(transformedData.id, transformedData);
         });
 
         callback(toArray());
@@ -72,7 +65,14 @@ function TableStorage<SS extends { id: string }>(tableName: string) {
         isInitialized = true;
     }
 
-    async function insert(newData: Omit<SS, 'id'>): Promise<string> {
+    function transformData(item: any): SS {
+        if (item && item.created_at && typeof item.created_at === "string") {
+            return { ...item, created_at: new Date(item.created_at) } as SS;
+        }
+        return item as SS;
+    }
+
+    async function insert(newData: Omit<SS, 'id' | 'created_at'>): Promise<string> {
         const { data: inserted, error } = await supabase
         .from(tableName)
         .insert([newData])
