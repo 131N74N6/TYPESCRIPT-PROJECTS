@@ -30,7 +30,7 @@ class SignIn extends DatabaseStorage<User> {
 
         await this.selectedData(data.user.id);
 
-        setTimeout(() => window.location.href = 'user.html', 500);
+        setTimeout(() => window.location.href = '/html/user.html', 500);
     }
 
     teardownSignIn(): void {

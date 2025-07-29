@@ -1,7 +1,7 @@
 import supabase from "./supabase-config";
 import { RealtimeChannel, type RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-const Storage = <TT extends { id: string }>(tableName: string) => ({
+const TableStorage = <TT extends { id: string }>(tableName: string) => ({
     currentData: new Map<string, TT>() as Map<string, TT>,
     realtimeChannel: null as RealtimeChannel | null,
     isInitialize: false as boolean,
@@ -23,21 +23,15 @@ const Storage = <TT extends { id: string }>(tableName: string) => ({
             'postgres_changes',
             { event: '*', schema: 'public', table: tableName },
             (payload: RealtimePostgresChangesPayload<TT>) => {
-                const processItem = (item: any): TT => {
-                    if (item && item.created_at && typeof item.created_at === 'string') {
-                        return { ...item, created_at: new Date(item.created_at) } as TT;
-                    } 
-                    return item as TT;
-                }
 
                 switch (payload.eventType) {
                     case 'INSERT': {
-                        const newItem = processItem(payload.new);
+                        const newItem = this.transformedData(payload.new);
                         this.currentData.set(newItem.id, newItem);
                         break;
                     }
                     case 'UPDATE': {
-                        const updatedItem = processItem(payload.new);
+                        const updatedItem = this.transformedData(payload.new);
                         this.currentData.set(updatedItem.id, updatedItem);
                         break;
                     }
@@ -62,8 +56,8 @@ const Storage = <TT extends { id: string }>(tableName: string) => ({
         
         this.currentData.clear();
         data.forEach(dt => {
-            const processed = { ...dt,  created_at: new Date(dt.created_at) } as TT;
-            this.currentData.set(processed.id, processed);
+            const transformData = this.transformedData(dt);
+            this.currentData.set(transformData.id, transformData);
         });
 
         callback(this.toArray());
@@ -71,7 +65,14 @@ const Storage = <TT extends { id: string }>(tableName: string) => ({
         this.isInitialize = true;
     },
 
-    async addToStorage(newData: Omit<TT, 'id'>): Promise<string> {
+    transformedData(item: any): TT {
+        if (item && item.created_at && typeof item.created_at === 'string') {
+            return { ...item, created_at: new Date(item.created_at) } as TT;
+        } 
+        return item as TT;
+    },
+
+    async insertData(newData: Omit<TT, 'id' | 'created_at'>): Promise<string> {
         const { data: inserted, error } = await supabase
         .from(tableName)
         .insert([newData])
@@ -103,7 +104,7 @@ const Storage = <TT extends { id: string }>(tableName: string) => ({
         const { error } = await supabase
         .from(tableName)
         .delete()
-        .not('id', 'is', null); // Delete all records
+        .not('id', 'is', null);
 
         if (error) throw error
     },
@@ -122,4 +123,4 @@ const Storage = <TT extends { id: string }>(tableName: string) => ({
     }
 });
 
-export default Storage;
+export default TableStorage;

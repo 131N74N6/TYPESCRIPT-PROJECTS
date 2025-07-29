@@ -1,4 +1,4 @@
-import Displayer from './balance';
+import BalanceHandler from './balance';
 
 const getBalance = document.getElementById("balance") as HTMLInputElement;
 const balanceInputField = document.getElementById("balance-input-field") as HTMLFormElement;
@@ -13,10 +13,10 @@ const incomeTotal = document.querySelector(".income-total") as HTMLElement;
 const expenseTotal = document.querySelector(".expense-total") as HTMLElement;
 const income_expense = document.querySelector(".income_expense") as HTMLElement;
 
-const displayer = Displayer(
+const displayer = BalanceHandler({ 
     getBalance, balanceInputField, balanceList, notification, oldest, newest, incomeTotal, 
-    expenseTotal, income_expense, description
-);
+    expenseTotal, income_expense, description 
+});
 
 async function init(): Promise<void> {
     await displayer.initEventListeners();

@@ -14,11 +14,11 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
     private galleryDetailModal: Modal = new Modal(this.notification__);
     private storageName = 'gallery';
 
-    private uploaderName = document.querySelector(".uploader-name") as HTMLParagraphElement;
-    private carouselContainer = document.querySelector(".carousel-container") as HTMLElement; 
-    private navigationContainer = document.querySelector(".navigation") as HTMLElement; 
-    private imageTitle = document.querySelector(".image-title") as HTMLParagraphElement;
-    private uploadedAt = document.querySelector(".created-at") as HTMLParagraphElement;
+    private uploaderName = document.querySelector("#uploader-name") as HTMLParagraphElement;
+    private carouselContainer = document.querySelector("#carousel-container") as HTMLElement; 
+    private navigationContainer = document.querySelector("#navigation") as HTMLElement; 
+    private imageTitle = document.querySelector("#image-title") as HTMLParagraphElement;
+    private uploadedAt = document.querySelector("#created-at") as HTMLParagraphElement;
 
     constructor() {
         super("image_gallery");
@@ -29,16 +29,15 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
     initEventListener(): void {
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
-            // Gunakan closest agar lebih tangguh
-            if (target.closest(".left-button")) {
+            if (target.closest("#left-button")) {
                 if (this.totalSlide > 1) { // Hanya geser jika ada lebih dari 1 slide
                     this.prevSlide();
                 }
-            } else if (target.closest(".right-button")) {
+            } else if (target.closest("#right-button")) {
                 if (this.totalSlide > 1) { // Hanya geser jika ada lebih dari 1 slide
                     this.nextSlide();
                 }
-            } else if (target.closest(".delete-button")) {
+            } else if (target.closest("#delete-button")) {
                 if (this.imageId) {
                     this.deletePost(this.imageId);
                 }
@@ -81,10 +80,10 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
 
         detail.image_url.forEach((image, index) => {
             const imageWrap = document.createElement("div") as HTMLDivElement;
-            imageWrap.className = "image-wrap";
+            imageWrap.className = "flex-shrink-0 w-full h-full relative overflow-hidden";
 
             const imageElement = document.createElement("img") as HTMLImageElement;
-            imageElement.className = "images";
+            imageElement.className = "w-full h-full object-contain block";
             imageElement.src = image;
             imageElement.alt = `${detail.title} - Image ${index + 1}`;
 

@@ -8,24 +8,24 @@
     <title>Detail</title>
 </head>
 <body>
-    <section id="notification__"></section>
-    <header>
-        <a href="gallery.html">Back</a>
-        <a href="index.html">Add Post</a>
+    <section id="notification__" class="fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 bg-yellow-300 text-yellow-800 hidden"></section>
+    <header class="bg-[#420039] p-4 flex gap-4 items-center shadow-md">
+        <a href="gallery.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">Back</a>
+        <a href="index.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">Add Post</a>
     </header>
-    <main id="gallery-detail">
-        <section class="image-group">
-            <div class="carousel-container"></div>
-            <div class="navigation">
-                <button type="button" class="left-button">&larr;</button>
-                <button type="button" class="right-button">&rarr;</button>
+    <main id="gallery-detail" class="container mx-auto p-4 flex-grow grid grid-cols-1 md:grid-cols-[0.55fr_300px] gap-4 md:gap-8 lg:gap-12 py-8">
+        <section id="image-group" class="relative overflow-hidden aspect-square rounded-lg shadow-xl">
+            <div id="carousel-container" class="flex h-full transition-transform duration-300 ease-in-out"></div>
+            <div id="navigation" class="absolute inset-0 flex items-center justify-between px-4" style="display: none;">
+                <button type="button" id="left-button" class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white transition-colors duration-200">&larr;</button>
+                <button type="button" id="right-button" class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white transition-colors duration-200">&rarr;</button>
             </div>
         </section>
-        <div class="detail-info">
-            <p class="uploader-name"></p>
-            <p class="image-title"></p>
-            <p class="created-at"></p>
-            <button type="button" class="delete-button">Delete</button>
+        <div id="detail-info" class="bg-white p-6 rounded-lg shadow-xl flex flex-col space-y-4">
+            <p id="uploader-name" class="text-gray-700 text-lg font-medium"></p>
+            <p id="image-title" class="text-gray-600 text-xl font-semibold"></p>
+            <p id="created-at" class="text-gray-500 text-sm"></p>
+            <button type="button" id="delete-button" class="mt-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-colors duration-200">Delete</button>
         </div>
     </main>
     <script type="module" src="../ts/detail.ts"></script>

@@ -61,12 +61,14 @@ class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
             } else {
                 this.imagesGallery.innerHTML = '';
                 this.imagesGallery.textContent = 'No Image Uploaded';
+                this.imagesGallery.classList.add('text-gray-600', 'text-center', 'col-span-full', 'py-8');
             }
         } catch (error: any) {
             this.makeNotification.createComponent(`Error: ${error.message || error}`);
             this.makeNotification.showComponent();
             this.imagesGallery.innerHTML = '';
             this.imagesGallery.textContent = 'No Image Uploaded';
+            this.imagesGallery.classList.add('text-red-600', 'text-center', 'col-span-full', 'py-8');
         }
     }
 
@@ -75,14 +77,15 @@ class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
         link.href = `detail.html?id=${detail.id}`;
         
         const imagePost = document.createElement("div") as HTMLDivElement;
-        imagePost.className = "image-post";
+        imagePost.className = "image-post-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300";
 
         const imageWrap = document.createElement("div") as HTMLDivElement;
-        imageWrap.className = "image-wrap";
+        imageWrap.className = "image-wrap w-full aspect-square overflow-hidden rounded-t-lg";
 
         detail.image_url.forEach((image_src) => {
             const imageContent = document.createElement("img") as HTMLImageElement;
             imageContent.src = image_src;
+            imageContent.className = "w-full h-full object-cover block";
             imageWrap.appendChild(imageContent);
         });
 

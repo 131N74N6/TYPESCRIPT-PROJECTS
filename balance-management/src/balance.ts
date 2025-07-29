@@ -1,56 +1,45 @@
-import Storage from "./storage";
+import TableStorage from "./supabase-table";
 import Modal from "./modal";
+import type { BalanceDetail, BalanceHandlerProps } from "./custom-types";
 
-type BalanceDetail = {
-    id: string;
-    amount: number;
-    type: string;
-    created_at: Date;
-    description: string;
-}
-
-const storage = Storage<BalanceDetail>("finance_list");
+const balanceTable = TableStorage<BalanceDetail>("finance_list");
 const controller = new AbortController();
 
-const Displayer = (
-    getBalance: HTMLInputElement, balanceInputField: HTMLFormElement, balanceList: HTMLElement, 
-    notification: HTMLElement, oldest: HTMLInputElement, newest: HTMLInputElement, incomeTotal: HTMLElement,
-    expenseTotal: HTMLElement, income_expense: HTMLElement, description: HTMLInputElement
-) => ({
+const BalanceHandler = (props: BalanceHandlerProps) => ({
     getSelectedId: null as string | null,
-    balanceNotification: Modal(notification),
+    balanceNotification: Modal(props.notification),
     totalIncome: 0 as number,
     totalExpense: 0 as number,
     balanceDifference: 0 as number,
 
     async initEventListeners(): Promise<void> {
-        await storage.realtimeInit((data) => this.showAllBalanceData(data));
+        await balanceTable.realtimeInit((data) => this.showAllBalanceData(data));
 
         document.addEventListener("click", async (event) => {
             const target = event.target as HTMLElement;
             if (target.closest("#delete-all-list")) await this.deleteAllBalanceList();
         }, { signal: controller.signal });
 
-        balanceInputField.addEventListener("submit", async (event) => await this.submitData(event), { 
+        props.balanceInputField.addEventListener("submit", async (event) => await this.submitData(event), { 
             signal: controller.signal 
         });
 
-        oldest.addEventListener("change", () => { 
-            newest.checked = false; 
-            this.showAllBalanceData(storage.toArray());
+        props.oldest.addEventListener("change", () => { 
+            props.newest.checked = false; 
+            this.showAllBalanceData(balanceTable.toArray());
             console.log("testing");
         }, { signal: controller.signal });
 
-        newest.addEventListener("change", () => { 
-            oldest.checked = false; 
-            this.showAllBalanceData(storage.toArray());
+        props.newest.addEventListener("change", () => { 
+            props.oldest.checked = false; 
+            this.showAllBalanceData(balanceTable.toArray());
         }, { signal: controller.signal });
     },
 
     async submitData(event: SubmitEvent): Promise<void> {
         event.preventDefault();
-        const trimmedAmount = Number(getBalance.value.trim());
-        const trimmedDescription = description.value.trim();
+        const trimmedAmount = Number(props.getBalance.value.trim());
+        const trimmedDescription = props.description.value.trim();
         const selectedType = (document.querySelector('input[name="category"]:checked') as HTMLInputElement);
 
         if (isNaN(trimmedAmount) || !selectedType) {
@@ -59,9 +48,8 @@ const Displayer = (
             return;
         }
         
-        await storage.addToStorage({
-            created_at: new Date(),
-            amount: Number(getBalance.value.trim()),
+        await balanceTable.insertData({
+            amount: Number(props.getBalance.value.trim()),
             type: selectedType.value,
             description: trimmedDescription || '-'
         });
@@ -70,7 +58,7 @@ const Displayer = (
     },
 
     resetForm(): void {
-        balanceInputField.reset();
+        props.balanceInputField.reset();
         this.getSelectedId = null;
     },
 
@@ -84,11 +72,11 @@ const Displayer = (
             if (balanceData.length > 0) {
                 let modifiedData = balanceData;
 
-                if (oldest.checked) {
+                if (props.oldest.checked) {
                     modifiedData = [...balanceData].sort((a: BalanceDetail, b: BalanceDetail) => {
                         return a.created_at.getTime() - b.created_at.getTime()
                     });
-                } else if (newest.checked) {
+                } else if (props.newest.checked) {
                     modifiedData = [...balanceData].sort((a: BalanceDetail, b: BalanceDetail) => {
                         return b.created_at.getTime() - a.created_at.getTime()
                     });
@@ -103,36 +91,36 @@ const Displayer = (
                     fragment.appendChild(this.createListComponent(detail));
                 });
                 
-                balanceList.innerHTML = '';
-                balanceList.appendChild(fragment);
+                props.balanceList.innerHTML = '';
+                props.balanceList.appendChild(fragment);
 
                 this.balanceDifference = this.totalIncome - this.totalExpense;
-                incomeTotal.textContent = `Income = Rp ${this.totalIncome.toLocaleString()}`;
-                expenseTotal.textContent = `Expense = Rp ${this.totalExpense.toLocaleString()}`;
-                income_expense.textContent = `Both Total = Rp ${this.balanceDifference.toLocaleString()}`;
+                props.incomeTotal.textContent = `Income = Rp ${this.totalIncome.toLocaleString()}`;
+                props.expenseTotal.textContent = `Expense = Rp ${this.totalExpense.toLocaleString()}`;
+                props.income_expense.textContent = `Both Total = Rp ${this.balanceDifference.toLocaleString()}`;
             } else {
                 this.totalIncome = 0;
                 this.totalExpense = 0;
                 this.balanceDifference = 0;
 
-                incomeTotal.textContent = `Income = Rp 0`;
-                expenseTotal.textContent = `Expense = Rp 0`;
-                income_expense.textContent = `Both Total = Rp 0`;
+                props.incomeTotal.textContent = `Income = Rp 0`;
+                props.expenseTotal.textContent = `Expense = Rp 0`;
+                props.income_expense.textContent = `Both Total = Rp 0`;
                 
-                balanceList.innerHTML = '';
-                balanceList.textContent = "...Empty...";
+                props.balanceList.innerHTML = '';
+                props.balanceList.textContent = "...Empty...";
             }
         } catch (error) {
             this.totalIncome = 0;
             this.totalExpense = 0;
             this.balanceDifference = 0;
 
-            incomeTotal.textContent = `Income = Rp 0`;
-            expenseTotal.textContent = `Expense = Rp 0`;
-            income_expense.textContent = `Both Total = Rp 0`;
+            props.incomeTotal.textContent = `Income = Rp 0`;
+            props.expenseTotal.textContent = `Expense = Rp 0`;
+            props.income_expense.textContent = `Both Total = Rp 0`;
             
-            balanceList.innerHTML = '';
-            balanceList.textContent = `Failed to load balance: ${error}`;
+            props.balanceList.innerHTML = '';
+            props.balanceList.textContent = `Failed to load balance: ${error}`;
         }
     },
 
@@ -208,7 +196,7 @@ const Displayer = (
                 }
 
                 try {
-                    await storage.changeSelectedData(detail.id, {
+                    await balanceTable.changeSelectedData(detail.id, {
                         amount: trimmedNewAmount,
                         type: selectedType.value,
                         description: trimmedNewDescription || '-'
@@ -272,15 +260,15 @@ const Displayer = (
             deleteButton.textContent = "Delete";
             deleteButton.className = "delete-button";
             deleteButton.onclick = async () => {
-                const balanceData = storage.toArray();
+                const balanceData = balanceTable.toArray();
                 try {
                     if (balanceData.length > 0) {
                         await this.deleteSelectedBalance(detail.id);
                     } else {                        
                         this.balanceNotification.createModal('No balance added!');
                         this.balanceNotification.showModal();
-                        balanceList.innerHTML = '';
-                        balanceList.textContent = "...Empty...";
+                        props.balanceList.innerHTML = '';
+                        props.balanceList.textContent = "...Empty...";
                     }
                 } catch (error) {
                     this.balanceNotification.createModal(`Failed to delete: ${error}`);
@@ -296,13 +284,13 @@ const Displayer = (
     },
 
     async deleteSelectedBalance(id: string): Promise<void> {
-        const balanceData = storage.toArray();
+        const balanceData = balanceTable.toArray();
         try {
             if (balanceData.length > 0) {
-                await storage.deleteSelectedData(id);
+                await balanceTable.deleteSelectedData(id);
             } else {
-                balanceList.innerHTML = '';
-                balanceList.textContent = "...Empty...";
+                props.balanceList.innerHTML = '';
+                props.balanceList.textContent = "...Empty...";
             }
         } catch (error) {
             this.balanceNotification.createModal(`Failed to delete data: ${error}`);
@@ -311,12 +299,12 @@ const Displayer = (
     },
 
     async deleteAllBalanceList(): Promise<void> {
-        const balanceData = storage.toArray();
+        const balanceData = balanceTable.toArray();
         try {
             if (balanceData.length > 0) {
-                await storage.deleteAllData();
-                balanceList.innerHTML = '';
-                balanceList.textContent = "...Empty...";
+                await balanceTable.deleteAllData();
+                props.balanceList.innerHTML = '';
+                props.balanceList.textContent = "...Empty...";
             } else {
                 this.balanceNotification.createModal('No data added!');
                 this.balanceNotification.showModal();
@@ -331,14 +319,14 @@ const Displayer = (
         this.resetForm();
         controller.abort();
         this.balanceNotification.teardownModal();
-        storage.teardownStorage();
+        balanceTable.teardownStorage();
     },
 
     updateExistingComponent(balanceId: string): void {
-        const existingComponent = balanceList.querySelector(`.balance-wrap[data-id="${balanceId}"]`);
-        const balanceData = storage.toArray();
+        const existingComponent = props.balanceList.querySelector(`.balance-wrap[data-id="${balanceId}"]`);
+        const balanceData = balanceTable.toArray();
         if (existingComponent) {
-            const detail = storage.currentData.get(balanceId);
+            const detail = balanceTable.currentData.get(balanceId);
             if (detail) {
                 const newComponent = this.createListComponent(detail);
                 newComponent.dataset.id = balanceId;
@@ -347,8 +335,8 @@ const Displayer = (
                 existingComponent.remove();
 
                 if (balanceData.length === 0) {
-                    balanceList.innerHTML = '';
-                    balanceList.textContent = "...Empty...";
+                    props.balanceList.innerHTML = '';
+                    props.balanceList.textContent = "...Empty...";
                 }
             }
         } else {
@@ -357,4 +345,4 @@ const Displayer = (
     }
 });
 
-export default Displayer;
+export default BalanceHandler;

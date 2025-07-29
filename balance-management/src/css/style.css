@@ -105,6 +105,11 @@ input[type="text"] {
     border-radius: 0.5rem;
 }
 
+.form-button-wrap {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
 input[type="text"]::placeholder {
     color: var(--air-superiority-blue);
 }
