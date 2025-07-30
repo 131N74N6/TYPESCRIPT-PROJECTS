@@ -7,15 +7,15 @@
     <link rel="stylesheet" href="../css/index.css"/>
     <title>Sign Up</title>
 </head>
-<body class="bg-[#420039] relative z-10">
-    <main id="sign-up-page" class="inset-0 fixed flex justify-center items-center z-50">
-        <form id="sign-up-form" class="bg-[#932F6D] flex flex-col gap-[2.5rem] p-[1rem] w-[350px]">
-            <input type="text" placeholder="username" id="username" class="border-[2px] border-[#E07BE0] p-[0.5rem] text-[1rem] text-[#E07BE0] font-[500] outline-0"/>
-            <input type="email" placeholder="email" id="email"  class="border-[2px] border-[#E07BE0] p-[0.5rem] text-[1rem] text-[#E07BE0] font-[500] outline-0"/>
-            <input type="password" placeholder="password" id="password"  class="border-[2px] border-[#E07BE0] p-[0.5rem] text-[1rem] text-[#E07BE0] font-[500] outline-0"/>
-            <div id="message"></div>
-            <button type="submit" id="sign-up-button" class="cursor-pointer bg-[#DCCCFF] text-[#932F6D] text-[0.9rem] font-[500] p-[0.4rem]">Sign Up</button>
-            <a href="signin.html"><span class="cursor-pointer bg-[#DCCCFF] text-[#932F6D] text-[0.9rem] font-[500] p-[0.4rem]">Sign In</span></a>
+<body>
+    <main id="sign-up-page" class="flex justify-center items-center h-[100dvh]">
+        <form id="sign-up-form" class="flex flex-col gap-[1.5rem] p-[1.5rem] w-[320px] shadow-[0px_0px_5px_rgba(0,0,0,0.33)]">
+            <div class="text-[1.3rem] text-center font-[600]">Hello</div>
+            <input type="text" placeholder="your username" id="username" class="font-[600] border-[1px] outline-0 p-[0.5rem] text-[0.95rem] border-[rgba(0,0,0,0.33)]"/>
+            <input type="email" placeholder="your@gmail.com" id="email" class="font-[600] border-[1px] outline-0 p-[0.5rem] text-[0.95rem] border-[rgba(0,0,0,0.33)]"/>
+            <input type="password" placeholder="password" id="password" class="font-[600] border-[1px] outline-0 p-[0.5rem] text-[0.95rem] border-[rgba(0,0,0,0.33)]"/>
+            <div class="text-[1rem] text-center">Already have account? <a class="text-blue-600 text-[1rem] cursor-pointer" href="signin.html">Sign In</a></div>
+            <button type="submit" id="sign-up-button" class="bg-[#db819e] font-[500] text-white p-[0.46rem] cursor-pointer outline-0 border-0">Sign Up</button>
         </form>
     </main>
     <script type="module" src="../ts/signup.ts"></script>

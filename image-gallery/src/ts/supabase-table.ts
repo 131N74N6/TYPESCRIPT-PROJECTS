@@ -1,4 +1,4 @@
-import supabase from "./supabase-config";
+import { supabase } from "./supabase-config";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 interface DatabaseProps<B> {

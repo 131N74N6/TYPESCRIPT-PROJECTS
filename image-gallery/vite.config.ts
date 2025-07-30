@@ -13,8 +13,8 @@ export default defineConfig({
         emptyOutDir: true,
         rollupOptions: {
             input: {
-                main: resolve(root, 'html', 'index.html'),
-                signin: resolve(root, 'html', 'signin.html'),
+                add_post: resolve(root, 'html', 'add-post.html'),
+                main: resolve(root, 'html', 'signin.html'),
                 signup: resolve(root, 'html', 'signup.html'),
                 gallery: resolve(root, 'html', 'gallery.html'),
                 detail: resolve(root, 'html', 'detail.html')

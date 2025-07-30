@@ -1,5 +1,5 @@
 import type { User } from "@supabase/supabase-js";
-import supabase from "./supabase-config";
+import { supabase } from "./supabase-config";
 import DatabaseStorage from "./supabase-table";
 
 class SignIn extends DatabaseStorage<User> {

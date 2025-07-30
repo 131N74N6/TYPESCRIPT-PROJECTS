@@ -1,4 +1,4 @@
-import supabase from "./supabase-config";
+import { supabase } from "./supabase-config";
 
 async function InsertFile(file: File, storageName: string): Promise<string> {
     const sanitizedFileName = file.name

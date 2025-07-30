@@ -1,5 +1,5 @@
 import type { Users } from "./custom-types";
-import supabase from "./supabase-config";
+import { supabase } from "./supabase-config";
 import DatabaseStorage from "./supabase-table";
 
 class SignUp extends DatabaseStorage<Users> {

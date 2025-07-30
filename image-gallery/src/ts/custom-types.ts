@@ -20,3 +20,7 @@ export type Users = {
 }
 
 export type PrivateUsers = Pick<Users, 'username' | 'created_at'>;
+
+export type UserGalleryDisplay = GalleryDisplayer & {
+    user_id: string; 
+}

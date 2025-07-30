@@ -5,14 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
     <link rel="stylesheet" href="../css/index.css"/>
-    <title>Welcome</title>
+    <title>Sign In</title>
 </head>
 <body>
-    <main id="sign-in-page">
-        <form id="sign-in-field">
-            <input type="email" placeholder="email" id="email"/>
-            <input type="password" placeholder="password" id="password"/>
-            <button type="submit" id="sign-in-button">Sign In</button>
+    <main id="sign-in-page" class="flex justify-center items-center h-[100dvh]">
+        <form id="sign-in-field" class="flex flex-col gap-[1.5rem] p-[1.5rem] w-[320px] shadow-[0px_0px_5px_rgba(0,0,0,0.33)]">
+            <div class="text-[1.3rem] text-center font-[600]">Welcome</div>
+            <input type="email" placeholder="your@gmail.com" id="email" class="font-[600] border-[1px] outline-0 p-[0.5rem] text-[0.95rem] border-[rgba(0,0,0,0.33)]"/>
+            <input type="password" placeholder="password" id="password" class="font-[600] border-[1px] outline-0 p-[0.5rem] text-[0.95rem] border-[rgba(0,0,0,0.33)]"/>
+            <div class="text-[1rem] text-center">Don't have any account? <a class="text-blue-600 text-[1rem] cursor-pointer" href="signup.html">Sign Up</a></div>
+            <button type="submit" id="sign-in-button" class="bg-[#db819e] font-[500] text-white p-[0.46rem] cursor-pointer outline-0 border-0">Sign In</button>
         </form>
     </main>
     <script type="module" src="../ts/signin.ts"></script>
