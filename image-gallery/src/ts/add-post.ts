@@ -2,25 +2,61 @@ import DatabaseStorage from "./supabase-table";
 import { InsertFile } from "./supabase-storage";
 import Modal from "./modal";
 import type { GalleryPost } from "./custom-types";
+import { getSession, supabase } from "./supabase-config";
 
 class ImageForm extends DatabaseStorage<GalleryPost> {
-    controller: AbortController = new AbortController();
-    imageFiles: File[] = [];
+    private controller: AbortController = new AbortController();
+    private imageFiles: File[] = [];
     private notification = document.getElementById("notification_") as HTMLElement;
     private uploaderModal: Modal = new Modal(this.notification);
     
     private imageUploadField = document.getElementById("image-upload-field") as HTMLFormElement;
-    private uploaderName = document.getElementById("uploader-name") as HTMLInputElement;
     private imageTitle = document.getElementById("image-title") as HTMLInputElement;
     private mediaFile = document.getElementById("media-file") as HTMLInputElement;
     private imagePreviewContainer = document.getElementById("image-preview-container") as HTMLElement;
     private submitButton = document.getElementById("add-post-button") as HTMLButtonElement;
+    
+    private currentUserId: string | null = null; 
+    private currentUsername: string | null = null; 
 
     constructor() {
         super("image_gallery");
     }
 
-    initEventListener(): void {
+    async initEventListener(): Promise<void> {
+        const session = await getSession();
+        if (session && session.user) {
+            this.currentUserId = session.user.id;
+            
+            try {
+                const { data, error } = await supabase
+                .from('image_gallery_user')
+                .select('username')
+                .eq('id', this.currentUserId)
+                .single();
+
+                if (error) {
+                    console.error('Error fetching username for uploader:', error.message);
+                    this.currentUsername = 'Anonymous User'; // Fallback jika gagal ambil username
+                } else if (data && data.username) {
+                    this.currentUsername = data.username;
+                } else {
+                    this.currentUsername = 'Anonymous User'; // Fallback jika tidak ada username
+                }
+            } catch (error) {                
+                this.uploaderModal.createComponent(`Unexpected error fetching username: ${error}`);
+                this.uploaderModal.showComponent();
+                this.currentUsername = 'Anonymous User'; // Fallback untuk error tak terduga
+            }
+
+        } else {
+            // Jika tidak login, arahkan kembali ke halaman sign-in
+            this.uploaderModal.createComponent("Anda perlu login untuk menambahkan postingan.");
+            this.uploaderModal.showComponent();
+            window.location.replace('/html/signin.html');
+            return; // Penting untuk menghentikan eksekusi lebih lanjut
+        }
+
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
             if (target.closest("#image-preview-container")) this.mediaFile.click();
@@ -82,11 +118,14 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
             const imageUrls = await Promise.all(uploadPromises);
             const imageNames = this.imageFiles.map(file => file.name);
             
+            if (!this.currentUserId) return;
+
             await this.insertData({
-                uploader_name: this.uploaderName.value.trim() || `user_${Date.now()}`,
+                uploader_name: this.currentUsername || 'Anonymous User',
                 title: this.imageTitle.value.trim() || `gallery_${Date.now()}`,
                 image_name: imageNames,
-                image_url: imageUrls
+                image_url: imageUrls,
+                user_id: this.currentUserId
             });
             
             this.resetForm();

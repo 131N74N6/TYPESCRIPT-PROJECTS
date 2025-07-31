@@ -5,20 +5,33 @@
     <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
     <link rel="stylesheet" href="../css/index.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>Add New Post</title>
 </head>
-<body>
-    <header><a href="gallery.html">See All Images</a></header>
-    <main id="app">
+<body class="relative">
+    <main id="app" class="flex justify-center items-center h-[100dvh]">
         <section id="notification_"></section>
-        <form id="image-upload-field" title="image-upload-field">
-            <input type="text" id="uploader-name" placeholder="enter-name..."/>
-            <input type="text" id="image-title" placeholder="enter-image-title..."/>
+        <form id="image-upload-field" title="image-upload-field" class="flex gap-[1.3rem] p-[1.3rem] rounded-[1.3rem] flex-col shadow-[0_0_6px_rgba(0,0,0,0.3)]">
+            <input type="text" id="image-title" placeholder="enter-image-title..." class="p-[0.45rem] border-[1px] outline-0 border-[rgba(0,0,0,0.3)] text-[0.9rem] font-[550]"/>
             <input type="file" id="media-file" multiple accept=".jpg,.png,.jpeg" placeholder="select-your-file"/>
             <section id="image-preview-container"></section>
-            <button type="submit" id="add-post-button">Add Post</button>
+            <button type="submit" id="add-post-button" class="text-[0.9rem] p-[0.45rem] rounded-[0.45rem] font-[550] cursor-pointer bg-[#765898] text-[#FFFFFF]">Add Post</button>
         </form>
     </main>
+    <footer class="bg-[#32364f] p-[1rem] flex justify-center gap-[1rem] sticky bottom-0 top-[80%]">
+        <a href="add-post.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+            <i class="fa-solid fa-plus"></i>
+        </a>
+        <a href="gallery.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+            <i class="fa-solid fa-images"></i>
+        </a>
+        <a href="user.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+            <i class="fa-solid fa-user"></i>
+        </a>
+        <a href="setting.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+            <i class="fa-solid fa-user-gear"></i>
+        </a>
+    </footer>
     <script type="module" src="../ts/add-post.ts"></script>
     <script type="module" src="../ts/auth-guard.ts"></script>
 </body>

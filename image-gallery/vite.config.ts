@@ -16,12 +16,13 @@ export default defineConfig({
                 add_post: resolve(root, 'html', 'add-post.html'),
                 main: resolve(root, 'html', 'signin.html'),
                 signup: resolve(root, 'html', 'signup.html'),
+                setting: resolve(root, 'html', 'setting.html'),
                 gallery: resolve(root, 'html', 'gallery.html'),
                 detail: resolve(root, 'html', 'detail.html')
             }
         }
     },
     server: {
-        open: "/html/index.html"
+        open: "/html/signin.html"
     }
 })

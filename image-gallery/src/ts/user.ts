@@ -1,17 +1,16 @@
 import DatabaseStorage from "./supabase-table";
 import Modal from "./modal";
-import { getSession } from "./supabase-config";
+import { getSession, supabase } from "./supabase-config";
 import type { UserGalleryDisplay } from "./custom-types";
 
 class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
     private controller = new AbortController();
     private notificationElement = document.getElementById("personal-gallery-notification") as HTMLElement;
     private makeNotification = new Modal(this.notificationElement);
-
+    private username = document.getElementById("username") as HTMLDivElement;
     private personalImagesGallery = document.getElementById("personal-images-gallery") as HTMLElement;
     private noPostMessage = document.getElementById("no-post-message") as HTMLElement;
-
-    private currentUserId: string | null = null; // Untuk menyimpan ID pengguna yang login
+    private currentUserId: string | null = null; 
 
     constructor() {
         super("image_gallery");
@@ -21,24 +20,43 @@ class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
         const session = await getSession();
         if (session && session.user) {
             this.currentUserId = session.user.id;
+            await this.displayUsername(this.currentUserId);
             await this.realtimeInit({ 
                 callback: (data: UserGalleryDisplay[]) => this.showUserImages(data),
                 initialQuery: (query) => query.eq('user_id', this.currentUserId)
             });
         } else {
-            // Ini seharusnya tidak terjadi jika auth-guard.ts berfungsi,
-            // tetapi sebagai fallback
-            this.makeNotification.createComponent("Anda perlu login untuk melihat galeri pribadi.");
+            this.makeNotification.createComponent("Please sign-in to see gallery content");
             this.makeNotification.showComponent();
             window.location.replace('/html/signin.html');
         }
-
-        // Event listener untuk tombol sign-out sudah dipindahkan ke auth-guard.ts
-        // sehingga tidak perlu ada di sini lagi
     }
 
-    // Metode ini akan dipanggil oleh realtimeInit, menerima semua data,
-    // lalu memfilter berdasarkan user_id
+    private async displayUsername(userId: string): Promise<void> {
+        try {
+            const { data, error } = await supabase
+            .from('image_gallery_user')
+            .select('username')
+            .eq('id', userId)
+            .single();
+
+            if (error) {
+                console.error('Error fetching username:', error.message);
+                this.username.textContent = 'User'; 
+                return;
+            }
+
+            if (data && data.username) {
+                this.username.textContent = `Hello, ${data.username}!`;
+            } else {
+                this.username.textContent = 'Hello, User!';
+            }
+        } catch (error: any) {
+            console.error('Unexpected error fetching username:', error);
+            this.username.textContent = 'Hello, User!'; // Fallback
+        }
+    }
+
     showUserImages(allImages: UserGalleryDisplay[]): void {
         this.personalImagesGallery.innerHTML = ''; // Bersihkan konten sebelumnya
         const fragment = document.createDocumentFragment();
@@ -91,7 +109,6 @@ class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
         detail.image_url.forEach((image_src: string) => {
             const imageContent = document.createElement("img") as HTMLImageElement;
             imageContent.src = image_src;
-            imageContent.alt = detail.title || 'Personal Gallery Image';
             imageContent.className = "w-full h-full object-cover block";
             imageWrap.appendChild(imageContent);
         });

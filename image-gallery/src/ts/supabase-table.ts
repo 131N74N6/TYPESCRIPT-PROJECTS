@@ -1,10 +1,6 @@
 import { supabase } from "./supabase-config";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-
-interface DatabaseProps<B> {
-    callback: (data: B[]) => void;
-    initialQuery?: (query: any) => any;
-}
+import type { DatabaseProps } from "./custom-types";
 
 class DatabaseStorage <B extends { id: string }> {
     protected currentData: Map<string, B>;

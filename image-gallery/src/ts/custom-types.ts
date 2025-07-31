@@ -5,6 +5,7 @@ export type GalleryPost = {
     image_name: string[];
     image_url: string[];
     title: string;
+    user_id: string;
 }
 
 export type GalleryDisplayer = Pick<GalleryPost, 'id' | 'image_url' | 'title'>;
@@ -23,4 +24,9 @@ export type PrivateUsers = Pick<Users, 'username' | 'created_at'>;
 
 export type UserGalleryDisplay = GalleryDisplayer & {
     user_id: string; 
+}
+
+export interface DatabaseProps<B> {
+    callback: (data: B[]) => void;
+    initialQuery?: (query: any) => any;
 }
