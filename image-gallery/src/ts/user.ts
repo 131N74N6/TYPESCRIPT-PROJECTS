@@ -42,7 +42,7 @@ class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
 
             if (error) {
                 console.error('Error fetching username:', error.message);
-                this.username.textContent = 'User'; 
+                this.username.textContent = 'Error getting username'; 
                 return;
             }
 
@@ -87,7 +87,7 @@ class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
 
     private createComponent(detail: UserGalleryDisplay): HTMLDivElement {
         const link = document.createElement("a") as HTMLAnchorElement;
-        link.href = `detail.html?id=${detail.id}`; // Arahkan ke halaman detail
+        link.href = `detail-user-only.html?id=${detail.id}`; 
         link.className = "block";
         
         const imagePost = document.createElement("div") as HTMLDivElement;
@@ -95,16 +95,6 @@ class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
 
         const imageWrap = document.createElement("div") as HTMLDivElement;
         imageWrap.className = "image-wrap w-full aspect-square overflow-hidden rounded-t-lg"; 
-
-        // Judul gambar
-        const titleElement = document.createElement("h3") as HTMLHeadingElement;
-        titleElement.className = "text-lg font-semibold px-4 pt-2 pb-1 text-gray-800 truncate";
-        titleElement.textContent = detail.title || 'Untitled Image'; 
-
-        // Deskripsi (opsional, jika ada di GalleryDisplayer)
-        const descriptionElement = document.createElement("p") as HTMLParagraphElement;
-        descriptionElement.className = "text-sm text-gray-600 px-4 pb-4 line-clamp-2"; 
-        descriptionElement.textContent = detail.title || 'No description available.'; 
 
         detail.image_url.forEach((image_src: string) => {
             const imageContent = document.createElement("img") as HTMLImageElement;
@@ -115,8 +105,6 @@ class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
 
         link.appendChild(imageWrap);
         imagePost.appendChild(link);
-        imagePost.appendChild(titleElement);
-        imagePost.appendChild(descriptionElement);
         return imagePost;
     }
 

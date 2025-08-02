@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
     --anti-flash-white: #E7ECEF;
     --yin-mn-blue: #274C77;

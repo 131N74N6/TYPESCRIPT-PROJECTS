@@ -1,4 +1,4 @@
-import supabase from "./supabase-config";
+import { supabase } from "./supabase-config";
 import { RealtimeChannel, type RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 const TableStorage = <TT extends { id: string }>(tableName: string) => ({

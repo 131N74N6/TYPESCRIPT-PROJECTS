@@ -18,7 +18,8 @@ export default defineConfig({
                 signup: resolve(root, 'html', 'signup.html'),
                 setting: resolve(root, 'html', 'setting.html'),
                 gallery: resolve(root, 'html', 'gallery.html'),
-                detail: resolve(root, 'html', 'detail.html')
+                detail: resolve(root, 'html', 'detail.html'),
+                detail_user_only: resolve(root, 'html', 'detail-user-only.html')
             }
         }
     },

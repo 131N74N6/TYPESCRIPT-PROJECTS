@@ -32,11 +32,13 @@ class DatabaseStorage <B extends { id: string }> {
             (payload: RealtimePostgresChangesPayload<B>) => {
                 switch(payload.eventType) {
                     case "INSERT": {
-                        this.currentData.set(payload.new.id, payload.new);
+                        const transformedData = this.transformsData(payload.new);
+                        this.currentData.set(transformedData.id, transformedData);
                         break;
                     }
                     case "UPDATE": {
-                        this.currentData.set(payload.new.id, payload.new);
+                        const transformedChangeData = this.transformsData(payload.new);
+                        this.currentData.set(transformedChangeData.id, transformedChangeData);
                         break;
                     }
                     case "DELETE": {
@@ -64,7 +66,10 @@ class DatabaseStorage <B extends { id: string }> {
             }
 
             this.currentData.clear();
-            data.forEach(dt => this.currentData.set(dt.id, dt));
+            data.forEach(dt => {
+                const transformData = this.transformsData(dt);
+                this.currentData.set(transformData.id, transformData)
+            });
 
             db.callback(this.toArray());
             this.realtimeChannel.subscribe();
@@ -75,14 +80,34 @@ class DatabaseStorage <B extends { id: string }> {
         }
     }
 
+    private transformsData(data: any): B {
+        if (data && data.created_at && typeof data.created_at === 'string') {
+            return { ...data, created_at: new Date(data.created_at) } as B;
+        }
+        return data as B;
+    }
+
     protected async insertData(newData: Omit<B, 'id' | 'created_at'>): Promise<string> {
         const { data, error } = await supabase
         .from(this.table_name)
         .insert([newData])
         .select();
 
-        if (error) throw error;
+        if (error) throw `Failed to insert data: ${error}`;
         return data[0].id;
+    }
+
+    protected async upsertData(dataToUpsert: Partial<B>): Promise<B | null> {
+        // Supabase `upsert` membutuhkan kolom unik atau PK (Primary Key) untuk mengidentifikasi baris.
+        // Di kasus ini, 'id' adalah PK dan akan cocok dengan auth.uid()
+        const { data, error } = await supabase
+        .from(this.table_name)
+        .upsert([dataToUpsert])
+        .select()
+        .single();
+
+        if (error) throw `Failed to upsert data: ${error}`;
+        return data;
     }
 
     protected async selectedData(id: string): Promise<B> { 
@@ -91,7 +116,7 @@ class DatabaseStorage <B extends { id: string }> {
         .select("*") 
         .eq('id', id);
 
-        if (error) throw new Error(`Failed to show selected data: ${error}`);
+        if (error) throw `Failed to show selected data: ${error}`;
 
         const item = data[0];
         return item;

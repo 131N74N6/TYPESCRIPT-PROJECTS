@@ -12,16 +12,17 @@
     <main id="app">
         <section class="show-data">
             <section>
+                <section class="detail-inform">
+                    <section class="income-total"></section>
+                    <section class="expense-total"></section>
+                    <section class="income_expense"></section>
+                    <div id="username"></div>
+                </section>
                 <button type="button" id="delete-all-list">Delete All</button>
                 <input type="checkbox" id="oldest" value="oldest-sorting"/>
                 <label for="oldest">Oldest</label>
                 <input type="checkbox" id="newest" value="newest-sorting"/>
                 <label for="newest">Newest</label>
-            </section>
-            <section class="detail-inform">
-                <section class="income-total"></section>
-                <section class="expense-total"></section>
-                <section class="income_expense"></section>
             </section>
             <section id="balance-list"></section>
         </section>
@@ -40,6 +41,7 @@
             </div>
         </form>
     </main>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="../ts/auth-guard.ts"></script>
+    <script type="module" src="../ts/main.ts"></script>
 </body>
 </html>

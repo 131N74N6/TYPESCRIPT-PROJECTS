@@ -1,8 +1,9 @@
 import DatabaseStorage from "./supabase-table";
 import Modal from "./modal";
 import type { GalleryDetails } from "./custom-types";
+import { RemoveFile } from "./supabase-storage";
 
-class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
+class GalleryDetail extends DatabaseStorage<GalleryDetails> {
     private controller = new AbortController();
     private urlParams = new URLSearchParams(window.location.search);
     private imageId: string | null;
@@ -11,6 +12,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
 
     private detailPostNotification = document.getElementById("detail-post-notification") as HTMLElement;
     private galleryDetailModal: Modal = new Modal(this.detailPostNotification);
+    private storageName = 'gallery';
 
     private uploaderName = document.querySelector("#uploader-name") as HTMLParagraphElement;
     private carouselContainer = document.querySelector("#carousel-container") as HTMLElement; 
@@ -35,7 +37,11 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
                 if (this.totalSlide > 1) { // Hanya geser jika ada lebih dari 1 slide
                     this.nextSlide();
                 }
-            } 
+            } else if (target.closest("#delete-button")) {
+                if (this.imageId) {
+                    this.deletePost(this.imageId);
+                }
+            }
         }, { signal: this.controller.signal });
     }
 
@@ -93,8 +99,8 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         this.totalSlide = detail.image_url.length;
         this.currentIndex = 0;
 
-        // Tampilkan/sembunyikan navigasi jika diperlukan
-        this.navigationContainer.style.display = this.totalSlide > 1 ? 'flex' : 'none'; // Tampilkan hanya jika ada lebih dari 1 gambar
+        // Tampilkan/sembunyikan navigasi
+        this.navigationContainer.style.display = this.totalSlide > 1 ? 'flex' : 'none';
 
         // Panggil updateCarousel untuk memastikan tampilan awal benar
         this.updateCarousel();
@@ -102,7 +108,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
 
     private displayMessage(message: string): void {
         this.carouselContainer.innerHTML = `<p style="text-align: center; padding: 20px;">${message}</p>`;
-        this.imageTitle.textContent = ''; 
+        this.imageTitle.textContent = ''; // Kosongkan judul dan tanggal
         this.uploadedAt.textContent = '';
     }
 
@@ -142,17 +148,35 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         this.uploadedAt.textContent = '';
         this.navigationContainer.style.display = 'none';
     }
+
+    private async deletePost(id: string) {
+        try {
+            const getImageData = this.currentData.get(id);
+            if (!getImageData) return;
+
+            const paths: string[] = getImageData.image_url;
+            await this.deleteData(id); 
+            await Promise.all(paths.map(path => RemoveFile(path, this.storageName)));
+            
+            this.carouselContainer.innerHTML = '';
+            setTimeout(() => window.location.href = '/gallery.html', 500);
+
+        } catch (error: any) {
+            this.galleryDetailModal.createComponent(`Failed to delete post: ${error.message || error}`);
+            this.galleryDetailModal.showComponent();
+        }
+    }
 }
 
-const publicGalleryDetail = new PublicGalleryDetail();
+const galleryDetail = new GalleryDetail();
 
 function initGallery(): void {
-    publicGalleryDetail.initEventListener();
+    galleryDetail.initEventListener();
 }
 
 function teardownGallery(): void {
-    publicGalleryDetail.teardownStorage();
-    publicGalleryDetail.teardown();
+    galleryDetail.teardownStorage();
+    galleryDetail.teardown();
 }
 
 document.addEventListener("DOMContentLoaded", initGallery);

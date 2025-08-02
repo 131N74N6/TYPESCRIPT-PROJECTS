@@ -10,7 +10,7 @@
 </head>
 <body class="relative">
     <section id="gallery-notification" class="fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 bg-yellow-300 text-yellow-800 hidden"></section>
-    <main id="gallery" class="container mx-auto p-4 h-[100dvh]">
+    <main id="gallery" class="container mx-auto p-4 h-[92.3dvh] overflow-y-auto">
         <form id="search-image-field" title="search-image-field" class="mb-6 flex flex-col sm:flex-row gap-2">
             <input type="text" id="search-image" placeholder="search here..." class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#932F6D]"/>
             <button type="submit" class="bg-[#932F6D] text-white px-4 py-2 rounded-md hover:bg-dark-purple transition-colors duration-200">Find</button>
@@ -18,7 +18,7 @@
         </form>
         <section id="images-gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4"></section>
     </main>
-    <footer class="bg-[#32364f] p-[1rem] flex justify-center gap-[1rem] sticky bottom-0 top-[80%]">
+    <footer class="bg-[#32364f] p-[1rem] flex justify-center gap-[1rem]">
         <a href="add-post.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
             <i class="fa-solid fa-plus"></i>
         </a>

@@ -51,7 +51,7 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
 
         } else {
             // Jika tidak login, arahkan kembali ke halaman sign-in
-            this.uploaderModal.createComponent("Anda perlu login untuk menambahkan postingan.");
+            this.uploaderModal.createComponent("Please sign-in to insert your image");
             this.uploaderModal.showComponent();
             window.location.replace('/html/signin.html');
             return; // Penting untuk menghentikan eksekusi lebih lanjut
@@ -78,7 +78,7 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
         if (!files || files.length === 0) return;
         
         // Reset preview container
-        this.imagePreviewContainer.innerHTML = '';
+        this.imagePreviewContainer.innerHTML = 'No Images Selected';
         this.imageFiles = [];
         
         // Process each selected file
@@ -144,7 +144,7 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
         this.controller.abort();
         this.imageUploadField.reset();
         this.mediaFile.value = '';
-        this.imagePreviewContainer.innerHTML = '';
+        this.imagePreviewContainer.innerHTML = 'No Images Selected';
         this.imageFiles = [];
     }
 }
