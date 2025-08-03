@@ -9,9 +9,9 @@ const description = document.getElementById('description') as HTMLInputElement;
 const oldest = document.getElementById("oldest") as HTMLInputElement;
 const newest = document.getElementById("newest") as HTMLInputElement;
 
-const incomeTotal = document.querySelector(".income-total") as HTMLElement;
-const expenseTotal = document.querySelector(".expense-total") as HTMLElement;
-const income_expense = document.querySelector(".income_expense") as HTMLElement;
+const incomeTotal = document.querySelector("#income-total") as HTMLElement;
+const expenseTotal = document.querySelector("#expense-total") as HTMLElement;
+const income_expense = document.querySelector("#income_expense") as HTMLElement;
 
 const displayer = BalanceHandler({ 
     getBalance, balanceInputField, balanceList, notification, oldest, newest, incomeTotal, 

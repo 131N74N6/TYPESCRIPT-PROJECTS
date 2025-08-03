@@ -14,7 +14,7 @@
         <a href="gallery.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">Back</a>
         <a href="add-post.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">Add Post</a>
     </header>
-    <main id="gallery-detail" class="container mx-auto p-4 flex-grow grid grid-cols-1 md:grid-cols-[0.55fr_300px] gap-4 md:gap-8 lg:gap-12 py-8">
+    <main id="gallery-detail" class="container mx-auto p-4 flex-grow grid grid-cols-3 md:grid-cols-[0.55fr_300px] gap-4 md:gap-8 lg:gap-12 py-8">
         <section id="image-group" class="relative overflow-hidden aspect-square rounded-lg shadow-xl">
             <div id="carousel-container" class="flex h-full transition-transform duration-300 ease-in-out"></div>
             <div id="navigation" class="absolute inset-0 flex items-center justify-between px-4" style="display: none;">
@@ -26,6 +26,15 @@
             <p id="uploader-name" class="text-gray-700 text-lg font-medium"></p>
             <p id="image-title" class="text-gray-600 text-xl font-semibold"></p>
             <p id="created-at" class="text-gray-500 text-sm"></p>
+        </div>
+        <div id="comment-section" class="bg-white rounded-lg shadow-xl flex g-[0.6rem] p-[0.6rem] space-y-4">
+            <form id="comment-maker" class="flex gap-[0.7rem]">
+                <textarea id="opinions" class="resize-none border-[1px] border-[rgba(0,0,0,0.3)] outline-0 w-[100px] h-[200px] p-[0.5rem] text-[1rem]"></textarea>
+                <button type="button" class="bg-[#ed9322] text-[#1A1A1A] text-[1rem] p-[0.5rem] rounded-[0.5rem]">
+                    <i class="fa-regular fa-paper-plane"></i>
+                </button>
+            </form>
+            <section id="comments-group" class="flex flex-col g-[1rem] p-[1rem]"></section>
         </div>
     </main>
     <script type="module" src="../ts/detail.ts"></script>

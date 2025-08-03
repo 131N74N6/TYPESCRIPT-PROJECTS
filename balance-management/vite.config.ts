@@ -1,19 +1,22 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 
 const root = resolve(__dirname, 'src');
 const outDir = resolve(__dirname, 'dist');
 
 export default defineConfig({
     root,
+    plugins: [tailwindcss()],
     build: {
         outDir,
         emptyOutDir: true,
         rollupOptions: {
             input: {
-                balance: resolve(root, 'html', 'balance.html'),
                 main: resolve(root, 'html', 'signin.html'),
-                signup: resolve(root, 'html', 'signup.html'),
+                balance: resolve(root, 'html', 'balance.html'),
+                home: resolve(root, 'html', 'home.html'),
+                signup: resolve(root, 'html', 'signup.html')
             }
         }
     },

@@ -29,10 +29,7 @@ function onAuthStateChange(callback: (event: string, session: any | null) => voi
 
 async function signOut() {
     const { error } = await supabase.auth.signOut();
-    if (error) {
-        console.error('Error signing out:', error.message);
-        throw error;
-    }
+    if (error) throw error;
 }
 
 export { getSession, onAuthStateChange, supabase, signOut };

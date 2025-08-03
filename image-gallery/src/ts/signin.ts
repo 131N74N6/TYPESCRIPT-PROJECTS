@@ -22,10 +22,13 @@ class SignIn extends DatabaseStorage<Users> {
 
     async verifySavedUser(event: SubmitEvent): Promise<void> {
         event.preventDefault();
+        const trimmedEmail = this.email.value.trim();
+        const trimmedPassword = this.password.value.trim();
+
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
-                email: this.email.value.trim(),
-                password: this.password.value.trim()
+                email: trimmedEmail,
+                password: trimmedPassword
             });
 
             if (error) throw error;
@@ -41,37 +44,32 @@ class SignIn extends DatabaseStorage<Users> {
                     // Kita perlu memastikan selectedData bisa menangani "tidak ditemukan" tanpa melempar error
                     // Atau gunakan kueri langsung yang lebih fleksibel
                     const { data: existingProfile, error: selectError } = await supabase
-                        .from('image_gallery_user')
-                        .select('*')
-                        .eq('id', user.id)
-                        .single();
+                    .from('image_gallery_user')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
                     
-                    if (selectError && selectError.code !== 'PGRST116') { // PGRST116 is "no rows found"
-                        throw selectError;
-                    }
+                    // PGRST116 is "no rows found"
+                    if (selectError && selectError.code !== 'PGRST116') throw selectError;
+
                     userProfile = existingProfile;
 
                 } catch (selectError: any) {
                     console.error("Error checking existing user profile:", selectError.message);
-                    // Lanjutkan eksekusi, mungkin profil belum ada, akan di-upsert nanti
                 }
 
                 // 2. Jika profil belum ada, buat (upsert)
                 if (!userProfile) {
-                    // Ambil username dari user_metadata yang disimpan saat sign-up
-                    const username = user.user_metadata?.username || 'Pengguna Baru'; 
+                    const username = user.user_metadata?.username || 'Pengguna Baru';
 
                     try {
-                        const newProfile = await this.upsertData({
+                        await this.upsertData({
                             id: user.id,
                             email: user.email,
                             username: username,
                             password: this.password.value.trim()
                         });
-                        console.log("User profile created/updated:", newProfile);
                     } catch (error: any) {
-                        console.error("Error creating/updating user profile:", error.message);
-                        // Tampilkan pesan error ke pengguna jika gagal menyimpan profil
                         this.signInMessage.classList.remove('hidden');
                         this.signInMessage.classList.add('block');
                         this.signInMessage.textContent = `Login successful, but failed to save profile: ${error.message}`;

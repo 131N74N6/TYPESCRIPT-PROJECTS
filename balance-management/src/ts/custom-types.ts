@@ -6,6 +6,13 @@ export type BalanceDetail = {
     description: string;
 }
 
+export type Users = {
+    id: string;
+    email: string;
+    username: string;
+    password: string;
+}
+
 export type BalanceHandlerProps = {
     getBalance: HTMLInputElement; 
     balanceInputField: HTMLFormElement; 

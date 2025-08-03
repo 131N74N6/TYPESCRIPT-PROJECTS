@@ -23,7 +23,6 @@ async function checkAuthAndRedirect() {
     }
 }
 
-// Jalankan pemeriksaan saat DOMContentLoaded
 document.addEventListener('DOMContentLoaded', checkAuthAndRedirect);
 
 // Tambahkan event listener untuk tombol sign-out di mana pun ia berada

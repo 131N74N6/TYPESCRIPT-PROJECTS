@@ -46,7 +46,7 @@ class SignUp extends DatabaseStorage<Users> {
         } catch (error: any) {
             this.signUpMessage.classList.remove('hidden');
             this.signUpMessage.classList.add('block');
-            this.signUpMessage.textContent = error;
+            this.signUpMessage.textContent = error.message;
         } finally {
             this.showSignUpMessage();
             this.signUpForm.reset();
