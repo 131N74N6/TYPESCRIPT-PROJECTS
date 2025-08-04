@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+:root {
+    --anti-flash-white: #E7ECEF;
+    --yin-mn-blue: #274C77;
+    --air-superiority-blue: #6096BA;
+    --uranian-blue: #A3CEF1;
+    --battleship-gray: #8B8C89;
+}

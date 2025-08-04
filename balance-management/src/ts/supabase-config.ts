@@ -20,21 +20,30 @@ const supabase = createClient(supabaseUrl, supabaseApiKey, {
     }
 });
 
+let sessionCache: any = null;
+
 async function getSession() {
+    if (sessionCache) return sessionCache;
+    
     const { data: { session } } = await supabase.auth.getSession();
+    sessionCache = session;
     return session;
 }
 
 function onAuthStateChange(callback: (event: string, session: any | null) => void) {
-    supabase.auth.onAuthStateChange(callback);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        sessionCache = session;
+        callback(event, session);
+    });
+    
+    return () => subscription.unsubscribe();
 }
 
+
 async function signOut() {
+    sessionCache = null;
     const { error } = await supabase.auth.signOut();
-    if (error) {
-        console.error('Error signing out:', error.message);
-        throw error;
-    }
+    if (error) throw error;
 }
 
 export { getSession, onAuthStateChange, supabase, signOut };

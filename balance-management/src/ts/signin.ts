@@ -72,7 +72,7 @@ function SignIn() {
                     }
                 }
 
-                setTimeout(() => window.location.href = '/html/balance.html', 500);
+                setTimeout(() => window.location.href = '/html/home.html', 500);
             } catch (error: any) {
                 this.signInMessage.classList.remove('hidden');
                 this.signInMessage.classList.add('block');

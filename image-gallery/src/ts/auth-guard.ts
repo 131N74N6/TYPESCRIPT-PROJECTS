@@ -1,50 +1,65 @@
 import { getSession, onAuthStateChange, signOut as supabaseSignOut } from './supabase-config';
 
 const publicRoutes = ['/html/signin.html', '/html/signup.html'];
+let authUnsubscribe: (() => void) | null = null;
+let isCheckingAuth = false;
 
-// Fungsi untuk memeriksa sesi dan mengarahkan
-async function checkAuthAndRedirect() {
+// Handle redirect logic
+const handleRedirect = (sessionExists: boolean) => {
     const currentPath = window.location.pathname;
-    const session = await getSession();
-
-    // Jika pengguna sudah login
-    if (session) {
-        // Jika sedang di halaman publik (signin/signup/index) dan sudah login, arahkan ke user.html
-        if (publicRoutes.includes(currentPath)) {
-            window.location.replace('/html/user.html');
-            return;
-        }
-    } else { // Jika pengguna belum login
-        // Jika tidak di halaman publik, dan belum login, arahkan ke signin.html
-        if (!publicRoutes.includes(currentPath)) {
-            window.location.replace('/html/signin.html');
-            return;
-        }
+    const isPublicRoute = publicRoutes.includes(currentPath);
+    
+    if (sessionExists && isPublicRoute) {
+        window.location.href = '/html/user.html';
+    } else if (!sessionExists && !isPublicRoute) {
+        window.location.href = '/html/signin.html';
     }
 }
 
-document.addEventListener('DOMContentLoaded', checkAuthAndRedirect);
+// Centralized auth check
+const checkAuth = async () => {
+    if (isCheckingAuth) return;
+    isCheckingAuth = true;
+    
+    try {
+        const session = await getSession();
+        handleRedirect(!!session);
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        if (!publicRoutes.includes(window.location.pathname)) {
+            window.location.href = '/html/signin.html';
+        }
+    } finally {
+        isCheckingAuth = false;
+    }
+}
 
-// Tambahkan event listener untuk tombol sign-out di mana pun ia berada
-document.addEventListener('click', async (event) => {
-    const target = event.target as HTMLElement;
-    if (target && target.id === 'sign-out') {
+const initAuthGuard = () => {
+    checkAuth();
+    
+    // Auth state listener
+    authUnsubscribe = onAuthStateChange((event) => {
+        if (event === 'SIGNED_OUT') {
+            handleRedirect(false);
+        } else if (event === 'SIGNED_IN') {
+            handleRedirect(true);
+        }
+    });
+    
+    document.getElementById('sign-out')?.addEventListener('click', async () => {
         try {
             await supabaseSignOut();
-            // Setelah sign-out, auth-guard akan mendeteksi tidak ada sesi dan mengarahkan ke signin.html
-            // Tidak perlu redirect eksplisit di sini karena sudah ditangani oleh onAuthStateChange
         } catch (error) {
-            alert('Failed to sign out. Please try again.'); // Gunakan modal Anda jika ada
+            console.error('Sign out failed:', error);
+            alert('Failed to sign out. Please try again.');
         }
-    }
-});
+    });
+}
 
-// Dengarkan perubahan state autentikasi secara real-time
-onAuthStateChange((event) => {
-    // Jika event adalah SIGNED_OUT, otomatis arahkan ke signin.html
-    if (event === 'SIGNED_OUT') {
-        window.location.replace('/html/signin.html');
-    }
-    // Jika SIGNED_IN, checkAuthAndRedirect akan menangani pengarahan jika perlu
-    checkAuthAndRedirect();
-});
+const cleanupAuthGuard = () => {
+    if (authUnsubscribe) authUnsubscribe();
+    document.getElementById('sign-out')?.removeEventListener('click', supabaseSignOut);
+}
+
+document.addEventListener('DOMContentLoaded', initAuthGuard);
+window.addEventListener('beforeunload', cleanupAuthGuard);

@@ -3,20 +3,26 @@
 <head>
     <meta charset="UTF-8"/>
     <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
-    <link rel="stylesheet" href="../css/style.css"/>
+    <link rel="stylesheet" href="../css/index.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Balance</title>
 </head>
-<body>
+<body class="bg-[#274C77]">
     <section id="notification"></section>
-    <main id="app">
-        <section class="show-data">
-            <section>
+    <main id="app" class="p-[1rem] relative z-10 flex gap-[1rem]">
+        <header class="flex flex-col gap-[1rem] p-[1rem] w-[25%] border-[1.3px] border-[#6096BA] h-[95.7dvh]">
+            <button id="sign-out" type="button" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Sign Out</button>
+            <button id="add-new" type="button" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Add Balance</button>
+            <a href="home.html" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] text-center p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Home</a>
+            <a href="balance.html" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] text-center p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Balance Detail</a>
+        </header>
+        <section id="show-data" class="flex flex-col gap-[1rem] w-[75%]">
+            <section class="border-[1.3px] border-[#6096BA] p-[1rem]">
                 <section class="detail-inform">
-                    <section id="income-total"></section>
-                    <section id="expense-total"></section>
-                    <section id="income_expense"></section>
-                    <div id="username"></div>
+                    <div id="username" class="font-mono font-[550] text-[1.3rem] text-[#A3CEF1]">Welcome, User</div>
+                    <section id="income-total" class="font-mono font-[550] text-[1.3rem] text-[#A3CEF1]"></section>
+                    <section id="expense-total" class="font-mono font-[550] text-[1.3rem] text-[#A3CEF1]"></section>
+                    <section id="income_expense" class="font-mono font-[550] text-[1.3rem] text-[#A3CEF1]"></section>
                 </section>
                 <button type="button" id="delete-all-list">Delete All</button>
                 <input type="checkbox" id="oldest" value="oldest-sorting"/>
@@ -24,9 +30,9 @@
                 <input type="checkbox" id="newest" value="newest-sorting"/>
                 <label for="newest">Newest</label>
             </section>
-            <section id="balance-list"></section>
+            <section id="balance-list" class="border-[1.3px] border-[#6096BA] flex flex-col gap-[1rem] p-[1rem] text-[1rem] font-mono text-[#A3CEF1] font-[520]"></section>
         </section>
-        <form id="balance-input-field">
+        <form id="balance-input-field" class="z-20 inset-0 fixed hidden justify-center items-center p-">
             <input type="text" id="balance" placeholder="enter balance..."/>
             <input type="text" id="description" placeholder="enter description..."/>
             <div class="radio-button-wrap">
