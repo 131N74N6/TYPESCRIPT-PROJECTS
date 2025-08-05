@@ -1,4 +1,4 @@
-import type { Product } from "./types";
+import type { Product } from "./custom-types";
 import Storage from "./supabase-table";
 import Modal from "./notification";
 import { InsertFile } from "./supabase-storage";

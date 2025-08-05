@@ -1,5 +1,5 @@
 import TableStorage from './supabase-table';
-import type { CartItem } from './types';
+import type { CartItem } from './custom-types';
 import Modal from './notification';
 
 const cartStorage = TableStorage<CartItem>('product_cart');

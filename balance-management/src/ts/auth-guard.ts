@@ -35,7 +35,7 @@ const checkAuth = async () => {
 }
 
 // Initialize auth guard
-function initAuthGuard() {
+function initAuthGuard(): void {
     // Initial check
     checkAuth();
     

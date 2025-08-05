@@ -4,6 +4,7 @@ export type BalanceDetail = {
     type: string;
     created_at: Date;
     description: string;
+    user_id: string;
 }
 
 export type Users = {
@@ -23,5 +24,6 @@ export type BalanceHandlerProps = {
     incomeTotal: HTMLElement;
     expenseTotal: HTMLElement; 
     income_expense: HTMLElement; 
-    description: HTMLInputElement
+    description: HTMLInputElement;
+    username: HTMLDivElement;
 }

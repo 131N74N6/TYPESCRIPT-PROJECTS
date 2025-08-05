@@ -1,5 +1,5 @@
 import Storage from './supabase-table';
-import type { CartItem, Product } from './types';
+import type { CartItem, Product } from './custom-types';
 
 const dataStorage = Storage<Product>('products');
 const cartStorage = Storage<CartItem>('product_cart');

@@ -10,3 +10,10 @@ export type Product = {
 export type CartItem = Product & {
     quantity: number;
 }
+
+export type User = {
+    id: string;
+    email: string;
+    password: string;
+    username: string;
+}

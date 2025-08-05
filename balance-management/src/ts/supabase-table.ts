@@ -1,16 +1,21 @@
 import { supabase } from "./supabase-config";
 import { RealtimeChannel, type RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
+type DatabaseProps<TT> = {
+    callback: (data: TT[]) => void;
+    initialQuery?: (query: any) => any;
+}
+
 function TableStorage<TT extends { id: string }>(tableName: string) {
     return {
         currentData: new Map<string, TT>() as Map<string, TT>,
         realtimeChannel: null as RealtimeChannel | null,
         isInitialize: false as boolean,
 
-        async realtimeInit(callback: (data: TT[]) => void): Promise<void> {
+        async realtimeInit(dbProps: DatabaseProps<TT>): Promise<void> {
             if (this.isInitialize && this.realtimeChannel) {
                 console.warn(`TableStorage for ${tableName} is already initialized.`);
-                callback(this.toArray());
+                dbProps.callback(this.toArray());
                 return;
             }
 
@@ -42,16 +47,18 @@ function TableStorage<TT extends { id: string }>(tableName: string) {
                             break;
                         }
                     }
-                    callback(this.toArray());
+                    dbProps.callback(this.toArray());
                 }
             );
+
+            let query = supabase.from(tableName).select('*');
+
+            if (dbProps.initialQuery) query = dbProps.initialQuery(query);
             
-            const { data, error } = await supabase
-            .from(tableName)
-            .select('*');
+            const { data, error } = await query;
 
             if (error) {
-                callback([]);
+                dbProps.callback([]);
                 throw error;
             }
             
@@ -61,7 +68,7 @@ function TableStorage<TT extends { id: string }>(tableName: string) {
                 this.currentData.set(transformData.id, transformData);
             });
 
-            callback(this.toArray());
+            dbProps.callback(this.toArray());
             this.realtimeChannel.subscribe();
             this.isInitialize = true;
         },

@@ -1,5 +1,5 @@
 import Storage from './supabase-table';
-import type { Product } from './types';
+import type { Product } from './custom-types';
 import Modal from './notification';
 import { InsertFile, RemoveFile } from './supabase-storage';
 

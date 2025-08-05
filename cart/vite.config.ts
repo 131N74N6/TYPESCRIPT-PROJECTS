@@ -13,7 +13,8 @@ export default defineConfig ({
         emptyOutDir: true,
         rollupOptions: {
             input: {
-                main: resolve(root, 'html', 'index.html'),
+                main: resolve(root, 'html', 'signin.html'),
+                sign_up: resolve(root, 'html', 'signup.html'),
                 cart: resolve(root, 'html', 'cart.html'),
                 add_product: resolve(root, 'html', 'add-product.html'),
                 seller: resolve(root, 'html', 'seller.html'),

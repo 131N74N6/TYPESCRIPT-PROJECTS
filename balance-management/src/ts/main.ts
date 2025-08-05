@@ -8,6 +8,7 @@ const description = document.getElementById('description') as HTMLInputElement;
 
 const oldest = document.getElementById("oldest") as HTMLInputElement;
 const newest = document.getElementById("newest") as HTMLInputElement;
+const username = document.getElementById('username') as HTMLDivElement;
 
 const incomeTotal = document.querySelector("#income-total") as HTMLElement;
 const expenseTotal = document.querySelector("#expense-total") as HTMLElement;
@@ -15,7 +16,7 @@ const income_expense = document.querySelector("#income_expense") as HTMLElement;
 
 const displayer = BalanceHandler({ 
     getBalance, balanceInputField, balanceList, notification, oldest, newest, incomeTotal, 
-    expenseTotal, income_expense, description 
+    expenseTotal, income_expense, description, username
 });
 
 async function init(): Promise<void> {

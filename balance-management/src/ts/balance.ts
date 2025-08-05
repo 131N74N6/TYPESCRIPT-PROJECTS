@@ -1,6 +1,7 @@
 import TableStorage from "./supabase-table";
 import Modal from "./modal";
 import type { BalanceDetail, BalanceHandlerProps } from "./custom-types";
+import { getSession, supabase } from "./supabase-config";
 
 const balanceTable = TableStorage<BalanceDetail>("finance_list");
 const controller = new AbortController();
@@ -11,13 +12,29 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
     totalIncome: 0 as number,
     totalExpense: 0 as number,
     balanceDifference: 0 as number,
+    currentUserId: null as string | null,
 
     async initEventListeners(): Promise<void> {
-        await balanceTable.realtimeInit((data) => this.showAllBalanceData(data));
+        const session = await getSession();
+        if (session && session.user) {
+            this.currentUserId = session.user.id;
+            if (this.currentUserId) await this.showUserName(this.currentUserId);
+        } else {
+            this.balanceNotification.createModal('Please sign in to see your balance');
+            this.balanceNotification.showModal();
+            return;
+        }
+
+        await balanceTable.realtimeInit({ 
+            callback: (data) => this.showAllBalanceData(data),
+            initialQuery: (query) => query.eq('user_id', this.currentUserId)
+        });
 
         document.addEventListener("click", async (event) => {
             const target = event.target as HTMLElement;
-            if (target.closest("#delete-all-list")) await this.deleteAllBalanceList();
+            if (target.closest('#delete-all-list')) await this.deleteAllBalanceList();
+            else if (target.closest('#close-insert-form')) this.hideInsertForm();
+            else if (target.closest('#open-insert-form')) this.openInsertForm();
         }, { signal: controller.signal });
 
         props.balanceInputField.addEventListener("submit", async (event) => await this.submitData(event), { 
@@ -27,13 +44,35 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
         props.oldest.addEventListener("change", () => { 
             props.newest.checked = false; 
             this.showAllBalanceData(balanceTable.toArray());
-            console.log("testing");
         }, { signal: controller.signal });
 
         props.newest.addEventListener("change", () => { 
             props.oldest.checked = false; 
             this.showAllBalanceData(balanceTable.toArray());
         }, { signal: controller.signal });
+    },
+
+    async showUserName(id: string): Promise<void> {
+        try {            
+            const { data, error } = await supabase
+            .from('finance_list_user')
+            .select('username')
+            .eq('id', id)
+            .single();
+
+            if (error) throw 'Failed to get username';
+
+            if (data && data.username) {
+                props.username.innerHTML = '';
+                props.username.textContent = `Hello, ${data.username}`;
+            } else {
+                props.username.innerHTML = '';
+                props.username.textContent = 'Hello, User';
+            }
+        } catch (error: any) {
+            props.username.innerHTML = '';
+            props.username.textContent = error.message;
+        }
     },
 
     async submitData(event: SubmitEvent): Promise<void> {
@@ -47,14 +86,23 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
             this.balanceNotification.showModal();
             return;
         }
-        
-        await balanceTable.insertData({
-            amount: Number(props.getBalance.value.trim()),
-            type: selectedType.value,
-            description: trimmedDescription || '-'
-        });
-        
-        this.resetForm();
+
+        if (!this.currentUserId) return;
+
+        try {
+            await balanceTable.insertData({
+                amount: Number(props.getBalance.value.trim()),
+                type: selectedType.value,
+                description: trimmedDescription || '-',
+                user_id: this.currentUserId
+            });
+        } catch (error: any) {
+            this.balanceNotification.createModal(`Error: ${error.message}`);
+            this.balanceNotification.showModal();
+        } finally {
+            this.resetForm();
+            this.hideInsertForm();
+        }
     },
 
     resetForm(): void {
@@ -126,7 +174,7 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
 
     createListComponent(detail: BalanceDetail): HTMLElement {
         const balanceWrap = document.createElement("div");
-        balanceWrap.className = "balance-wrap";
+        balanceWrap.className = "balance-wrap border-[1px] rounded-[1rem] p-[1rem] border-[#6096BA] shadow-[4px_4px_#6096BA] flex gap-[1rem] flex-col";
         balanceWrap.dataset.id = detail.id;
 
         if (this.getSelectedId === detail.id) {
@@ -317,6 +365,7 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
 
     cleanup(): void {
         this.resetForm();
+        this.currentUserId = null;
         controller.abort();
         this.balanceNotification.teardownModal();
         balanceTable.teardownStorage();
@@ -333,7 +382,6 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
                 existingComponent.replaceWith(newComponent);
             } else {
                 existingComponent.remove();
-
                 if (balanceData.length === 0) {
                     props.balanceList.innerHTML = '';
                     props.balanceList.textContent = "...Empty...";
@@ -342,6 +390,17 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
         } else {
             this.showAllBalanceData(balanceData);
         }
+    },
+
+    openInsertForm() {
+        props.balanceInputField.classList.remove('hidden');
+        props.balanceInputField.classList.add('flex');
+    },
+
+    hideInsertForm() {
+        props.balanceInputField.classList.add('hidden');
+        props.balanceInputField.classList.remove('flex');
+        props.balanceInputField.reset();
     }
 });
 

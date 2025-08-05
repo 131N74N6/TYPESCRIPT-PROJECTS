@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
     <link rel="stylesheet" href="../css/index.css"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Balance</title>
 </head>
 <body class="bg-[#274C77]">
@@ -12,7 +12,7 @@
     <main id="app" class="p-[1rem] relative z-10 flex gap-[1rem]">
         <header class="flex flex-col gap-[1rem] p-[1rem] w-[25%] border-[1.3px] border-[#6096BA] h-[95.7dvh]">
             <button id="sign-out" type="button" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Sign Out</button>
-            <button id="add-new" type="button" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Add Balance</button>
+            <button id="open-insert-form" type="button" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Add Balance</button>
             <a href="home.html" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] text-center p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Home</a>
             <a href="balance.html" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] text-center p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Balance Detail</a>
         </header>
@@ -24,26 +24,30 @@
                     <section id="expense-total" class="font-mono font-[550] text-[1.3rem] text-[#A3CEF1]"></section>
                     <section id="income_expense" class="font-mono font-[550] text-[1.3rem] text-[#A3CEF1]"></section>
                 </section>
-                <button type="button" id="delete-all-list">Delete All</button>
-                <input type="checkbox" id="oldest" value="oldest-sorting"/>
-                <label for="oldest">Oldest</label>
-                <input type="checkbox" id="newest" value="newest-sorting"/>
-                <label for="newest">Newest</label>
+                <section class="flex pt-[0.5rem] gap-[1rem]">
+                    <button type="button" id="delete-all-list" class="border-[#6096BA] border-[1.3px] text-[0.95rem] p-[0.45rem] cursor-pointer text-center font-mono font-[550] text-[#A3CEF1]">Delete All</button>
+                    <input type="checkbox" id="oldest" value="oldest-sorting" class="hidden"/>
+                    <label for="oldest" class="border-[#6096BA] border-[1.3px] text-[0.95rem] p-[0.45rem] cursor-pointer text-center font-mono font-[550] text-[#A3CEF1] w-[95px] checked:bg-[#6096BA] checked:text-[#274C77]">Oldest</label>
+                    <input type="checkbox" id="newest" value="newest-sorting" class="hidden"/>
+                    <label for="newest" class="border-[#6096BA] border-[1.3px] text-[0.95rem] p-[0.45rem] cursor-pointer text-center font-mono font-[550] text-[#A3CEF1] w-[95px] checked:bg-[#6096BA] checked:text-[#274C77]">Newest</label>
+                </section>
             </section>
-            <section id="balance-list" class="border-[1.3px] border-[#6096BA] flex flex-col gap-[1rem] p-[1rem] text-[1rem] font-mono text-[#A3CEF1] font-[520]"></section>
+            <section id="balance-list" class="border-[1.3px] border-[#6096BA] flex flex-col gap-[1rem] p-[1rem] text-[1rem] h-[67.8dvh] overflow-y-auto font-mono text-[#A3CEF1] font-[520]"></section>
         </section>
-        <form id="balance-input-field" class="z-20 inset-0 fixed hidden justify-center items-center p-">
-            <input type="text" id="balance" placeholder="enter balance..."/>
-            <input type="text" id="description" placeholder="enter description..."/>
-            <div class="radio-button-wrap">
-                <input type="radio" name="category" id="income" value="income"/>
-                <label for="income">Income</label>
-                <input type="radio" name="category" id="expense" value="expense"/>
-                <label for="expense">Expense</label>
-            </div>
-            <div class="form-button-wrap">
-                <button type="submit" id="add-balance">Add</button>
-                <button type="button" id="clear-form">Clear</button>
+        <form id="balance-input-field" class="fixed inset-0 hidden items-center justify-center z-20 gap-[1.3rem] p-[1rem]">
+            <div class="backdrop-blur-[18px] saturate-[161%] border-[2px] flex flex-col gap-[1.3rem] border-[#B1D4E0] p-8 rounded-lg w-full max-w-md">
+                <input type="text" id="balance" placeholder="enter balance..." class="border-[1.5px] border-[#E7ECEF] p-[0.45rem] text-[0.95rem] font-mono font-[550] outline-0 text-[#A3CEF1]"/>
+                <input type="text" id="description" placeholder="enter description..." class="border-[1.5px] border-[#E7ECEF] p-[0.45rem] text-[0.95rem] font-mono font-[550] outline-0 text-[#A3CEF1]"/>
+                <div id="radio-button-wrap">
+                    <input type="radio" name="category" id="income" value="income"/>
+                    <label for="income">Income</label>
+                    <input type="radio" name="category" id="expense" value="expense"/>
+                    <label for="expense">Expense</label>
+                </div>
+                <div id="form-button-wrap" class="flex gap-[1rem]">
+                    <button type="submit" id="add-balance" class="bg-[#274C77] border-[1px] border-[#6096BA] text-[#8B8C89] cursor-pointer w-[90px] shadow-[4px_4px_#6096BA] p-[0.45rem] text-[0.95rem] font-mono font-[550]">Add</button>
+                    <button type="button" id="close-insert-form" class="bg-[#274C77] border-[1px] border-[#6096BA] text-[#8B8C89] cursor-pointer w-[90px] shadow-[4px_4px_#6096BA] p-[0.45rem] text-[0.95rem] font-mono font-[550]">Close</button>
+                </div>
             </div>
         </form>
     </main>
