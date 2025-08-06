@@ -22,5 +22,5 @@ export default defineConfig ({
             }
         }
     },
-    server: { open: 'html/index.html' }
+    server: { open: 'html/signin.html' }
 })

@@ -2,27 +2,66 @@ import Storage from './supabase-table';
 import type { Product } from './custom-types';
 import Modal from './notification';
 import { InsertFile, RemoveFile } from './supabase-storage';
+import { getSession, supabase } from './supabase-config';
 
 const dataStorage = Storage<Product>('products');
 const controller = new AbortController();
 const storageName = 'product';
 
+const username = document.getElementById('username') as HTMLDivElement;
 const productList = document.getElementById('product-list') as HTMLElement;
 const notification = document.getElementById('seller-notification') as HTMLElement;
 const sellerNotification = Modal(notification);
 
+let currentUserId: string | null = null;
 let getSelectedId: string | null = null;
 let newImageFile: File | null = null;
 let newImageUrl: string;
 let newImageName: string;
 
 async function initEventListeners(): Promise<void> {
-    await dataStorage.realtimeInit((data) => showAllProducts(data));
+    const session = await getSession();
+    if (session && session.user) {
+        currentUserId = session.user.id;
+        if (currentUserId) await showUserName(currentUserId);
+    } else {
+        sellerNotification.createNotification('Please sign in to see to gain access');
+        sellerNotification.showNotivication();
+        return;
+    }
+
+    await dataStorage.realtimeInit({
+        callback: (data) => showAllProducts(data),
+        additionalQuery: (addQuery) => addQuery.eq('user_id', currentUserId)
+    });
 
     document.addEventListener('click', async(event) => {
         const target = event.target as HTMLElement;
         if (target.closest('#delete-all-product')) await deleteAllProduct();
     }, { signal: controller.signal });
+}
+
+async function showUserName(userId: string) {
+    try {
+        const { data, error } = await supabase
+        .from('cart_user')
+        .select('username')
+        .eq('id', userId)
+        .single()
+
+        if (error) throw 'Failed to get and show username';
+
+        if (data && data.username) {
+            username.innerHTML = '';
+            username.textContent = `Hello, ${data.username}`;
+        } else {
+            username.innerHTML = '';
+            username.textContent = 'Hello, user';
+        }
+    } catch (error: any) {
+        username.innerHTML = '';
+        username.textContent = `Error: ${error.message}`;
+    }
 }
 
 function showAllProducts(goods: Product[]): void {

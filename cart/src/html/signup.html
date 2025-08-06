@@ -6,14 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Sign Up</title>
 </head>
-<body>
-    <main>
-        <form>
-            <div class="font-mono text-[1.5rem] font-[550]">Hello</div>
-            <input type="email" id="email" placeholder="your username"/>
-            <input type="text" id="username" placeholder="your username"/>
-            <input type="text" id="password"  placeholder="your username"/>
-            <button type="submit">Sign Up</button>
+<body class="bg-[#7D82B8]">
+    <main class="h-[100dvh] flex justify-center items-center">
+        <form class="flex flex-col gap-[1.5rem] p-[1.5rem] w-[305px] bg-[#7B4B94] border-[1.5px] border-[#B7E3CC] shadow-[4px_4px_#B7E3CC] rounded-[1rem]">
+            <div class="font-mono text-[2rem] text-[#D6F7A3] font-[550] text-center">Hello</div>
+            <input type="email" id="email" placeholder="your username" class="text-[1rem] p-[0.5rem] border-[1.5px] border-[#D6F7A3] font-mono text-[#D6F7A3] font-[550] outline-0"/>
+            <input type="email" id="email" placeholder="your@gmail.com" class="text-[1rem] p-[0.5rem] border-[1.5px] border-[#D6F7A3] font-mono text-[#D6F7A3] font-[550] outline-0"/>
+            <input type="text" id="password"  placeholder="your password" class="text-[1rem] p-[0.5rem] border-[1.5px] border-[#D6F7A3] font-mono text-[#D6F7A3] font-[550] outline-0"/>
+            <div class="text-[#D6F7A3] text-center font-mono font-[550] text-[0.95rem]">Already have account? <a class="text-[#a2cff0]" href="signin.html">Sign In</a></div>
+            <button type="submit" class="hover:bg-[#D6F7A3] hover:text-[#7B4B94] text-[#D6F7A3] font-[550] cursor-pointer border-[1.5px] border-[#D6F7A3] rounded-[0.5rem] bg-[#7B4B94] p-[0.5rem] text-[1rem] font-mono">Sign Up</button>
         </form>
     </main>
     <script type="module" src="../ts/signup.ts"></script>

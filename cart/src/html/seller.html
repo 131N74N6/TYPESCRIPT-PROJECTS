@@ -13,13 +13,16 @@
         <header>
             <a href="index.html"><span>Home</span></a>
             <a href="add-product.html">Add-Product</a>
+            <div id="username"></div>
             <button type="button" id="delete-all-product">Delete All</button>
+            <button type="button" id="sign-out">Sign Out</button>
         </header>
         <section id="seller-notification"></section>
         <section id="product-list">
             <div class="error-message">No products available.</div>
         </section>
     </main>
+    <script type="module" src="../ts/auth-guard.ts"></script>
     <script type="module" src="../ts/seller.ts"></script>
 </body>
 </html>

@@ -1,8 +1,13 @@
-import supabase from "./supabase-config";
+import { supabase } from "./supabase-config";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
+type DatabaseProps<HSR> = {
+    callback: (data: HSR[]) => void;
+    additionalQuery?: (query: any) => any;
+}
+
 const TableStorage = <HSR extends { id: string }>(tableName: string) => {
-    async function insertData(new_data: Omit<HSR, 'id'>): Promise<string>;
+    async function insertData(new_data: Omit<HSR, 'id | created_at'>): Promise<string>;
     async function insertData(new_data: HSR): Promise<string>;
     async function insertData(new_data: Partial<HSR>): Promise<string>;
 
@@ -23,7 +28,7 @@ const TableStorage = <HSR extends { id: string }>(tableName: string) => {
             .insert([new_data])
             .select();
 
-            if (error) throw error;
+            if (error) throw 'Failed to add new data';
             return data[0].id;
         }
     }
@@ -45,7 +50,7 @@ const TableStorage = <HSR extends { id: string }>(tableName: string) => {
             .delete()
             .not('id', 'is', null);
 
-            if (error) throw error;
+            if (error) throw 'Failed to delete data';
         }
     }
 
@@ -56,10 +61,10 @@ const TableStorage = <HSR extends { id: string }>(tableName: string) => {
         realtimeChannel: null as RealtimeChannel | null,
         currentData: new Map<string, HSR>() as Map<string, HSR>,
 
-        async realtimeInit(callback: (data: HSR[]) => void): Promise<void> {
+        async realtimeInit(dbProps: DatabaseProps<HSR>): Promise<void> {
             if (this.realtimeChannel && this.isInitialize) {
                 console.warn(`TableStorage for ${tableName} has been initialized`);
-                callback(this.toArray());
+                dbProps.callback(this.toArray());
                 return;
             }
 
@@ -90,18 +95,19 @@ const TableStorage = <HSR extends { id: string }>(tableName: string) => {
                             break;
                         }
                     }
-                    callback(this.toArray());
+                    dbProps.callback(this.toArray());
                 }
             );
 
-            const { data, error } = await supabase
-            .from(tableName)
-            .select('*');
+            let query = supabase.from(tableName).select('*');
+
+            if (dbProps.additionalQuery) query = dbProps.additionalQuery(query);
+
+            const { data, error } = await query;
 
             if (error) {
-                console.error('Initial data fetch error:', error);
-                callback([]);
-                return;
+                dbProps.callback([]);
+                throw 'Failed to get data';
             }
 
             this.currentData.clear();
@@ -110,7 +116,7 @@ const TableStorage = <HSR extends { id: string }>(tableName: string) => {
                 this.currentData.set(processed.id, processed);
             });
 
-            callback(this.toArray());
+            dbProps.callback(this.toArray());
             this.realtimeChannel.subscribe(); 
             this.isInitialize = true;
         },
@@ -122,13 +128,24 @@ const TableStorage = <HSR extends { id: string }>(tableName: string) => {
             return item as HSR;
         },
 
-        async changeSelectedData(id: string, new_data: Partial<Omit<HSR, 'id'>>): Promise<void> {
+        async upsertData(upsertedData: Partial<HSR>): Promise<any> {
+            const { data, error } = await supabase
+            .from(tableName)
+            .upsert([upsertedData])
+            .select()
+            .single();
+
+            if (error) throw 'Failed to upsert data';
+            return data
+        },
+
+        async changeSelectedData(id: string, new_data: Partial<Omit<HSR, 'id | created_at'>>): Promise<void> {
             const { error } = await supabase
             .from(tableName)
             .update(new_data)
             .eq('id', id);
 
-            if (error) throw error;
+            if (error) throw 'Failed to change data';
         },
 
         toArray(): HSR[] {
