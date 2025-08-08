@@ -1,8 +1,8 @@
 import { supabase } from "./supabase-config";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
-type DatabaseProps<HSR> = {
-    callback: (data: HSR[]) => void;
+type DatabaseProps<R> = {
+    callback: (data: R[]) => void;
     additionalQuery?: (query: any) => any;
 }
 

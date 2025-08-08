@@ -4,7 +4,7 @@ const Modal = (component: HTMLElement) => ({
     timeout: null as number | null,
 
     createModal(text: string): void {
-        this.notificationComponent.className = "content";
+        this.notificationComponent.className = "p-[0.5rem] bg-[#8B8C89] text-[1rem] font-mono font-[550]";
         this.notificationMessage.textContent = text;
         this.notificationComponent.appendChild(this.notificationMessage);
         component.appendChild(this.notificationComponent);

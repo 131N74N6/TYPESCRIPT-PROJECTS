@@ -2,19 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
-    <link rel="stylesheet" href="../css/style.css"/>
+    <link rel="icon" type="image/svg+xml" href="../assets/web-logo.svg"/>
+    <link rel="stylesheet" href="../css/index.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Document</title>
+    <title>Homepage</title>
 </head>
-<body>
-    <main id="home-content">
-        <header class="flex flex-col gap-[1rem] p-[0.6rem]">
-            <button id="sign-out">Sign Out</button>
-            <a href="home.html">Home</a>
-            <a href="balance.html">Balance Detail</a>
+<body class="bg-[#274C77]">
+    <section id="notification"></section>
+    <main id="home-content" class="p-[1rem] relative z-10 flex gap-[1rem]">
+        <header class="flex flex-col gap-[1rem] p-[1rem] w-[25%] border-[1.3px] border-[#6096BA] h-[95.7dvh]">
+            <button id="sign-out" type="button" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Sign Out</button>
+            <button id="open-insert-form" type="button" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Add Balance</button>
+            <a href="home.html" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] text-center p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Home</a>
+            <a href="balance.html" class="text-[#6096BA] border-b-[1.3px] border-[#6096BA] text-center p-[0.5rem] text-[1.1rem] cursor-pointer font-mono">Balance Detail</a>
         </header>
-        <section class=""></section>
+        <section class="flex flex-col gap-[1rem] w-[75%]">
+            <div id="username" class="font-mono font-[550] text-[1.3rem] text-[#A3CEF1]">Welcome, User</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="col-span-2 flex flex-wrap gap-[0.7rem] bg-[#274C77] text-[#E7ECEF] font-mono font-[550] p-4 rounded border-[1px] border-[#A3CEF1] shadow-[4px_4px_#A3CEF1]">
+                    <div class="flex flex-col g-[1rem]">
+                        <label class="font-[550] font-mono text-[1rem]">From</label>
+                        <input type="date" id="start-date" class="p-2 border rounded">
+                    </div>
+                    <div class="flex flex-col g-[1rem]">
+                        <label class="font-[550] font-mono text-[1rem]">To</label>
+                        <input type="date" id="end-date" class="p-2 border rounded">
+                    </div>
+                    <button id="filter-button" class="bg-[#6096BA] cursor-pointer p-[0.45rem] font-[550] text-[0.95rem] rounded-[0.45rem] w-[100px] text-[#E7ECEF] border-[1.5px] border-[#E7ECEF]">Apply</button>
+                </div>
+                <div class="bg-[#274C77] text-[#E7ECEF] font-mono font-[550] p-4 rounded border-[1px] border-[#A3CEF1] shadow-[4px_4px_#A3CEF1]">
+                    <h2 class="text-xl font-semibold mb-4">Income vs Expense</h2>
+                    <canvas id="trend-chart" height="300"></canvas>
+                </div>
+                <div class="bg-[#274C77] text-[#E7ECEF] font-mono font-[550] p-4 rounded border-[1px] border-[#A3CEF1] shadow-[4px_4px_#A3CEF1]">
+                    <h2 class="text-xl font-semibold mb-4">Monthly Comparison</h2>
+                    <canvas id="monthly-chart" height="300"></canvas>
+                </div>
+            </div>
+        </section>
+        <form id="balance-input-field" class="fixed inset-0 hidden items-center justify-center z-20 gap-[1.3rem] p-[1rem]">
+            <div class="bg-[#274C77] border-[2px] flex flex-col gap-[1.3rem] border-[#B1D4E0] p-8 rounded-lg w-full max-w-md">
+                <input type="text" id="balance" placeholder="enter balance..." class="border-[1.5px] border-[#E7ECEF] p-[0.45rem] text-[0.95rem] font-mono font-[550] outline-0 text-[#A3CEF1]"/>
+                <input type="text" id="description" placeholder="enter description..." class="border-[1.5px] border-[#E7ECEF] p-[0.45rem] text-[0.95rem] font-mono font-[550] outline-0 text-[#A3CEF1]"/>
+                <div id="radio-button-wrap">
+                    <input type="radio" name="category" id="income" value="income"/>
+                    <label for="income">Income</label>
+                    <input type="radio" name="category" id="expense" value="expense"/>
+                    <label for="expense">Expense</label>
+                </div>
+                <div id="form-button-wrap" class="flex gap-[1rem]">
+                    <button type="submit" id="add-balance" class="bg-[#274C77] border-[1px] border-[#6096BA] text-[#8B8C89] cursor-pointer w-[90px] shadow-[4px_4px_#6096BA] p-[0.45rem] text-[0.95rem] font-mono font-[550]">Add</button>
+                    <button type="button" id="close-insert-form" class="bg-[#274C77] border-[1px] border-[#6096BA] text-[#8B8C89] cursor-pointer w-[90px] shadow-[4px_4px_#6096BA] p-[0.45rem] text-[0.95rem] font-mono font-[550]">Close</button>
+                </div>
+            </div>
+        </form>
     </main>
     <script type="module" src="../ts/auth-guard.ts"></script>
     <script type="module" src="../ts/home.ts"></script>

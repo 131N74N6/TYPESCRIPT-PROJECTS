@@ -10,9 +10,13 @@ const priceTotal = document.getElementById('price-total') as HTMLElement;
 const notification = document.getElementById('cart-notification') as HTMLElement;
 const cartNotification = Modal(notification);
 let getSelectedId: string | null = null;
+let currentUserId: string | null = null;
 
 async function initEventListeners(): Promise<void> {
-    await cartStorage.realtimeInit((data) => showAllChosenProduct(data));
+    await cartStorage.realtimeInit({
+        callback: (data) => showAllChosenProduct(data),
+        additionalQuery: (query) => query.ed('user_id', currentUserId)
+    });
 
     document.addEventListener('click', async (event) => {
         const target = event.target as HTMLElement;

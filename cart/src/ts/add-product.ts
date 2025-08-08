@@ -2,8 +2,10 @@ import type { Product } from "./custom-types";
 import Storage from "./supabase-table";
 import Modal from "./notification";
 import { InsertFile } from "./supabase-storage";
+import { getSession } from "./supabase-config";
 
 let currentImageFile: File | null = null;
+let currentUserId: string | null = null;
 const tableStorage = Storage<Product>("products");
 const controller = new AbortController();
 
@@ -17,9 +19,18 @@ const productPrice = document.getElementById('product-price') as HTMLInputElemen
 const productImage = document.querySelector('#product-image') as HTMLInputElement;
 const productImagePreview = document.querySelector('#product-image-preview') as HTMLDivElement;
 
-function initEventListeners(): void {
+async function initEventListeners(): Promise<void> {
     productImagePreview.onclick = () => productImage.click();
     resetInserted.onclick = () => resetForm();
+
+    const session = await getSession();
+    if (session && session.user) {
+        currentUserId = session.user.id;
+    } else {
+        insertNotification.createNotification('Please sign in to add new product');
+        insertNotification.showNotivication();
+        return;
+    }
 
     addProductFields.addEventListener('submit', async (event) => await addProduct(event), { 
         signal: controller.signal 
@@ -67,14 +78,15 @@ async function addProduct(event: SubmitEvent): Promise<void> {
     }
 
     if (!currentImageFile) return;
+    if (!currentUserId) return;
 
     try {
         await tableStorage.insertData({
-            created_at: new Date(),
             name: trimmedProductName,
             price: trimmedProductPrice,
             image_name: currentImageFile.name,
-            image_url: await InsertFile('product', currentImageFile)
+            image_url: await InsertFile('product', currentImageFile),
+            user_id: currentUserId
         });
     } catch (error: any) {
         insertNotification.createNotification(`Error: ${error.message || error}`);

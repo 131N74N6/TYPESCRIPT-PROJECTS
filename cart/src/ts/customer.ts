@@ -7,7 +7,9 @@ const controller = new AbortController();
 const productList = document.getElementById('product-list') as HTMLElement;
 
 async function initEventListeners(): Promise<void> {
-    await dataStorage.realtimeInit((data) => showAllProducts(data));
+    await dataStorage.realtimeInit({
+        callback: (data) => showAllProducts(data)
+    });
 }
 
 function showAllProducts(goods: Product[]): void {

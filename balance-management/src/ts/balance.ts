@@ -60,7 +60,7 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
             .eq('id', id)
             .single();
 
-            if (error) throw 'Failed to get username';
+            if (error) throw 'Failed to get and show your username';
 
             if (data && data.username) {
                 props.username.innerHTML = '';
@@ -71,7 +71,9 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
             }
         } catch (error: any) {
             props.username.innerHTML = '';
-            props.username.textContent = error.message;
+            props.username.textContent = 'Hello, User';
+            this.balanceNotification.createModal('Please sign in to see your balance');
+            this.balanceNotification.showModal();
         }
     },
 
@@ -183,7 +185,7 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
             newAmountInput.type = "text";
             newAmountInput.placeholder = 'Insert new amount';
             newAmountInput.value = detail.amount.toString();
-            newAmountInput.className = "edit-amount";
+            newAmountInput.className = "text-[#E7ECEF] rounded-[0.5rem] border-[#A3CEF1] font-[600] font-mono border-[1px] outline-0 p-[0.5rem] text-[0.95rem]";
 
             const incomeLabel = document.createElement('label') as HTMLLabelElement;
             incomeLabel.htmlFor = `income-${detail.id}`;
@@ -209,7 +211,7 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
 
             const newDescription = document.createElement('input') as HTMLInputElement;
             newDescription.type = 'text';
-            newDescription.className = 'new-description';
+            newDescription.className = 'text-[#E7ECEF] rounded-[0.5rem] border-[#A3CEF1] font-[600] font-mono border-[1px] outline-0 p-[0.5rem] text-[0.95rem]';
             newDescription.value = detail.description;
 
             const buttonWrap = document.createElement("div");
@@ -226,12 +228,12 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
             secondRadioWrap.append(expenseRadioButton, expenseLabel);
 
             const radioButtonGroup = document.createElement('div') as HTMLDivElement;
-            radioButtonGroup.className = 'radio-button-group';
+            radioButtonGroup.className = 'flex gap-[1rem] items-center';
             radioButtonGroup.append(firstRadioWrap, secondRadioWrap);
 
             const changeButton = document.createElement("button");
             changeButton.textContent = "Save";
-            changeButton.className = "change-button";
+            changeButton.className = "bg-[#6096BA] cursor-pointer p-[0.45rem] font-[550] text-[0.95rem] rounded-[0.45rem] w-[100px] text-[#E7ECEF] border-[1.5px] border-[#E7ECEF]";
             changeButton.onclick = async () => {
                 const selectedType = radioButtonGroup.querySelector(`input[name="amount-type-${detail.id}"]:checked`) as HTMLInputElement;
                 const trimmedNewAmount = Number(newAmountInput.value.trim());
@@ -260,14 +262,14 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
 
             const cancelButton = document.createElement("button");
             cancelButton.textContent = "Cancel";
-            cancelButton.className = "cancel-button";
+            cancelButton.className = "bg-[#6096BA] cursor-pointer p-[0.45rem] font-[550] text-[0.95rem] rounded-[0.45rem] w-[100px] text-[#E7ECEF] border-[1.5px] border-[#E7ECEF]";
             cancelButton.onclick = () => {
                 this.getSelectedId = null;
                 this.updateExistingComponent(detail.id);
             }
 
             buttonWrap.append(changeButton, cancelButton);
-            balanceWrap.append(newAmountInput, radioButtonGroup, newDescription, buttonWrap);
+            balanceWrap.append(newAmountInput, newDescription, radioButtonGroup, buttonWrap);
         } else {
             // View mode
             const balanceData = document.createElement("div") as HTMLDivElement;
@@ -293,7 +295,7 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
 
             const selectButton = document.createElement("button");
             selectButton.textContent = "Select";
-            selectButton.className = "select-button";
+            selectButton.className = "bg-[#6096BA] cursor-pointer p-[0.45rem] font-[550] text-[0.95rem] rounded-[0.45rem] w-[100px] text-[#E7ECEF] border-[1.5px] border-[#E7ECEF]";
             selectButton.onclick = () => {
                 const previousId = this.getSelectedId;
                 this.getSelectedId = detail.id;
@@ -306,7 +308,7 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
 
             const deleteButton = document.createElement("button");
             deleteButton.textContent = "Delete";
-            deleteButton.className = "delete-button";
+            deleteButton.className = "bg-[#6096BA] cursor-pointer p-[0.45rem] font-[550] text-[0.95rem] rounded-[0.45rem] w-[100px] text-[#E7ECEF] border-[1.5px] border-[#E7ECEF]";
             deleteButton.onclick = async () => {
                 const balanceData = balanceTable.toArray();
                 try {

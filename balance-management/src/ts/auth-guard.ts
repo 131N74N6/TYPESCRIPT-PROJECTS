@@ -4,7 +4,7 @@ const publicRoutes = ['/html/signin.html', '/html/signup.html'];
 let authUnsubscribe: (() => void) | null = null;
 let isCheckingAuth = false;
 
-const handleRedirect = (sessionExists: boolean) => {
+function handleRedirect(sessionExists: boolean): void {
     const currentPath = window.location.pathname;
     const isPublicRoute = publicRoutes.includes(currentPath);
     
@@ -16,7 +16,7 @@ const handleRedirect = (sessionExists: boolean) => {
 }
 
 // Centralized auth check
-const checkAuth = async () => {
+async function checkAuth(): Promise<void> {
     if (isCheckingAuth) return;
     isCheckingAuth = true;
     
@@ -59,7 +59,7 @@ function initAuthGuard(): void {
     });
 }
 
-function cleanupAuthGuard() {
+function cleanupAuthGuard(): void {
     if (authUnsubscribe) authUnsubscribe();
     document.getElementById('sign-out')?.removeEventListener('click', supabaseSignOut);
 }
