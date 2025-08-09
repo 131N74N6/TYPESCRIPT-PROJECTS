@@ -1,31 +1,18 @@
 import DataStorages from './supabase-table';
 import Modal from './modal';
 import SupabaseStorage from './supabase-storage';
+import type { CloudStorageProps, FileData } from './custom-types';
 
-type FileItem = {
-    id: number;
-    created_at: Date;
-    uploader_name: string;
-    file_name: string;
-    file_type: string;
-    file_url: string;
-}
-
-const tableStorages = DataStorages<FileItem>('files_list');
+const tableStorages = DataStorages<FileData>('files_list');
 const mediaStorage = SupabaseStorage();
 const storageName = 'file-example';
-let temp: FileItem[];
+let temp: FileData[];
 
-function Displayer (
-    fileUploaderForm: HTMLFormElement, fileInput: HTMLInputElement, documentsList: HTMLElement,
-    preview: HTMLDivElement, submitButton: HTMLButtonElement, username: HTMLInputElement, 
-    modal: HTMLElement, searchInput: HTMLInputElement, checkboxCategory: NodeListOf<HTMLInputElement>,
-    sortingData: HTMLSelectElement
-) { 
+function CloudStorage (props: CloudStorageProps) { 
     return {
-        setModal: Modal(modal),
+        setModal: Modal(props.modal),
         controller: new AbortController() as  AbortController,
-        selectedFileId: null as number | null,
+        selectedFileId: null as string | null,
         currentFile: null as File | null,
         currentFileDataUrl: '',
         selectedCategories: [
@@ -33,25 +20,27 @@ function Displayer (
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ] as string[],
 
-        async initDisplayer(): Promise<void> {
-            await tableStorages.realtimeInit((filesData) => {
-                this.showAllFiles(filesData);
-                temp = filesData;
+        async initCloudStorage(): Promise<void> {
+            await tableStorages.realtimeInit({
+                callback: (filesData) => {
+                    this.showAllFiles(filesData);
+                    temp = filesData;
+                }
             });
             
-            fileInput.onchange = (event) => this.changeFileToUrl(event);
-            fileUploaderForm.onsubmit = async (event) => await this.handleSubmit(event);
-            searchInput.oninput = (event) => this.searchedData(event);
+            props.fileInput.onchange = (event) => this.changeFileToUrl(event);
+            props.fileUploaderForm.onsubmit = async (event) => await this.handleSubmit(event);
+            props.searchInput.oninput = (event) => this.searchedData(event);
             
             document.addEventListener('click', async (event) => {
                 const target = event.target as HTMLElement;
                 if (target.closest('#delete-all-files')) await this.deleteAllFiles();
                 else if (target.closest('#show-form')) this.openForm();
                 else if (target.closest('#close-insert-form')) this.closeForm();
-                else if (target.closest('#preview')) fileInput.click();
+                else if (target.closest('#props.preview')) props.fileInput.click();
             }, { signal: this.controller.signal });
 
-            sortingData.onchange = (event) => {
+            props.sortingData.onchange = (event) => {
                 const getValue = event.target as HTMLInputElement;
                 switch (getValue.value) {
                     case 'from-A-Z': {
@@ -81,17 +70,17 @@ function Displayer (
                 }
             }
 
-            checkboxCategory.forEach(checkbox => {
+            props.checkboxCategory.forEach(checkbox => {
                 checkbox.onchange = () => {
-                    this.selectedCategories = Array.from(checkboxCategory)
+                    this.selectedCategories = Array.from(props.checkboxCategory)
                     .filter(selected => selected.checked)
-                    .map(get_value => get_value.value as FileItem['file_type']);
+                    .map(get_value => get_value.value as FileData['file_type']);
                     this.showAllFiles(temp);
                 }
             });
         },
 
-        showAllFiles(filesData: FileItem[]): void {
+        showAllFiles(filesData: FileData[]): void {
             const fileDataFragment = document.createDocumentFragment();
             try {
                 if (filesData.length > 0) {
@@ -99,15 +88,15 @@ function Displayer (
                     let sortedData = filteredData;
 
                     sortedData.forEach(data => fileDataFragment.appendChild(this.createComponent(data)));
-                    documentsList.innerHTML = '';
-                    documentsList.appendChild(fileDataFragment);
+                    props.documentsList.innerHTML = '';
+                    props.documentsList.appendChild(fileDataFragment);
                 } else {
-                    documentsList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">No files added...</div>`;
+                    props.documentsList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">No files added...</div>`;
                 }
             } catch (error: any) {
                 this.setModal.createModal(`Failed to load data: ${error.message || error}`);
                 this.setModal.showMessage();
-                documentsList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">Error ${error.message || error}...</div>`;
+                props.documentsList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">Error ${error.message || error}...</div>`;
             }
         },
 
@@ -121,9 +110,9 @@ function Displayer (
                 reader.onloadend = (event) => {
                     this.currentFileDataUrl = event.target?.result as string;
                     if (file.type.startsWith('image/')) {
-                        preview.innerHTML = `<img src="${this.currentFileDataUrl}" class="w-[100%] h-[100%] object-cover" alt="Preview"/>`;
+                        props.preview.innerHTML = `<img src="${this.currentFileDataUrl}" class="w-[100%] h-[100%] object-cover" alt="Preview"/>`;
                     } else {
-                        preview.textContent = file.name;
+                        props.preview.textContent = file.name;
                     }
                 }
                 reader.readAsDataURL(file);
@@ -140,7 +129,6 @@ function Displayer (
             }
 
             try {
-                let uploadDate: Date;
                 let fileUrl: string = '';
                 let newFileName: string = '';
                 let newFileType: string = '';
@@ -157,14 +145,10 @@ function Displayer (
                         // Ada file baru, hapus file lama dari storage
                         await mediaStorage.RemoveFile(existingFileItem.file_url, storageName);
 
-                        // Upload file baru
-                        uploadDate = existingFileItem.created_at;
                         fileUrl = await mediaStorage.InsertFile(this.currentFile, storageName);
                         newFileName = this.currentFile.name;
                         newFileType = this.currentFile.type;
                     } else {
-                        // Tidak ada file baru yang dipilih, gunakan URL file yang sudah ada
-                        uploadDate = existingFileItem.created_at;
                         fileUrl = existingFileItem.file_url;
                         newFileName = existingFileItem.file_name;
                         newFileType = existingFileItem.file_type;
@@ -177,24 +161,25 @@ function Displayer (
                         return;
                     }
                     
-                    uploadDate = new Date();
                     fileUrl = await mediaStorage.InsertFile(this.currentFile, storageName);
                     newFileName = this.currentFile.name;
                     newFileType = this.currentFile.type;
                 }
 
-                const newFile: Omit<FileItem, 'id'> = {
-                    created_at: uploadDate, // Mungkin Anda ingin menjaga created_at yang asli untuk edit, atau update ke waktu sekarang
-                    uploader_name: username.value || `user_${Date.now()}`,
-                    file_name: newFileName,
-                    file_type: newFileType,
-                    file_url: fileUrl
-                }
-
                 if (this.selectedFileId) {
-                    await tableStorages.changeSelectedData(this.selectedFileId, newFile);
+                    await tableStorages.changeSelectedData(this.selectedFileId, {
+                        uploader_name: props.username.value || `user_${Date.now()}`,
+                        file_name: newFileName,
+                        file_type: newFileType,
+                        file_url: fileUrl
+                    });
                 } else {
-                    await tableStorages.addToStorage(newFile);
+                    await tableStorages.addToStorage({
+                        uploader_name: props.username.value || `user_${Date.now()}`,
+                        file_name: newFileName,
+                        file_type: newFileType,
+                        file_url: fileUrl
+                    });
                 }
             } catch (error) {
                 this.setModal.createModal('Error uploading file');
@@ -205,7 +190,7 @@ function Displayer (
             }
         },
 
-        createComponent(detail: FileItem): HTMLDivElement {
+        createComponent(detail: FileData): HTMLDivElement {
             const card = document.createElement('div');
             card.className = 'border-[#B71C1C] border-[1.8px] text-[#FFFFFF] shadow-[3px_3px_#B71C1C] p-[1rem] flex flex-col gap-[0.5rem] rounded-[1rem] font-[520]';
             card.dataset.id = detail.id.toString();
@@ -232,9 +217,9 @@ function Displayer (
                 
                 if (!fileData) return;
                 
-                username.value = fileData.uploader_name;
+                props.username.value = fileData.uploader_name;
                 this.showPreview(fileData);
-                submitButton.textContent = 'Save Changes';
+                props.submitButton.textContent = 'Save Changes';
             }
 
             const deleteButton = document.createElement('button');
@@ -267,19 +252,19 @@ function Displayer (
             return card;
         },
         
-        openDocument(selectedData: FileItem): void {
+        openDocument(selectedData: FileData): void {
             window.open(selectedData.file_url, '_blank');
         },
 
         searchedData(event: Event): void {
             event.preventDefault();
-            const trimmedValue = searchInput.value.trim().toLowerCase();
+            const trimmedValue = props.searchInput.value.trim().toLowerCase();
 
             temp = tableStorages.toArray().filter(data => data.file_name.includes(trimmedValue));
             this.showAllFiles(temp);
         },
 
-        fileIcon(file: FileItem): HTMLElement {
+        fileIcon(file: FileData): HTMLElement {
             const icon = document.createElement('i') as HTMLElement;
             if (file.file_name.includes('.pdf')) icon.className = 'fa-solid fa-file-pdf';
             else if (file.file_name.includes('.txt')) icon.className = 'fa-solid fa-file-lines';
@@ -292,10 +277,10 @@ function Displayer (
             return icon;
         },
 
-        showPreview(detail: FileItem): void {
-            preview.innerHTML = detail.file_type.startsWith('image/') ? 
+        showPreview(detail: FileData): void {
+            props.preview.innerHTML = detail.file_type.startsWith('image/') ? 
             `<img src="${detail.file_url}" class="w-[100%] h-[100%] object-cover" alt="${detail.file_name}"/>` : 
-            `<div class='file-preview'>${detail.file_name}</div>`;
+            `<div class='file-props.preview'>${detail.file_name}</div>`;
         },
 
         async deleteAllFiles(): Promise<void> {
@@ -303,8 +288,8 @@ function Displayer (
                 if (tableStorages.currentData.size > 0) {
                     await tableStorages.deleteData();
                     await Promise.all(tableStorages.toArray().map(data => mediaStorage.RemoveFile(data.file_url, storageName)));
-                    documentsList.innerHTML = '';
-                    documentsList.textContent = 'No file added...';
+                    props.documentsList.innerHTML = '';
+                    props.documentsList.textContent = 'No file added...';
                     this.resetForm();
                 } else {    
                     this.setModal.createModal('Please add one file');
@@ -317,13 +302,13 @@ function Displayer (
         },
 
         openForm(): void {
-            fileUploaderForm.classList.remove('hidden');
-            fileUploaderForm.classList.add('flex');
+            props.fileUploaderForm.classList.remove('hidden');
+            props.fileUploaderForm.classList.add('flex');
         },
 
         closeForm(): void {
-            fileUploaderForm.classList.remove('flex');
-            fileUploaderForm.classList.add('hidden');
+            props.fileUploaderForm.classList.remove('flex');
+            props.fileUploaderForm.classList.add('hidden');
             this.resetForm();
         },
 
@@ -331,10 +316,10 @@ function Displayer (
             this.selectedFileId = null;
             this.currentFile = null;
             this.currentFileDataUrl = '';
-            fileInput.value = '';
-            username.value = '';
-            preview.innerHTML = 'Click here to upload your file';
-            submitButton.textContent = 'Add';
+            props.fileInput.value = '';
+            props.username.value = '';
+            props.preview.innerHTML = 'Click here to upload your file';
+            props.submitButton.textContent = 'Add';
         },
 
         cleanUpListener(): void {
@@ -346,4 +331,4 @@ function Displayer (
     }
 }
 
-export default Displayer;
+export default CloudStorage;

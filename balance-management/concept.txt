@@ -1,0 +1,78 @@
+Update Data Dinamis
+Tampilan Awal
++--------------------+
+| Item A             |
+| 1000               |
+| Select | Delete    |
++--------------------+
++--------------------+
+| Item B             |
+| 2500               |
+| Select | Delete    |
++--------------------+
++--------------------+
+| Item C             |
+| 500                |
+| Select | Delete    |
++--------------------+
+
+Perubahan pertama
+-) selectButton.onclick dieksekusi.
+-) previousId = null (karena tidak ada yang dipilih sebelumnya).
+-) this.getSelectedId diubah menjadi ID Item B.
+-) this.updateExistingComponent("ID Item B") dipanggil. Fungsi ini menemukan elemen Item B.
+-) Mengambil data terbaru untuk Item B.
+-) Membuat komponen baru untuk Item B (misalnya, menampilkan formulir edit di tempat tombol "Select").
+-) Komponen lama Item B diganti dengan komponen baru.
+-) Kondisi if (previousId && previousId !== detail.id) tidak terpenuhi.
++--------------------+
+| Item A             |
+| 1000               |
+| Select | Delete    |
++--------------------+
++--------------------+
+| Item B             |
+| (Formulir Edit)    |
+| Change | Cancel    |
++--------------------+
++--------------------+
+| Item C             |
+| 500                |
+| Select | Delete    |
++--------------------+
+
+Perubahan kedua
+-) selectButton.onclick dieksekusi.
+-) previousId = ID Item B.
+-) this.getSelectedId diubah menjadi ID Item C.
+-) this.updateExistingComponent("ID Item C") dipanggil.
+-) Fungsi ini mengubah Item C dari tampilan normal menjadi formulir edit.
+-) Kondisi if (previousId && previousId !== detail.id) terpenuhi.
+-) this.updateExistingComponent("ID Item B") dipanggil.
+-) Fungsi ini menemukan elemen Item B.
+-) Lalu mengambil data terbaru untuk Item B.
+-) Selanjutnya membuat komponen baru untuk Item B (yang tidak menampilkan formulir edit. 
+-) Komponen Item B yang lama diganti dengan komponen baru, mengembalikannya ke tampilan awal.
++--------------------+
+| Item A             |
+| 1000               |
+| Select | Delete    |
++--------------------+
++--------------------+
+| Item B             |
+| 2500               |
+| Select | Delete    |
++--------------------+
++--------------------+
+| Item C             |
+| (Formulir Edit)    |
+| Change | Cancel    |
++--------------------+
+
+Cara kerja cancel
+-) cancelButton.onclick dieksekusi.
+-) this.getSelectedId diubah menjadi null.
+-) this.updateExistingComponent("ID Item C") dipanggil.
+-) Fungsi ini menemukan elemen Item C.
+-) Lalu mengambil data terbaru Item C.
+-) Kemudian membuat komponen baru Item C yang tidak menampilkan formulir edit. Komponen lama Item C diganti dengan yang baru.

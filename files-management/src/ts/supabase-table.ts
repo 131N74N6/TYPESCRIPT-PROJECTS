@@ -1,11 +1,16 @@
 import supabase from './supabase-config';
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
-const DataStorages = <N extends { id: number }>(tableName: string) => {
-    async function deleteData(id: number): Promise<void>;
-    async function deleteData(id?: number): Promise<void>;
+type DatabaseProps<J> = {
+    callback: (data: J[]) => void;
+    additionalQuery?: (query: any) => any;
+}
 
-    async function deleteData(id?: number): Promise<void> {
+const DataStorages = <N extends { id: string }>(tableName: string) => {
+    async function deleteData(id: string): Promise<void>;
+    async function deleteData(id?: string): Promise<void>;
+
+    async function deleteData(id?: string): Promise<void> {
         if (id !== undefined) {
             const { error } = await supabase
             .from(tableName)
@@ -24,15 +29,15 @@ const DataStorages = <N extends { id: number }>(tableName: string) => {
     }
 
     return {
-        currentData: new Map<number, N>() as Map<number, N>,
+        currentData: new Map<string, N>() as Map<string, N>,
         isInitialize: false as boolean,
         realtimeChannel: null as RealtimeChannel | null,
         deleteData,
 
-        async realtimeInit(callback: (data: N[]) => void): Promise<void>  {
+        async realtimeInit(dbProps: DatabaseProps<N>): Promise<void>  {
             if (this.isInitialize && this.realtimeChannel) {
                 console.warn(`Storage for ${tableName} has been initialized`);
-                callback(this.toArray());
+                dbProps.callback(this.toArray());
                 return;
             }
 
@@ -48,11 +53,13 @@ const DataStorages = <N extends { id: number }>(tableName: string) => {
                 (payload: RealtimePostgresChangesPayload<N>) => {
                     switch (payload.eventType) {
                         case 'INSERT': {
-                            this.currentData.set(payload.new.id, payload.new);
+                            const fixed = payload.new;
+                            this.currentData.set(fixed.id, fixed);
                             break;
                         }
                         case 'UPDATE': {
-                            this.currentData.set(payload.new.id, payload.new);
+                            const fixed = payload.new;
+                            this.currentData.set(fixed.id, fixed);
                             break;
                         }
                         case 'DELETE': {
@@ -61,29 +68,34 @@ const DataStorages = <N extends { id: number }>(tableName: string) => {
                             break;
                         }
                     }
-                    callback(this.toArray());
+                    dbProps.callback(this.toArray());
                 }
             );
+
+            let query = supabase.from(tableName).select('*');
             
-            const { data, error } = await supabase
-            .from(tableName)
-            .select('*');
+            const { data, error } = await query;
 
             if (error) {
                 console.error('Initial data fetch error:', error);
-                callback([]);
+                dbProps.callback([]);
                 return;
             }
 
-            this.currentData.clear();
-            data.forEach(dt => this.currentData.set(dt.id, dt));
+            if (dbProps.additionalQuery) query = dbProps.additionalQuery(query);
 
-            callback(this.toArray());
+            this.currentData.clear();
+            data.forEach(dt => {
+                const transofrmData = this.transformedData(dt);
+                this.currentData.set(transofrmData.id, transofrmData)
+            });
+
+            dbProps.callback(this.toArray());
             this.realtimeChannel.subscribe();
             this.isInitialize = true;
         },
 
-        async addToStorage(data: Omit<N, 'id' | 'created_at'>): Promise<number> {
+        async addToStorage(data: Omit<N, 'id' | 'created_at'>): Promise<string> {
             const { data: inserted, error } = await supabase
             .from(tableName)
             .insert([data])
@@ -93,7 +105,17 @@ const DataStorages = <N extends { id: number }>(tableName: string) => {
             return inserted[0].id
         },
 
-        async changeSelectedData(id: number, newData: Partial<Omit<N, 'id'>>): Promise<void> {
+        async upsertData(upsertNewData: Partial<N>): Promise<any[]> {
+            const { data, error } = await supabase
+            .from(tableName)
+            .upsert([upsertNewData])
+            .select();
+            
+            if (error) throw error;
+            return data;
+        },
+
+        async changeSelectedData(id: string, newData: Partial<Omit<N, 'id' | 'created_at'>>): Promise<void> {
             const { error } = await supabase
             .from(tableName)
             .update(newData)
@@ -104,6 +126,13 @@ const DataStorages = <N extends { id: number }>(tableName: string) => {
 
         toArray(): N[] {
             return Array.from(this.currentData.values());
+        },
+
+        transformedData(item: any): N {
+            if (item && typeof item.created_at === 'string') {
+                return { ...item, created_at: new Date(item.created_at) } as N;
+            }
+            return item as N;
         },
 
         teardownStorage(): void {

@@ -1,4 +1,4 @@
-import Displayer from './handler';
+import CloudStorage from './cloud-storage';
 
 const fileUploaderForm = document.getElementById('upload-file-section') as HTMLFormElement;
 const username = document.getElementById('username') as HTMLInputElement;
@@ -12,13 +12,13 @@ const sortingData = document.getElementById('sorting-data') as HTMLSelectElement
 const documentsList = document.getElementById('documents-list') as HTMLElement;
 const modal = document.getElementById('modal') as HTMLElement;
 
-const fileDataDisplayer = Displayer(
+const fileDataDisplayer = CloudStorage(
     fileUploaderForm, fileInput, documentsList, preview, submitButton, username, modal, 
     searchedData, checkboxCategory, sortingData
 );
 
 async function init(): Promise<void> {
-    await fileDataDisplayer.initDisplayer();
+    await fileDataDisplayer.initCloudStorage();
 }
 
 function teardown(): void {
