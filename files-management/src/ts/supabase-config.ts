@@ -9,8 +9,9 @@ if (!supabaseUrl || !supabaseApiKey) {
 
 const supabase = createClient(supabaseUrl, supabaseApiKey, {
     auth: {
-        persistSession: false,
-        autoRefreshToken: false
+        detectSessionInUrl: true,
+        persistSession: true,
+        autoRefreshToken: true
     },
     realtime: {
         params: {
@@ -19,4 +20,29 @@ const supabase = createClient(supabaseUrl, supabaseApiKey, {
     }
 });
 
-export default supabase;
+let sessionCache: any = null;
+
+async function getSession() {
+    if(sessionCache) return sessionCache;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    sessionCache = session;
+    return session;
+}
+
+function onAuthStateChange(callback: (event: string, session: any | null) => void) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        sessionCache = session;
+        callback(event, session);
+    });
+
+    return () => subscription.unsubscribe();
+}
+
+async function signOut() {
+    sessionCache = null;
+    const { error } = await supabase.auth.signOut();
+    if (error) throw 'Failed to sign up';
+}
+
+export { getSession, onAuthStateChange, signOut, supabase };

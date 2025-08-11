@@ -1,10 +1,15 @@
+export type DatabaseProps<J> = {
+    callback: (data: J[]) => void;
+    additionalQuery?: (query: any) => any;
+}
+
 export type FileData = {
     id: string;
     created_at: Date;
-    uploader_name: string;
     file_name: string;
     file_type: string;
     file_url: string;
+    user_id: string;
 }
 
 export type User = {
@@ -20,9 +25,12 @@ export type CloudStorageProps = {
     documentsList: HTMLElement;
     preview: HTMLDivElement; 
     submitButton: HTMLButtonElement; 
-    username: HTMLInputElement; 
+    username: HTMLDivElement; 
     modal: HTMLElement; 
     searchInput: HTMLInputElement; 
     checkboxCategory: NodeListOf<HTMLInputElement>;
-    sortingData: HTMLSelectElement
+    sortingData: HTMLSelectElement;
+    navbar: HTMLElement;
+    fileViewer: HTMLElement;
+    fileContent: HTMLElement;
 }

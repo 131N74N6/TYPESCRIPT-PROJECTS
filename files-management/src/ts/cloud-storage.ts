@@ -2,11 +2,13 @@ import DataStorages from './supabase-table';
 import Modal from './modal';
 import SupabaseStorage from './supabase-storage';
 import type { CloudStorageProps, FileData } from './custom-types';
+import { getSession, supabase } from './supabase-config';
 
 const tableStorages = DataStorages<FileData>('files_list');
 const mediaStorage = SupabaseStorage();
 const storageName = 'file-example';
 let temp: FileData[];
+let currentUserId: string | null = null;
 
 function CloudStorage (props: CloudStorageProps) { 
     return {
@@ -21,11 +23,22 @@ function CloudStorage (props: CloudStorageProps) {
         ] as string[],
 
         async initCloudStorage(): Promise<void> {
+            const session = await getSession();
+            if (session && session.user) {
+                currentUserId = session.user.id;
+                if (currentUserId) await this.showUserName(currentUserId);
+            } else {
+                this.setModal.createModal('Please sign in to see your files');
+                this.setModal.showMessage();
+                return;
+            }
+
             await tableStorages.realtimeInit({
                 callback: (filesData) => {
                     this.showAllFiles(filesData);
                     temp = filesData;
-                }
+                },
+                additionalQuery: (query) => query.eq('user_id', currentUserId)
             });
             
             props.fileInput.onchange = (event) => this.changeFileToUrl(event);
@@ -37,7 +50,10 @@ function CloudStorage (props: CloudStorageProps) {
                 if (target.closest('#delete-all-files')) await this.deleteAllFiles();
                 else if (target.closest('#show-form')) this.openForm();
                 else if (target.closest('#close-insert-form')) this.closeForm();
-                else if (target.closest('#props.preview')) props.fileInput.click();
+                else if (target.closest('#preview')) props.fileInput.click();
+                else if (target.closest('#navbar-key')) this.showNavbar();
+                else if (target.closest('#close-navbar-key')) this.hideNavbar();
+                else if (target.closest('#close-file-viewer')) this.closeFileViewer();
             }, { signal: this.controller.signal });
 
             props.sortingData.onchange = (event) => {
@@ -78,6 +94,41 @@ function CloudStorage (props: CloudStorageProps) {
                     this.showAllFiles(temp);
                 }
             });
+        },
+
+        showNavbar() {
+            props.navbar.classList.add('flex');
+            props.navbar.classList.remove('hidden');
+        },
+
+        hideNavbar() {
+            props.navbar.classList.remove('flex');
+            props.navbar.classList.add('hidden');
+        },
+
+        async showUserName(id: string) {
+            try {
+                const { data, error } = await supabase
+                .from('cart_user')
+                .select('username')
+                .eq('id', id)
+                .single()
+
+                if (error) throw 'Failed to get and show username';
+
+                if (data && data.username) {
+                    props.username.innerHTML = '';
+                    props.username.textContent = `Hello, ${data.username}`;
+                } else {
+                    props.username.innerHTML = '';
+                    props.username.textContent = 'Hello, user';
+                }
+            } catch (error: any) {
+                props.username.innerHTML = '';
+                props.username.textContent = `User`;
+                this.setModal.createModal(`Error: ${error.message || error}`);
+                this.setModal.showMessage();
+            }
         },
 
         showAllFiles(filesData: FileData[]): void {
@@ -168,17 +219,18 @@ function CloudStorage (props: CloudStorageProps) {
 
                 if (this.selectedFileId) {
                     await tableStorages.changeSelectedData(this.selectedFileId, {
-                        uploader_name: props.username.value || `user_${Date.now()}`,
                         file_name: newFileName,
                         file_type: newFileType,
                         file_url: fileUrl
                     });
                 } else {
+                    if (!currentUserId) return;
+
                     await tableStorages.addToStorage({
-                        uploader_name: props.username.value || `user_${Date.now()}`,
                         file_name: newFileName,
                         file_type: newFileType,
-                        file_url: fileUrl
+                        file_url: fileUrl,
+                        user_id: currentUserId
                     });
                 }
             } catch (error) {
@@ -199,10 +251,6 @@ function CloudStorage (props: CloudStorageProps) {
             file_name.className = 'file-name';
             file_name.textContent = `File: ${detail.file_name}`;
 
-            const uploader_name = document.createElement('p');
-            uploader_name.className = 'uploader-name';
-            uploader_name.textContent = `Uploaded by: ${detail.uploader_name}`;
-
             const uploadTime = document.createElement('p');
             uploadTime.className = 'date-time';
             uploadTime.textContent = `Uploaded at: ${detail.created_at.toLocaleString()}`;
@@ -217,10 +265,14 @@ function CloudStorage (props: CloudStorageProps) {
                 
                 if (!fileData) return;
                 
-                props.username.value = fileData.uploader_name;
                 this.showPreview(fileData);
                 props.submitButton.textContent = 'Save Changes';
             }
+
+            const openFileButton = document.createElement('button');
+            openFileButton.className = 'bg-[#4CAF50] p-[0.4rem] text-[0.9rem] text-[#FFFFFF] cursor-pointer w-[80px] rounded-[0.4rem]';
+            openFileButton.textContent = 'Open';
+            openFileButton.onclick = () => this.openFileViewer(detail);
 
             const deleteButton = document.createElement('button');
             deleteButton.className = 'bg-[#B71C1C] p-[0.4rem] text-[0.9rem] text-[#FFFFFF] cursor-pointer w-[80px] rounded-[0.4rem]';
@@ -242,18 +294,14 @@ function CloudStorage (props: CloudStorageProps) {
             
             const documentMeta = document.createElement('div');
             documentMeta.className = 'flex flex-col gap-[0.5rem]';
-            documentMeta.append(file_name, uploader_name, uploadTime);
+            documentMeta.append(file_name, uploadTime);
 
             const documentAction = document.createElement('div');
             documentAction.className = 'flex flex-wrap gap-[0.7rem]';
-            documentAction.append(selectButton, deleteButton);
+            documentAction.append(selectButton, openFileButton, deleteButton);
             
-            card.append(this.fileIcon(detail), documentMeta, documentAction); 
+            card.append(this.fileIcon(detail), documentMeta, documentAction);
             return card;
-        },
-        
-        openDocument(selectedData: FileData): void {
-            window.open(selectedData.file_url, '_blank');
         },
 
         searchedData(event: Event): void {
@@ -317,15 +365,60 @@ function CloudStorage (props: CloudStorageProps) {
             this.currentFile = null;
             this.currentFileDataUrl = '';
             props.fileInput.value = '';
-            props.username.value = '';
+            props.fileUploaderForm.reset();
             props.preview.innerHTML = 'Click here to upload your file';
             props.submitButton.textContent = 'Add';
+        },
+
+        openFileViewer(fileData: FileData): void {
+            props.fileContent.innerHTML = ''; 
+            props.fileViewer.classList.remove('hidden');
+            props.fileViewer.classList.add('flex');
+
+            const fileType = fileData.file_type;
+            const fileUrl = fileData.file_url;
+            const isOfficeFile = [
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',      // .xlsx
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation' // .pptx
+            ].includes(fileType);
+
+            if (fileType.startsWith('image/')) {
+                props.fileContent.innerHTML = `<img src="${fileUrl}" class="w-full h-full object-contain" alt="${fileData.file_name}"/>`;
+            } else if (isOfficeFile || fileType === 'application/pdf') {
+                // Menggunakan Google Docs Viewer untuk menampilkan file Office dan PDF
+                const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+                props.fileContent.innerHTML = `<iframe src="${viewerUrl}" class="w-full h-full" frameborder="0"></iframe>`;
+            } else {
+                // Menangani file non-gambar, non-pdf, dan non-office, seperti teks
+                fetch(fileUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok.');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    props.fileContent.innerHTML = `<pre class="whitespace-pre-wrap">${text}</pre>`;
+                })
+                .catch(error => {
+                    props.fileContent.textContent = `Failed to load file content. Error: ${error.message}`;
+                });
+            }
+        },
+
+        closeFileViewer(): void {
+            props.fileViewer.classList.remove('flex');
+            props.fileViewer.classList.add('hidden');
+            props.fileContent.innerHTML = '';
         },
 
         cleanUpListener(): void {
             this.controller.abort;
             this.setModal.teardown();
             this.resetForm();
+            this.hideNavbar();
+            this.closeFileViewer();
             tableStorages.teardownStorage();
         }
     }

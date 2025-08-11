@@ -1,4 +1,4 @@
-import supabase from "./supabase-config";
+import { supabase } from "./supabase-config";
 
 function SupabaseStorage() {
     async function InsertFile(file: File, bucketName: string): Promise<string> {
@@ -42,7 +42,42 @@ function SupabaseStorage() {
         if (error) throw error;
     }
 
-    return { InsertFile, RemoveFile }
+    async function RenameFile(oldFilePath: string, newFileName: string, bucketName: string): Promise<string> {
+        const filePath = oldFilePath.split(`${bucketName}/`)[1];
+        const fileNameWithoutExtension = filePath.split('-')[1];
+        const fileExtension = fileNameWithoutExtension.split('.')[1];
+        const newFilePath = `${Date.now()}-${newFileName}.${fileExtension}`;
+    
+        const { error: copyError } = await supabase.storage
+        .from(bucketName)
+        .copy(filePath, newFilePath);
+    
+        if (copyError) {
+            console.error('Error copying file:', copyError);
+            throw copyError;
+        }
+    
+        const { error: removeError } = await supabase.storage
+        .from(bucketName)
+        .remove([filePath]);
+    
+        if (removeError) {
+            console.error('Error removing old file:', removeError);
+            throw removeError;
+        }
+    
+        const { data: publicUrlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(newFilePath);
+    
+        if (!publicUrlData || !publicUrlData.publicUrl) {
+            throw new Error('Failed to get public URL for the renamed file.');
+        }
+    
+        return publicUrlData.publicUrl;
+    }
+
+    return { InsertFile, RenameFile, RemoveFile }
 }
 
 export default SupabaseStorage;

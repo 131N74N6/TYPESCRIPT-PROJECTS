@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <link rel="icon" type="image/svg+xml" href="/typescript.svg"/>
+    <link rel="icon" type="image/svg+xml" href="/web-logo.svg"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>File Uploader</title>
+    <title>Cloud Storage</title>
     <link rel="stylesheet" href="../css/style.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" 
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" 
@@ -13,21 +13,25 @@
 </head>
 <body class="bg-[#1A1A1A]">
     <section id="modal"></section>
-    <header id="header" class="bg-[#000000] p-[1rem] border-[#FFFFFF] border-[1.8px] flex flex-wrap gap-[0.6rem]">
-        <button type="button" id="show-form" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">
-            <i class="fa-solid fa-plus"></i>
-            <span>Add Data</span>
+    <header id="header" class="bg-[#000000] p-[1rem] border-[#FFFFFF] border-[1.8px] flex flex-wrap items-center gap-[1rem]">
+        <button type="button" id="navbar-key" class="border-0 outline-0 cursor-pointer text-[#FFFFFF] text-[1.2rem]">
+            <i class="fa-solid fa-bars-staggered"></i>
         </button>
-        <button type="button" id="delete-all-files" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">
-            <i class="fa-solid fa-trash"></i>
-            <span>Delete All</span>
-        </button>
+        <button type="button" id="sign-out" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">Sign Out</button>
+        <div id="username" class="text-[#FFFFFF] font-[550] text-[0.9rem]">User</div>
     </header>
-    <main class="z-10 relative">
-        <form id="upload-file-section" title="upload-section" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-50">
+    <main class="z-10 relative flex gap-[1rem] p-[1rem] h-[91.2dvh]">
+        <section id="file-viewer" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-50 p-[1rem]">
+            <div class="relative bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-4xl h-[90%] flex flex-col">
+                <button id="close-file-viewer" class="absolute top-2 right-2 text-white w-[50px] h-[50px] rounded-[100%] text-2xl p-2 cursor-pointer hover:bg-[#FF8C00]">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div id="file-content" class="flex-1 overflow-auto bg-white p-4 rounded-[0.5rem]"></div>
+            </div>
+        </section>
+        <form id="upload-file-section" title="upload-section" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-30">
             <section class="flex flex-col gap-[0.7rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-md">
-                <input type="text" id="username" placeholder="uploader name" class="text-[#FF8C00] font-[310] border-[1.8px] border-b-[#FF8C00] font-mono outline-0 text-[1rem] p-[0.5rem] rounded-[0.5rem] flex flex-col gap-[0.6rem]"/>
-                <input type="file" class="hidden" id="file-input" title="file" accept=".pdf,.doc,.docx,.txt,.jpg,.png,.jpeg"/>
+                <input type="file" class="hidden" id="file-input" title="file"/>
                 <div id="preview" class="h-[300px] border-[#FF8C00] border-[1.8px] text-[#FF8C00] p-[0.5rem]">Click here to upload your file</div>
                 <div id="fileName"></div>
                 <div id="insert-button-wrap" class="flex flex-row gap-[0.6rem]">
@@ -36,25 +40,35 @@
                 </div>
             </section>
         </form>
-        <section id="category-filter" class="bg-[#000000] p-[1rem] border-b-[#FFFFFF] border-x-[#FFFFFF] border-[1.8px] flex flex-wrap gap-[1rem]">
-            <input class="hidden" type="checkbox" id="asc-sorting" class="sorting-checkbox"/>
-            <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="asc-sorting"><span>A-Z</span></label>
-            <input class="hidden" type="checkbox" id="dsc-sorting" class="sorting-checkbox"/>
-            <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="dsc-sorting"><span>Z-A</span></label>
-            <input class="hidden" type="checkbox" name="file-type" id="pdf" value="application/pdf" checked/>
-            <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="pdf">PDF</label>
-            <input class="hidden" type="checkbox" name="file-type" id="jpg" value="image/jpg" checked/>
-            <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="jpg">JPG</label>
-            <input class="hidden" type="checkbox" name="file-type" id="jpeg" value="image/jpeg" checked/>
-            <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="jpeg">JPEG</label>
-            <input class="hidden" type="checkbox" name="file-type" id="png" value="image/png" checked/>
-            <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="png">PNG</label>
-            <input class="hidden" type="checkbox" name="file-type" id="txt" value="text/plain" checked/>
-            <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="txt">TXT</label>
-            <input class="hidden" type="checkbox" name="file-type" id="word/doc" value="application/vnd.openxmlformats-officedocument.wordprocessingml.document" checked/>
-            <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="word/doc">WORD/DOC</label>
+        <form id="change-selected-filename" title="upload-section" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-30">
+            <section class="flex flex-col gap-[0.7rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-md">
+                <input type="text" id="file-name" class="border-[#FF8C00] border-[1px] text-[#FFFFFF] text-[0.95rem] outline-0 p-[0.45rem]"/>
+                <div id="insert-button-wrap" class="flex flex-row gap-[0.6rem]">
+                    <button type="button" id="close-update-form" class="cursor-pointer bg-[#B71C1C] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#FFFFFF]">Close</button>
+                    <button type="submit" id="change-filename-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#1A1A1A]">Add</button>
+                </div>
+            </section>
+        </form>
+        <section id="category-filter" class="bg-[#00000093] fixed z-20 inset-0 hidden">
+            <div class="flex flex-col gap-[1rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-[270px] max-w-md">
+                <button type="button" id="close-navbar-key" class="border-0 outline-0 cursor-pointer text-[#FFFFFF] text-[1.2rem]">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <input class="hidden" type="checkbox" name="file-type" id="pdf" value="application/pdf" checked/>
+                <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="pdf">PDF</label>
+                <input class="hidden" type="checkbox" name="file-type" id="jpg" value="image/jpg" checked/>
+                <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="jpg">JPG</label>
+                <input class="hidden" type="checkbox" name="file-type" id="jpeg" value="image/jpeg" checked/>
+                <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="jpeg">JPEG</label>
+                <input class="hidden" type="checkbox" name="file-type" id="png" value="image/png" checked/>
+                <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="png">PNG</label>
+                <input class="hidden" type="checkbox" name="file-type" id="txt" value="text/plain" checked/>
+                <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="txt">TXT</label>
+                <input class="hidden" type="checkbox" name="file-type" id="word/doc" value="application/vnd.openxmlformats-officedocument.wordprocessingml.document" checked/>
+                <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="word/doc">WORD/DOC</label>
+            </div>
         </section>
-        <section id="documents-list-wrap">
+        <section id="documents-list-wrap" class="bg-[#000000] border-[#FFFFFF] border-[1.5px]">
             <form id="search-file-section" title="search-section" class="px-[1rem] pt-[1rem] flex flex-wrap gap-[0.65rem] justify-center">
                 <input type="text" id="searched-data" placeholder="search file name" class="border-[1.8px] border-[#FF8C00] text-[#FFFFFF] outline-0 p-[0.5rem] text-[1rem] font-[500] rounded-[0.5rem] w-[250px]"/>
                 <select name="sorting-data" id="sorting-data" class="bg-[#1A1A1A] p-[0.5rem] outline-0 border-[#FF8C00] border-[1.8px] text-[#FF8C00] rounded-[0.5rem] w-[250px]">
@@ -64,8 +78,17 @@
                     <option class="text-[#FFFFFF]" value="from-newest">Sort from newest</option>
                     <option class="text-[#FFFFFF]" value="from-oldest">Sort from oldest</option>
                 </select>
+                
+                <button type="button" id="show-form" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add File</span>
+                </button>
+                <button type="button" id="delete-all-files" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">
+                    <i class="fa-solid fa-trash"></i>
+                    <span>Delete All</span>
+                </button>
             </form>
-            <section id="documents-list" class="grid gap-[1rem] md:grid-cols-4 sm:grid-cols-2 p-[1rem]">
+            <section id="documents-list" class="grid gap-[1rem] md:grid-cols-4 sm:grid-cols-2 p-[1rem] overflow-auto">
                 <div class="text-[2rem] text-[#FFFFFF]">No files added...</div>
             </section>
         </section>

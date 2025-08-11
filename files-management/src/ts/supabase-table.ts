@@ -1,10 +1,6 @@
-import supabase from './supabase-config';
+import { supabase } from './supabase-config';
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-
-type DatabaseProps<J> = {
-    callback: (data: J[]) => void;
-    additionalQuery?: (query: any) => any;
-}
+import type { DatabaseProps } from './custom-types';
 
 const DataStorages = <N extends { id: string }>(tableName: string) => {
     async function deleteData(id: string): Promise<void>;
@@ -24,7 +20,7 @@ const DataStorages = <N extends { id: string }>(tableName: string) => {
             .delete()
             .not('id', 'is', null); 
 
-            if (error) throw error
+            if (error) throw error.message;
         }
     }
 
@@ -101,7 +97,7 @@ const DataStorages = <N extends { id: string }>(tableName: string) => {
             .insert([data])
             .select();
 
-            if (error) throw error
+            if (error) throw error.message;
             return inserted[0].id
         },
 
@@ -111,7 +107,7 @@ const DataStorages = <N extends { id: string }>(tableName: string) => {
             .upsert([upsertNewData])
             .select();
             
-            if (error) throw error;
+            if (error) throw error.message;
             return data;
         },
 
@@ -121,11 +117,20 @@ const DataStorages = <N extends { id: string }>(tableName: string) => {
             .update(newData)
             .eq('id', id);
 
-            if (error) throw error
+            if (error) throw error.message;
         },
 
         toArray(): N[] {
             return Array.from(this.currentData.values());
+        },
+
+        async filterData(param1: string, param2: string) {
+            const { error } = await supabase
+            .from(tableName)
+            .select('*')
+            .eq(param1, param2);
+
+            if (error) throw error.message;
         },
 
         transformedData(item: any): N {
