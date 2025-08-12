@@ -1,6 +1,13 @@
 export type DatabaseProps<J> = {
     callback: (data: J[]) => void;
     additionalQuery?: (query: any) => any;
+    relationalQuery?: string;
+}
+
+export type UpdateSelectedDataProps<K> = {
+    tableName: string; 
+    id: string; 
+    newData: Partial<Omit<K, 'id' | 'created_at'>>
 }
 
 export type FileData = {
@@ -19,18 +26,9 @@ export type User = {
     password: string;
 }
 
-export type CloudStorageProps = {
-    fileUploaderForm: HTMLFormElement; 
-    fileInput: HTMLInputElement; 
-    documentsList: HTMLElement;
-    preview: HTMLDivElement; 
-    submitButton: HTMLButtonElement; 
-    username: HTMLDivElement; 
-    modal: HTMLElement; 
-    searchInput: HTMLInputElement; 
-    checkboxCategory: NodeListOf<HTMLInputElement>;
-    sortingData: HTMLSelectElement;
-    navbar: HTMLElement;
-    fileViewer: HTMLElement;
-    fileContent: HTMLElement;
+export type FolderData = {
+    id: string;
+    created_at: Date;
+    folder_name: string;
+    user_id: string;
 }

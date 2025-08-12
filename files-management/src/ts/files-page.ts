@@ -1,18 +1,33 @@
-import DataStorages from './supabase-table';
+import TableStorage from './supabase-table';
 import Modal from './modal';
 import SupabaseStorage from './supabase-storage';
-import type { CloudStorageProps, FileData } from './custom-types';
+import type { FileData } from './custom-types';
 import { getSession, supabase } from './supabase-config';
 
-const tableStorages = DataStorages<FileData>('files_list');
+const fileUploaderForm = document.getElementById('upload-file-section') as HTMLFormElement;
+const username = document.getElementById('username') as HTMLDivElement;
+const fileInput = document.getElementById('file-input') as HTMLInputElement;
+const preview = document.getElementById('preview') as HTMLDivElement;
+const submitButton = document.getElementById('submit-btn') as HTMLButtonElement;
+const navbar = document.getElementById('category-filter') as HTMLElement;
+const searchedData = document.getElementById('searched-data') as HTMLInputElement;
+const checkboxCategory = document.querySelectorAll<HTMLInputElement>('#category-filter input[type="checkbox"]');
+const sortingData = document.getElementById('sorting-data') as HTMLSelectElement;
+const documentsList = document.getElementById('documents-list') as HTMLElement;
+const modal = document.getElementById('modal') as HTMLElement;
+const fileViewer = document.getElementById('file-viewer') as HTMLElement;
+const fileContent = document.getElementById('file-content') as HTMLElement;
+
+const tableStorages = TableStorage<FileData>();
 const mediaStorage = SupabaseStorage();
 const storageName = 'file-example';
+const tableName = 'files_list';
 let temp: FileData[];
 let currentUserId: string | null = null;
 
-function CloudStorage (props: CloudStorageProps) { 
+function FilesPage () { 
     return {
-        setModal: Modal(props.modal),
+        setModal: Modal(modal),
         controller: new AbortController() as  AbortController,
         selectedFileId: null as string | null,
         currentFile: null as File | null,
@@ -22,7 +37,7 @@ function CloudStorage (props: CloudStorageProps) {
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ] as string[],
 
-        async initCloudStorage(): Promise<void> {
+        async filesPage(): Promise<void> {
             const session = await getSession();
             if (session && session.user) {
                 currentUserId = session.user.id;
@@ -33,7 +48,7 @@ function CloudStorage (props: CloudStorageProps) {
                 return;
             }
 
-            await tableStorages.realtimeInit({
+            await tableStorages.realtimeInit(tableName, {
                 callback: (filesData) => {
                     this.showAllFiles(filesData);
                     temp = filesData;
@@ -41,22 +56,22 @@ function CloudStorage (props: CloudStorageProps) {
                 additionalQuery: (query) => query.eq('user_id', currentUserId)
             });
             
-            props.fileInput.onchange = (event) => this.changeFileToUrl(event);
-            props.fileUploaderForm.onsubmit = async (event) => await this.handleSubmit(event);
-            props.searchInput.oninput = (event) => this.searchedData(event);
+            fileInput.onchange = (event) => this.changeFileToUrl(event);
+            fileUploaderForm.onsubmit = async (event) => await this.handleSubmit(event);
+            searchedData.oninput = (event) => this.searchedData(event);
             
             document.addEventListener('click', async (event) => {
                 const target = event.target as HTMLElement;
                 if (target.closest('#delete-all-files')) await this.deleteAllFiles();
                 else if (target.closest('#show-form')) this.openForm();
                 else if (target.closest('#close-insert-form')) this.closeForm();
-                else if (target.closest('#preview')) props.fileInput.click();
+                else if (target.closest('#preview')) fileInput.click();
                 else if (target.closest('#navbar-key')) this.showNavbar();
                 else if (target.closest('#close-navbar-key')) this.hideNavbar();
                 else if (target.closest('#close-file-viewer')) this.closeFileViewer();
             }, { signal: this.controller.signal });
 
-            props.sortingData.onchange = (event) => {
+            sortingData.onchange = (event) => {
                 const getValue = event.target as HTMLInputElement;
                 switch (getValue.value) {
                     case 'from-A-Z': {
@@ -86,9 +101,9 @@ function CloudStorage (props: CloudStorageProps) {
                 }
             }
 
-            props.checkboxCategory.forEach(checkbox => {
+            checkboxCategory.forEach(checkbox => {
                 checkbox.onchange = () => {
-                    this.selectedCategories = Array.from(props.checkboxCategory)
+                    this.selectedCategories = Array.from(checkboxCategory)
                     .filter(selected => selected.checked)
                     .map(get_value => get_value.value as FileData['file_type']);
                     this.showAllFiles(temp);
@@ -97,13 +112,13 @@ function CloudStorage (props: CloudStorageProps) {
         },
 
         showNavbar() {
-            props.navbar.classList.add('flex');
-            props.navbar.classList.remove('hidden');
+            navbar.classList.add('flex');
+            navbar.classList.remove('hidden');
         },
 
         hideNavbar() {
-            props.navbar.classList.remove('flex');
-            props.navbar.classList.add('hidden');
+            navbar.classList.remove('flex');
+            navbar.classList.add('hidden');
         },
 
         async showUserName(id: string) {
@@ -117,15 +132,15 @@ function CloudStorage (props: CloudStorageProps) {
                 if (error) throw 'Failed to get and show username';
 
                 if (data && data.username) {
-                    props.username.innerHTML = '';
-                    props.username.textContent = `Hello, ${data.username}`;
+                    username.innerHTML = '';
+                    username.textContent = `Hello, ${data.username}`;
                 } else {
-                    props.username.innerHTML = '';
-                    props.username.textContent = 'Hello, user';
+                    username.innerHTML = '';
+                    username.textContent = 'Hello, user';
                 }
             } catch (error: any) {
-                props.username.innerHTML = '';
-                props.username.textContent = `User`;
+                username.innerHTML = '';
+                username.textContent = `User`;
                 this.setModal.createModal(`Error: ${error.message || error}`);
                 this.setModal.showMessage();
             }
@@ -139,15 +154,15 @@ function CloudStorage (props: CloudStorageProps) {
                     let sortedData = filteredData;
 
                     sortedData.forEach(data => fileDataFragment.appendChild(this.createComponent(data)));
-                    props.documentsList.innerHTML = '';
-                    props.documentsList.appendChild(fileDataFragment);
+                    documentsList.innerHTML = '';
+                    documentsList.appendChild(fileDataFragment);
                 } else {
-                    props.documentsList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">No files added...</div>`;
+                    documentsList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">No files added...</div>`;
                 }
             } catch (error: any) {
                 this.setModal.createModal(`Failed to load data: ${error.message || error}`);
                 this.setModal.showMessage();
-                props.documentsList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">Error ${error.message || error}...</div>`;
+                documentsList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">Error ${error.message || error}...</div>`;
             }
         },
 
@@ -161,9 +176,9 @@ function CloudStorage (props: CloudStorageProps) {
                 reader.onloadend = (event) => {
                     this.currentFileDataUrl = event.target?.result as string;
                     if (file.type.startsWith('image/')) {
-                        props.preview.innerHTML = `<img src="${this.currentFileDataUrl}" class="w-[100%] h-[100%] object-cover" alt="Preview"/>`;
+                        preview.innerHTML = `<img src="${this.currentFileDataUrl}" class="w-[100%] h-[100%] object-cover" alt="Preview"/>`;
                     } else {
-                        props.preview.textContent = file.name;
+                        preview.textContent = file.name;
                     }
                 }
                 reader.readAsDataURL(file);
@@ -218,15 +233,19 @@ function CloudStorage (props: CloudStorageProps) {
                 }
 
                 if (this.selectedFileId) {
-                    await tableStorages.changeSelectedData(this.selectedFileId, {
-                        file_name: newFileName,
-                        file_type: newFileType,
-                        file_url: fileUrl
+                    await tableStorages.changeSelectedData({ 
+                        tableName: tableName, 
+                        id: this.selectedFileId, 
+                        newData: {
+                            file_name: newFileName,
+                            file_type: newFileType,
+                            file_url: fileUrl
+                        }
                     });
                 } else {
                     if (!currentUserId) return;
 
-                    await tableStorages.addToStorage({
+                    await tableStorages.addToStorage(tableName, {
                         file_name: newFileName,
                         file_type: newFileType,
                         file_url: fileUrl,
@@ -266,7 +285,7 @@ function CloudStorage (props: CloudStorageProps) {
                 if (!fileData) return;
                 
                 this.showPreview(fileData);
-                props.submitButton.textContent = 'Save Changes';
+                submitButton.textContent = 'Save Changes';
             }
 
             const openFileButton = document.createElement('button');
@@ -280,7 +299,7 @@ function CloudStorage (props: CloudStorageProps) {
             deleteButton.onclick = async () => {
                 try {
                     if (tableStorages.currentData.size > 0) {
-                        await tableStorages.deleteData(detail.id);
+                        await tableStorages.deleteData(tableName, detail.id);
                         await mediaStorage.RemoveFile(detail.file_url, storageName)
                     } else {    
                         this.setModal.createModal('Please add one file');
@@ -306,7 +325,7 @@ function CloudStorage (props: CloudStorageProps) {
 
         searchedData(event: Event): void {
             event.preventDefault();
-            const trimmedValue = props.searchInput.value.trim().toLowerCase();
+            const trimmedValue = searchedData.value.trim().toLowerCase();
 
             temp = tableStorages.toArray().filter(data => data.file_name.includes(trimmedValue));
             this.showAllFiles(temp);
@@ -326,18 +345,18 @@ function CloudStorage (props: CloudStorageProps) {
         },
 
         showPreview(detail: FileData): void {
-            props.preview.innerHTML = detail.file_type.startsWith('image/') ? 
+            preview.innerHTML = detail.file_type.startsWith('image/') ? 
             `<img src="${detail.file_url}" class="w-[100%] h-[100%] object-cover" alt="${detail.file_name}"/>` : 
-            `<div class='file-props.preview'>${detail.file_name}</div>`;
+            `<div class='file-preview'>${detail.file_name}</div>`;
         },
 
         async deleteAllFiles(): Promise<void> {
             try {
                 if (tableStorages.currentData.size > 0) {
-                    await tableStorages.deleteData();
+                    await tableStorages.deleteData(tableName);
                     await Promise.all(tableStorages.toArray().map(data => mediaStorage.RemoveFile(data.file_url, storageName)));
-                    props.documentsList.innerHTML = '';
-                    props.documentsList.textContent = 'No file added...';
+                    documentsList.innerHTML = '';
+                    documentsList.textContent = 'No file added...';
                     this.resetForm();
                 } else {    
                     this.setModal.createModal('Please add one file');
@@ -350,13 +369,13 @@ function CloudStorage (props: CloudStorageProps) {
         },
 
         openForm(): void {
-            props.fileUploaderForm.classList.remove('hidden');
-            props.fileUploaderForm.classList.add('flex');
+            fileUploaderForm.classList.remove('hidden');
+            fileUploaderForm.classList.add('flex');
         },
 
         closeForm(): void {
-            props.fileUploaderForm.classList.remove('flex');
-            props.fileUploaderForm.classList.add('hidden');
+            fileUploaderForm.classList.remove('flex');
+            fileUploaderForm.classList.add('hidden');
             this.resetForm();
         },
 
@@ -364,16 +383,16 @@ function CloudStorage (props: CloudStorageProps) {
             this.selectedFileId = null;
             this.currentFile = null;
             this.currentFileDataUrl = '';
-            props.fileInput.value = '';
-            props.fileUploaderForm.reset();
-            props.preview.innerHTML = 'Click here to upload your file';
-            props.submitButton.textContent = 'Add';
+            fileInput.value = '';
+            fileUploaderForm.reset();
+            preview.innerHTML = 'Click here to upload your file';
+            submitButton.textContent = 'Add';
         },
 
         openFileViewer(fileData: FileData): void {
-            props.fileContent.innerHTML = ''; 
-            props.fileViewer.classList.remove('hidden');
-            props.fileViewer.classList.add('flex');
+            fileContent.innerHTML = ''; 
+            fileViewer.classList.remove('hidden');
+            fileViewer.classList.add('flex');
 
             const fileType = fileData.file_type;
             const fileUrl = fileData.file_url;
@@ -384,11 +403,11 @@ function CloudStorage (props: CloudStorageProps) {
             ].includes(fileType);
 
             if (fileType.startsWith('image/')) {
-                props.fileContent.innerHTML = `<img src="${fileUrl}" class="w-full h-full object-contain" alt="${fileData.file_name}"/>`;
+                fileContent.innerHTML = `<img src="${fileUrl}" class="w-full h-full object-contain" alt="${fileData.file_name}"/>`;
             } else if (isOfficeFile || fileType === 'application/pdf') {
                 // Menggunakan Google Docs Viewer untuk menampilkan file Office dan PDF
                 const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-                props.fileContent.innerHTML = `<iframe src="${viewerUrl}" class="w-full h-full" frameborder="0"></iframe>`;
+                fileContent.innerHTML = `<iframe src="${viewerUrl}" class="w-full h-full" frameborder="0"></iframe>`;
             } else {
                 // Menangani file non-gambar, non-pdf, dan non-office, seperti teks
                 fetch(fileUrl)
@@ -399,21 +418,21 @@ function CloudStorage (props: CloudStorageProps) {
                     return response.text();
                 })
                 .then(text => {
-                    props.fileContent.innerHTML = `<pre class="whitespace-pre-wrap">${text}</pre>`;
+                    fileContent.innerHTML = `<pre class="whitespace-pre-wrap">${text}</pre>`;
                 })
                 .catch(error => {
-                    props.fileContent.textContent = `Failed to load file content. Error: ${error.message}`;
+                    fileContent.textContent = `Failed to load file content. Error: ${error.message}`;
                 });
             }
         },
 
         closeFileViewer(): void {
-            props.fileViewer.classList.remove('flex');
-            props.fileViewer.classList.add('hidden');
-            props.fileContent.innerHTML = '';
+            fileViewer.classList.remove('flex');
+            fileViewer.classList.add('hidden');
+            fileContent.innerHTML = '';
         },
 
-        cleanUpListener(): void {
+        teardownFilesPage(): void {
             this.controller.abort;
             this.setModal.teardown();
             this.resetForm();
@@ -424,4 +443,9 @@ function CloudStorage (props: CloudStorageProps) {
     }
 }
 
-export default CloudStorage;
+const filesPage = FilesPage();
+const init = () => filesPage.filesPage();
+const teardown = () => filesPage.teardownFilesPage();
+
+document.addEventListener('DOMContentLoaded', init);
+window.addEventListener('beforeunload', teardown);

@@ -15,7 +15,9 @@ export default defineConfig({
             input: {
                 main: resolve(root, 'html', 'signin.html'),
                 sign_up: resolve(root, 'html', 'signup.html'),
-                home: resolve(root, 'html', 'home.html')
+                folder: resolve(root, 'html', 'folder.html'),
+                file: resolve(root, 'html', 'file.html'),
+                setting: resolve(root, 'html', 'setting.html')
             }
         }
     },

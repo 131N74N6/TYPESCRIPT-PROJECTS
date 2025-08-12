@@ -12,7 +12,7 @@
     />
 </head>
 <body class="bg-[#1A1A1A]">
-    <section id="modal"></section>
+    <section id="file-notification"></section>
     <header id="header" class="bg-[#000000] p-[1rem] border-[#FFFFFF] border-[1.8px] flex flex-wrap items-center gap-[1rem]">
         <button type="button" id="navbar-key" class="border-0 outline-0 cursor-pointer text-[#FFFFFF] text-[1.2rem]">
             <i class="fa-solid fa-bars-staggered"></i>
@@ -37,6 +37,15 @@
                 <div id="insert-button-wrap" class="flex flex-row gap-[0.6rem]">
                     <button type="button" id="close-insert-form" class="cursor-pointer bg-[#B71C1C] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#FFFFFF]">Close</button>
                     <button type="submit" id="submit-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#1A1A1A]">Add</button>
+                </div>
+            </section>
+        </form>
+        <form id="make-folder-section" title="upload-section" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-30">
+            <section class="flex flex-col gap-[0.7rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-md">
+                <input type="text" id="folder-name" placeholder="foldername" class="border-[#FF8C00] border-[1px] text-[#FFFFFF] text-[0.95rem] outline-0 p-[0.45rem]"/>
+                <div id="insert-button-wrap" class="flex flex-row gap-[0.6rem]">
+                    <button type="button" id="close-folder-form" class="cursor-pointer bg-[#B71C1C] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#FFFFFF]">Close</button>
+                    <button type="submit" id="save-folder-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#1A1A1A]">Add</button>
                 </div>
             </section>
         </form>
@@ -68,7 +77,7 @@
                 <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="word/doc">WORD/DOC</label>
             </div>
         </section>
-        <section id="documents-list-wrap" class="bg-[#000000] border-[#FFFFFF] border-[1.5px]">
+        <section id="documents-list-wrap" class="bg-[#000000] border-[#FFFFFF] w-[100%] border-[1.5px]">
             <form id="search-file-section" title="search-section" class="px-[1rem] pt-[1rem] flex flex-wrap gap-[0.65rem] justify-center">
                 <input type="text" id="searched-data" placeholder="search file name" class="border-[1.8px] border-[#FF8C00] text-[#FFFFFF] outline-0 p-[0.5rem] text-[1rem] font-[500] rounded-[0.5rem] w-[250px]"/>
                 <select name="sorting-data" id="sorting-data" class="bg-[#1A1A1A] p-[0.5rem] outline-0 border-[#FF8C00] border-[1.8px] text-[#FF8C00] rounded-[0.5rem] w-[250px]">
@@ -78,7 +87,6 @@
                     <option class="text-[#FFFFFF]" value="from-newest">Sort from newest</option>
                     <option class="text-[#FFFFFF]" value="from-oldest">Sort from oldest</option>
                 </select>
-                
                 <button type="button" id="show-form" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">
                     <i class="fa-solid fa-plus"></i>
                     <span>Add File</span>
@@ -94,6 +102,6 @@
         </section>
     </main>
     <script type="module" src="../ts/auth-guard.ts"></script>
-    <script type="module" src="../ts/main.ts"></script>
+    <script type="module" src="../ts/files-page.ts"></script>
 </body>
 </html>

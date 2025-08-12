@@ -6,7 +6,8 @@ const message = document.getElementById('message') as HTMLDivElement;
 const email = document.getElementById('email') as HTMLInputElement;
 const password = document.getElementById('password') as HTMLInputElement;
 const signInField = document.getElementById('sign-in-field') as HTMLFormElement;
-const tableStorage = DataStorages<User>('cart_user');
+const tableStorage = DataStorages<User>();
+const tableName = 'cloud_user';
 let timeout: number | null = null;
 
 function SignIn() {
@@ -35,7 +36,7 @@ function SignIn() {
                 let userProfile: User | null = null;
                 try {
                     const { data, error } = await supabase
-                    .from('cloud_user')
+                    .from(tableName)
                     .select('*')
                     .eq('id', user.id)
                     .single();
@@ -54,7 +55,7 @@ function SignIn() {
                 if (!userProfile) {
                     const username = user.user_metadata?.username || 'User';
                     try {
-                        await tableStorage.upsertData({
+                        await tableStorage.upsertData(tableName, {
                             id: user.id,
                             email: user.email,
                             username: username,
@@ -70,7 +71,7 @@ function SignIn() {
                     }
                 }
             }
-            window.location.href = '/html/home.html';
+            window.location.href = '/html/file.html';
         } catch (error: any) {
             message.classList.remove('hidden');
             message.classList.add('flex');
