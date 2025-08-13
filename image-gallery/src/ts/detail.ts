@@ -9,6 +9,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
     private currentIndex = 0;
     private totalSlide = 0;
 
+    private tableName = "image_gallery";
     private detailPostNotification = document.getElementById("detail-post-notification") as HTMLElement;
     private galleryDetailModal: Modal = new Modal(this.detailPostNotification);
 
@@ -19,7 +20,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
     private uploadedAt = document.querySelector("#created-at") as HTMLParagraphElement;
 
     constructor() {
-        super("image_gallery");
+        super();
         this.imageId = this.urlParams.get('id');
         this.showGalleryDetail();
     }
@@ -52,7 +53,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         }
 
         try {
-            const getDetail = await this.selectedData(this.imageId);
+            const getDetail = await this.selectedData(this.tableName, this.imageId);
 
             if (getDetail) {
                 this.createSliderComponent(getDetail);

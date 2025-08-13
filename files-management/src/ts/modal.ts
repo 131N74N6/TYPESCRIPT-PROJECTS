@@ -4,9 +4,9 @@ const Modal = (modal: HTMLElement) => ({
     timeout: null as number | null,
 
     createModal(message: string): void {
-        this.notification.className = "notification";
+        this.notification.className = "p-[0.45rem]";
 
-        this.messageWrap.className = "message";
+        this.messageWrap.className = "text-[#FFFFFF] font-[550] text-[0.9rem]";
         this.messageWrap.textContent = message;
 
         this.notification.appendChild(this.messageWrap);

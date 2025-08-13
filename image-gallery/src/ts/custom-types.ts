@@ -26,7 +26,20 @@ export type UserGalleryDisplay = GalleryDisplayer & {
     user_id: string; 
 }
 
-export interface DatabaseProps<B> {
-    callback: (data: B[]) => void;
+export interface DatabaseProps<I> {
+    tableName: string;
+    callback: (data: I[]) => void;
     initialQuery?: (query: any) => any;
+    relationalQuery?: string;
+}
+
+export type InsertDataProps<O> = {
+    tableName: string; 
+    newData: Omit<O, 'id' | 'created_at'>;
+}
+
+export type UpdateDataProps<Y> = {
+    id: string;
+    tableName: string;
+    newData: Partial<Omit<Y, 'id' | 'created_at'>>
 }

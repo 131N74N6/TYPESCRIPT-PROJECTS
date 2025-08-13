@@ -1,21 +1,19 @@
 import { supabase } from "./supabase-config";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import type { DatabaseProps } from "./custom-types";
+import type { DatabaseProps, InsertDataProps, UpdateDataProps } from "./custom-types";
 
 class DatabaseStorage <B extends { id: string }> {
     protected currentData: Map<string, B>;
-    private table_name: string;
     private isInitialized: boolean = false;
     private realtimeChannel: RealtimeChannel | null = null;
 
-    constructor(table_name: string) {
-        this.table_name = table_name
+    constructor() {
         this.currentData = new Map<string, B>();
     }
 
     protected async realtimeInit(db: DatabaseProps<B>): Promise<void> {
         if (this.isInitialized && this.realtimeChannel) {
-            console.warn(`Realtime channel for ${this.table_name} is already initialized.`);
+            console.warn(`Realtime channel for ${db.tableName} is already initialized.`);
             db.callback(this.toArray());
             return;
         }
@@ -28,16 +26,32 @@ class DatabaseStorage <B extends { id: string }> {
         this.realtimeChannel = supabase.channel('any');
         this.realtimeChannel.on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: this.table_name },
-            (payload: RealtimePostgresChangesPayload<B>) => {
+            { event: '*', schema: 'public', table: db.tableName },
+            async (payload: RealtimePostgresChangesPayload<B>) => {
                 switch(payload.eventType) {
                     case "INSERT": {
-                        const transformedData = this.transformsData(payload.new);
+                        const { data, error } = await supabase
+                        .from(db.tableName)
+                        .select(db.relationalQuery || '*')
+                        .eq('id', payload.new.id)
+                        .single();
+
+                        if (error) throw error;
+
+                        const transformedData = this.transformsData(data);
                         this.currentData.set(transformedData.id, transformedData);
                         break;
                     }
                     case "UPDATE": {
-                        const transformedChangeData = this.transformsData(payload.new);
+                        const { data, error } = await supabase
+                        .from(db.tableName)
+                        .select(db.relationalQuery || '*')
+                        .eq('id', payload.new.id)
+                        .single();
+
+                        if (error) throw error;
+
+                        const transformedChangeData = this.transformsData(data);
                         this.currentData.set(transformedChangeData.id, transformedChangeData);
                         break;
                     }
@@ -53,8 +67,8 @@ class DatabaseStorage <B extends { id: string }> {
         
         try {
             let query = supabase
-            .from(this.table_name)
-            .select('*');
+            .from(db.tableName)
+            .select(db.relationalQuery || '*');
 
             if (db.initialQuery) query = db.initialQuery(query);
 
@@ -87,21 +101,21 @@ class DatabaseStorage <B extends { id: string }> {
         return data as B;
     }
 
-    protected async insertData(newData: Omit<B, 'id' | 'created_at'>): Promise<string> {
+    protected async insertData(props: InsertDataProps<B>): Promise<string> {
         const { data, error } = await supabase
-        .from(this.table_name)
-        .insert([newData])
+        .from(props.tableName)
+        .insert([props.newData])
         .select();
 
         if (error) throw `Failed to insert data: ${error}`;
         return data[0].id;
     }
 
-    protected async upsertData(dataToUpsert: Partial<B>): Promise<B | null> {
+    protected async upsertData(tableName: string, dataToUpsert: Partial<B>): Promise<B | null> {
         // Supabase `upsert` membutuhkan kolom unik atau PK (Primary Key) untuk mengidentifikasi baris.
         // Di kasus ini, 'id' adalah PK dan akan cocok dengan auth.uid()
         const { data, error } = await supabase
-        .from(this.table_name)
+        .from(tableName)
         .upsert([dataToUpsert])
         .select()
         .single();
@@ -110,9 +124,9 @@ class DatabaseStorage <B extends { id: string }> {
         return data;
     }
 
-    protected async selectedData(id: string): Promise<B> { 
+    protected async selectedData(tableName: string, id: string): Promise<B> { 
         const { data, error } = await supabase
-        .from(this.table_name)
+        .from(tableName)
         .select("*") 
         .eq('id', id);
 
@@ -122,29 +136,29 @@ class DatabaseStorage <B extends { id: string }> {
         return item;
     }
 
-    protected async changeSelectedData(id: string, newData: Partial<Omit<B, 'id' | 'created_at'>>): Promise<void> {
+    protected async changeSelectedData(props: UpdateDataProps<B>): Promise<void> {
         const { error } = await supabase
-        .from(this.table_name)
-        .update(newData)
-        .eq('id', id);
+        .from(props.tableName)
+        .update(props.newData)
+        .eq('id', props.id);
 
         if (error) throw error;
     }
 
-    protected async deleteData(id: string): Promise<void>;
-    protected async deleteData(id?: string): Promise<void>;
+    protected async deleteData(tableName: string, id: string): Promise<void>;
+    protected async deleteData(tableName: string, id?: string): Promise<void>;
     
-    protected async deleteData(id?: string): Promise<void> {
+    protected async deleteData(tableName: string, id?: string): Promise<void> {
         if (id !== undefined) {          
             const { error } = await supabase
-            .from(this.table_name)
+            .from(tableName)
             .delete()
             .eq('id', id);
 
             if (error) throw error;
         } else {
             const { error } = await supabase
-            .from(this.table_name)
+            .from(tableName)
             .delete()
             .not('id', 'is', null);
 

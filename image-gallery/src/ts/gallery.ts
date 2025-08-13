@@ -6,17 +6,20 @@ class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
     private controller = new AbortController();
     private galleryNotification = document.getElementById("gallery-notification") as HTMLElement;
     private makeNotification = new Modal(this.galleryNotification);
-
+    private tableName = "image_gallery";
     private searchImageField = document.getElementById("search-image-field") as HTMLFormElement;
     private searchImage = document.getElementById("search-image") as HTMLInputElement;
     private imagesGallery = document.getElementById("images-gallery") as HTMLElement;
 
     constructor() {
-        super("image_gallery");
+        super();
     }
     
     async initEventListener(): Promise<void> {
-        await this.realtimeInit({ callback: (data: GalleryDisplayer[]) => this.showAllImages(data) });
+        await this.realtimeInit({ 
+            tableName: this.tableName,
+            callback: (data: GalleryDisplayer[]) => this.showAllImages(data) 
+        });
 
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;

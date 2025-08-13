@@ -12,7 +12,7 @@ class SignUp extends DatabaseStorage<Users> {
     private timeout: null | number = null;
 
     constructor() {
-        super('image_gallery_user');
+        super();
     }
     
     initSignUp(): void {

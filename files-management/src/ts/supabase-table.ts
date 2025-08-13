@@ -1,15 +1,17 @@
 import { supabase } from './supabase-config';
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import type { DatabaseProps, UpdateSelectedDataProps } from './custom-types';
+import type { DatabaseProps, InsertDataProps, UpdateSelectedDataProps } from './custom-types';
 
 const TableStorage = <N extends { id: string }>() => {
     const currentData: Map<string, N> = new Map<string, N>();
     let isInitialize: boolean = false;
     let realtimeChannel: RealtimeChannel | null = null;
+    let additionalQueryFn: ((query: any) => any) | null = null;
+    let relationalQuery: string | null = null;
 
-    async function realtimeInit(tableName: string, dbProps: DatabaseProps<N>): Promise<void>  {
+    async function realtimeInit(dbProps: DatabaseProps<N>): Promise<void>  {
         if (isInitialize && realtimeChannel) {
-            console.warn(`Storage for ${tableName} has been initialized`);
+            console.warn(`Storage for ${dbProps.tableName} has been initialized`);
             dbProps.callback(toArray());
             return;
         }
@@ -19,30 +21,43 @@ const TableStorage = <N extends { id: string }>() => {
             realtimeChannel = null;
         }
 
+        additionalQueryFn = dbProps.additionalQuery || null;
+        relationalQuery = dbProps.relationalQuery || null;
+        
         realtimeChannel = supabase.channel('any');
         realtimeChannel.on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: tableName },
+            { event: '*', schema: 'public', table: dbProps.tableName },
             async (payload: RealtimePostgresChangesPayload<N>) => {
                 switch (payload.eventType) {
                     case 'INSERT': {
-                        const { data } = await supabase
-                        .from(tableName)
-                        .select(dbProps.relationalQuery || '*')
-                        .eq('id', payload.new.id)
-                        .single();
+                        let mainQuery = supabase
+                        .from(dbProps.tableName)
+                        .select(relationalQuery || '*')
+                        .eq('id', payload.new.id);
 
+                        if (additionalQueryFn) mainQuery = additionalQueryFn(mainQuery);
+                        
+                        const { data, error } = await mainQuery;
+                        
+                        if (error) throw `Realtime INSERT error ${error}`;
+                        
                         const fixed = transformedData(data);
                         currentData.set(fixed.id, fixed);
                         break;
                     }
                     case 'UPDATE': {
-                        const { data } = await supabase
-                        .from(tableName)
-                        .select(dbProps.relationalQuery || '*')
-                        .eq('id', payload.new.id)
-                        .single();
+                        let mainQuery = supabase
+                        .from(dbProps.tableName)
+                        .select(relationalQuery || '*')
+                        .eq('id', payload.new.id);
 
+                        if (additionalQueryFn) mainQuery = additionalQueryFn(mainQuery);
+                        
+                        const { data, error } = await mainQuery;
+                        
+                        if (error) throw `Realtime UPDATE error ${error}`;
+                        
                         const fixed = transformedData(data);
                         currentData.set(fixed.id, fixed);
                         break;
@@ -57,22 +72,21 @@ const TableStorage = <N extends { id: string }>() => {
             }
         );
 
-        let query = supabase.from(tableName).select(dbProps.relationalQuery || '*');
+        let query = supabase.from(dbProps.tableName).select(relationalQuery || '*');
         
+        if (additionalQueryFn) query = additionalQueryFn(query);
+
         const { data, error } = await query;
 
         if (error) {
-            console.error('Initial data fetch error:', error);
             dbProps.callback([]);
-            return;
+            throw `Initial data fetch error: ${error}`;
         }
-
-        if (dbProps.additionalQuery) query = dbProps.additionalQuery(query);
 
         currentData.clear();
         data.forEach(dt => {
-            const transofrmData = transformedData(dt);
-            currentData.set(transofrmData.id, transofrmData)
+            const transformData = transformedData(dt);
+            currentData.set(transformData.id, transformData);
         });
 
         dbProps.callback(toArray());
@@ -80,10 +94,10 @@ const TableStorage = <N extends { id: string }>() => {
         isInitialize = true;
     }
 
-    async function addToStorage(tableName: string, data: Omit<N, 'id' | 'created_at'>): Promise<string> {
+    async function addToStorage(props: InsertDataProps<N>): Promise<string> {
         const { data: inserted, error } = await supabase
-        .from(tableName)
-        .insert([data])
+        .from(props.tableName)
+        .insert([props.data])
         .select();
 
         if (error) throw error.message;
@@ -94,7 +108,8 @@ const TableStorage = <N extends { id: string }>() => {
         const { data, error } = await supabase
         .from(tableName)
         .upsert([upsertNewData])
-        .select();
+        .select()
+        .single();
         
         if (error) throw error.message;
         return data;
@@ -132,6 +147,8 @@ const TableStorage = <N extends { id: string }>() => {
     function teardownStorage(): void {
         currentData.clear();
         isInitialize = false;
+        additionalQueryFn = null;
+        relationalQuery = null;
         if (realtimeChannel) {
             realtimeChannel.unsubscribe();
             realtimeChannel = null;

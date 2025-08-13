@@ -48,7 +48,8 @@ function FilesPage () {
                 return;
             }
 
-            await tableStorages.realtimeInit(tableName, {
+            await tableStorages.realtimeInit({
+                tableName: tableName,
                 callback: (filesData) => {
                     this.showAllFiles(filesData);
                     temp = filesData;
@@ -245,11 +246,14 @@ function FilesPage () {
                 } else {
                     if (!currentUserId) return;
 
-                    await tableStorages.addToStorage(tableName, {
-                        file_name: newFileName,
-                        file_type: newFileType,
-                        file_url: fileUrl,
-                        user_id: currentUserId
+                    await tableStorages.addToStorage({
+                        tableName: tableName, 
+                        data: {                            
+                            file_name: newFileName,
+                            file_type: newFileType,
+                            file_url: fileUrl,
+                            user_id: currentUserId
+                        }
                     });
                 }
             } catch (error) {

@@ -9,9 +9,10 @@ class SignIn extends DatabaseStorage<Users> {
     private password = document.getElementById('password') as HTMLInputElement;
     private signInMessage = document.getElementById('message') as HTMLDivElement;
     private timeout: number | null = null;
+    private tableName = 'image_gallery_user';
 
     constructor() {
-        super('image_gallery_user');
+        super();
     }
 
     initSignIn(): void {
@@ -63,7 +64,7 @@ class SignIn extends DatabaseStorage<Users> {
                     const username = user.user_metadata?.username || 'Pengguna Baru';
 
                     try {
-                        await this.upsertData({
+                        await this.upsertData(this.tableName, {
                             id: user.id,
                             email: user.email,
                             username: username,
@@ -79,7 +80,7 @@ class SignIn extends DatabaseStorage<Users> {
                 }
             }
 
-            await this.selectedData(data.user.id);
+            await this.selectedData(this.tableName, data.user.id);
 
             setTimeout(() => window.location.href = '/html/user.html', 500);
         } catch (error: any) {

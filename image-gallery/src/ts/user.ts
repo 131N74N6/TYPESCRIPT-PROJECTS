@@ -10,18 +10,20 @@ class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
     private username = document.getElementById("username") as HTMLDivElement;
     private personalImagesGallery = document.getElementById("personal-images-gallery") as HTMLElement;
     private noPostMessage = document.getElementById("no-post-message") as HTMLElement;
-    private currentUserId: string | null = null; 
+    private currentUserId: string | null = null;
+    private tableName = "image_gallery";
 
     constructor() {
-        super("image_gallery");
+        super();
     }
     
     async initEventListener(): Promise<void> {
         const session = await getSession();
         if (session && session.user) {
             this.currentUserId = session.user.id;
-            await this.displayUsername(this.currentUserId);
-            await this.realtimeInit({ 
+            if (this.currentUserId) await this.displayUsername(this.currentUserId);
+            await this.realtimeInit({
+                tableName: this.tableName,
                 callback: (data: UserGalleryDisplay[]) => this.showUserImages(data),
                 initialQuery: (query) => query.eq('user_id', this.currentUserId)
             });

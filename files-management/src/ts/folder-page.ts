@@ -3,6 +3,9 @@ import Modal from "./modal";
 import { getSession, supabase } from "./supabase-config";
 import TableStorage from "./supabase-table";
 
+const tableName = 'folder_list';
+const tableStorages = TableStorage<FolderData>();
+
 const username = document.getElementById('username') as HTMLElement;
 const insertFolderForm = document.getElementById('make-folder-section') as HTMLFormElement;
 const folderName = document.getElementById('folder-name') as HTMLInputElement;
@@ -10,9 +13,12 @@ const modal = document.getElementById('folder-notification') as HTMLElement;
 const changeFolderForm = document.getElementById('change-folder-section') as HTMLFormElement;
 const newFolderName = document.getElementById('new-folder-name') as HTMLInputElement;
 const folderList = document.getElementById('folder-list') as HTMLElement;
-const tableName = 'folder_list';
-const controller = new AbortController();
-const tableStorages = TableStorage<FolderData>();
+
+const showInsertFolderBtn = document.getElementById('show-insert-folder-form') as HTMLButtonElement;
+const closeInsertFolderBtn = document.getElementById('close-folder-form') as HTMLButtonElement;
+const closeChangeFolderBtn = document.getElementById('close-change-folder-form') as HTMLButtonElement;
+const deleteAllFoldersBtn = document.getElementById('delete-all-folders') as HTMLButtonElement;
+
 let currentUserId: string | null = null;
 let selectedFolderId: string | null = null;
 
@@ -30,22 +36,19 @@ function FoldersPage() {
             return;
         }
         
-        insertFolderForm.addEventListener('submit', async (event) => await insertNewFolder(event), {
-            signal: controller.signal
-        });
+        insertFolderForm.addEventListener('submit', async (event) => await insertNewFolder(event));
+        changeFolderForm.addEventListener('submit', async (event) => await changeFolderName(event));
 
-        await tableStorages.realtimeInit(tableName, {
+        showInsertFolderBtn.addEventListener('click', openInsertFolderForm);
+        closeInsertFolderBtn.addEventListener('click', closeInsertFolderForm);
+        closeChangeFolderBtn.addEventListener('click', closeChangeFolderForm);
+        deleteAllFoldersBtn.addEventListener('click', deleteAllFolders);
+
+        await tableStorages.realtimeInit({
+            tableName: tableName,
             callback: (folders) => showAllFolders(folders),
-            additionalQuery: (query) => query.eq('user_id', currentUserId)
+            additionalQuery: (addQuery) => addQuery.eq('user_id', currentUserId)
         });
-
-        document.addEventListener('click', (event) => {
-            const target = event.target as HTMLElement;
-            if (target.closest('#show-folder-form')) openInsertFolderForm();
-            else if (target.closest('#close-folder-form')) closeInsertFolderForm();
-            else if (target.closest('#show-insert-folder-form')) openChangeFolderForm();
-            else if (target.closest('#close-change-folder-form')) closeChangeFolderForm();
-        }, { signal: controller.signal });
     }
 
     async function showUserName(id: string) {
@@ -79,6 +82,7 @@ function FoldersPage() {
     function closeInsertFolderForm(): void {
         insertFolderForm.classList.remove('flex');
         insertFolderForm.classList.add('hidden');
+        insertFolderForm.reset();
     }
 
     function openChangeFolderForm(): void {
@@ -89,6 +93,7 @@ function FoldersPage() {
     function closeChangeFolderForm(): void {
         changeFolderForm.classList.remove('flex');
         changeFolderForm.classList.add('hidden');
+        changeFolderForm.reset();
     }
 
     async function insertNewFolder(event: SubmitEvent): Promise<void> {
@@ -100,9 +105,12 @@ function FoldersPage() {
         if (trimmedFolderName === '') throw 'Missing required data';
 
         try {
-            await tableStorages.addToStorage(tableName, {
-                folder_name: trimmedFolderName,
-                user_id: currentUserId
+            await tableStorages.addToStorage({
+                tableName: tableName,
+                data: {
+                    folder_name: trimmedFolderName,
+                    user_id: currentUserId
+                }
             });
         } catch (error: any) {
             notificationSetter.createModal(`Error: ${error.message || error}`);
@@ -122,7 +130,7 @@ function FoldersPage() {
                 folderList.innerHTML = '';
                 folderList.appendChild(fileDataFragment);
             } else {
-                folderList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">No files added...</div>`;
+                folderList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">No folders added...</div>`;
             }
         } catch (error: any) {
             notificationSetter.createModal(`Failed to load data: ${error.message || error}`);
@@ -137,13 +145,13 @@ function FoldersPage() {
 
         const card = document.createElement('div');
         card.className = 'border-[#B71C1C] border-[1.8px] text-[#FFFFFF] shadow-[3px_3px_#B71C1C] p-[1rem] flex flex-col gap-[0.5rem] rounded-[1rem] font-[520]';
-        card.dataset.id = detail.id.toString();
+        card.dataset.id = detail.id;
 
         const folderIcon = document.createElement('div') as HTMLDivElement;
         folderIcon.className = 'fa-solid fa-folder text-[#FFFFFF] font-[550] text-[0.9rem]'
         const folderName = document.createElement('h3');
         folderName.className = 'file-name';
-        folderName.textContent = `File: ${detail.folder_name}`;
+        folderName.textContent = `${detail.folder_name}`;
 
         const uploadTime = document.createElement('p');
         uploadTime.className = 'date-time';
@@ -175,11 +183,33 @@ function FoldersPage() {
         return link;
     }
 
+    async function changeFolderName(event: SubmitEvent): Promise<void> {
+        event.preventDefault();
+
+        if (!selectedFolderId) return;
+    }
+
+    async function deleteAllFolders(): Promise<void> {
+        try {
+            if (tableStorages.currentData.size > 0) {
+                await tableStorages.deleteData(tableName);
+            } else throw 'No folder added recently';
+        } catch (error: any) {
+            notificationSetter.createModal(`${error.message || error}`);
+            notificationSetter.showMessage();
+        }
+    }
+
     function teradownFoldersPage(): void {
-        controller.abort();
         notificationSetter.teardown();
         insertFolderForm.reset();
         closeInsertFolderForm();
+        insertFolderForm.removeEventListener('submit', insertNewFolder);
+        changeFolderForm.removeEventListener('submit', changeFolderName);
+        showInsertFolderBtn.removeEventListener('click', openInsertFolderForm);
+        closeInsertFolderBtn.removeEventListener('click', closeInsertFolderForm);
+        closeChangeFolderBtn.removeEventListener('click', closeChangeFolderForm);
+        deleteAllFoldersBtn.removeEventListener('click', deleteAllFolders);
     }
 
     return { initFoldersPage, teradownFoldersPage }

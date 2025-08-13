@@ -13,6 +13,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
     private detailPostNotification = document.getElementById("detail-post-notification") as HTMLElement;
     private galleryDetailModal: Modal = new Modal(this.detailPostNotification);
     private storageName = 'gallery';
+    private tableName = "image_gallery";
 
     private uploaderName = document.querySelector("#uploader-name") as HTMLParagraphElement;
     private carouselContainer = document.querySelector("#carousel-container") as HTMLElement; 
@@ -21,7 +22,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
     private uploadedAt = document.querySelector("#created-at") as HTMLParagraphElement;
 
     constructor() {
-        super("image_gallery");
+        super();
         this.imageId = this.urlParams.get('id');
         this.showGalleryDetail();
     }
@@ -58,7 +59,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
         }
 
         try {
-            const getDetail = await this.selectedData(this.imageId);
+            const getDetail = await this.selectedData(this.tableName, this.imageId);
 
             if (getDetail) {
                 this.createSliderComponent(getDetail);
@@ -108,7 +109,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
 
     private displayMessage(message: string): void {
         this.carouselContainer.innerHTML = `<p style="text-align: center; padding: 20px;">${message}</p>`;
-        this.imageTitle.textContent = ''; // Kosongkan judul dan tanggal
+        this.imageTitle.textContent = ''; 
         this.uploadedAt.textContent = '';
     }
 
@@ -155,11 +156,11 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
             if (!getImageData) return;
 
             const paths: string[] = getImageData.image_url;
-            await this.deleteData(id); 
+            await this.deleteData(this.tableName, id); 
             await Promise.all(paths.map(path => RemoveFile(path, this.storageName)));
             
             this.carouselContainer.innerHTML = '';
-            setTimeout(() => window.location.href = '/gallery.html', 500);
+            window.location.href = '/gallery.html';
 
         } catch (error: any) {
             this.galleryDetailModal.createComponent(`Failed to delete post: ${error.message || error}`);

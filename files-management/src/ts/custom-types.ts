@@ -1,13 +1,19 @@
 export type DatabaseProps<J> = {
+    tableName: string;
     callback: (data: J[]) => void;
     additionalQuery?: (query: any) => any;
     relationalQuery?: string;
 }
 
-export type UpdateSelectedDataProps<K> = {
+export type InsertDataProps<M> = {
     tableName: string; 
+    data: Omit<M, 'id' | 'created_at'>;
+}
+
+export type UpdateSelectedDataProps<K> = {
     id: string; 
-    newData: Partial<Omit<K, 'id' | 'created_at'>>
+    tableName: string; 
+    newData: Partial<Omit<K, 'id' | 'created_at'>>;
 }
 
 export type FileData = {
