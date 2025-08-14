@@ -1,6 +1,6 @@
 import { supabase } from './supabase-config';
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import type { DatabaseProps, InsertDataProps, UpdateSelectedDataProps } from './custom-types';
+import type { DatabaseProps, DeleteProps, InsertDataProps, UpdateSelectedDataProps } from './custom-types';
 
 const TableStorage = <N extends { id: string }>() => {
     const currentData: Map<string, N> = new Map<string, N>();
@@ -42,7 +42,7 @@ const TableStorage = <N extends { id: string }>() => {
                         
                         if (error) throw `Realtime INSERT error ${error}`;
                         
-                        const fixed = transformedData(data);
+                        const fixed = transformedData(data[0]);
                         currentData.set(fixed.id, fixed);
                         break;
                     }
@@ -58,7 +58,7 @@ const TableStorage = <N extends { id: string }>() => {
                         
                         if (error) throw `Realtime UPDATE error ${error}`;
                         
-                        const fixed = transformedData(data);
+                        const fixed = transformedData(data[0]);
                         currentData.set(fixed.id, fixed);
                         break;
                     }
@@ -101,7 +101,7 @@ const TableStorage = <N extends { id: string }>() => {
         .select();
 
         if (error) throw error.message;
-        return inserted[0].id
+        return inserted[0].id;
     }
 
     async function upsertData(tableName: string, upsertNewData: Partial<N>): Promise<any[]> {
@@ -115,11 +115,11 @@ const TableStorage = <N extends { id: string }>() => {
         return data;
     }
 
-    async function changeSelectedData(updateProps: UpdateSelectedDataProps<N>): Promise<void> {
+    async function changeSelectedData(props: UpdateSelectedDataProps<N>): Promise<void> {
         const { error } = await supabase
-        .from(updateProps.tableName)
-        .update(updateProps.newData)
-        .eq('id', updateProps.id);
+        .from(props.tableName)
+        .update(props.newData)
+        .eq(props.column, props.value);
 
         if (error) throw error.message;
     }
@@ -155,30 +155,36 @@ const TableStorage = <N extends { id: string }>() => {
         }
     }
 
-    async function deleteData(tableName: string, id: string): Promise<void>;
-    async function deleteData(tableName: string, id?: string): Promise<void>;
+    async function deleteData(props: DeleteProps): Promise<void> {
+        if (props.column !== undefined) {
+            if (Array.isArray(props.values)) {
+                const { error } = await supabase
+                .from(props.tableName)
+                .delete()
+                .in(props.column, props.values);
 
-    async function deleteData(tableName: string, id?: string): Promise<void> {
-        if (id !== undefined) {
-            const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .eq('id', id);
+                if (error) throw error.message;
+            } else if (typeof props.values === 'string') {
+                const { error } = await supabase
+                .from(props.tableName)
+                .delete()
+                .eq(props.column, props.values);
 
-            if (error) throw error
-        } else {
-            const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .not('id', 'is', null); 
+                if (error) throw error.message;
+            } else {
+                const { error } = await supabase
+                .from(props.tableName)
+                .delete()
+                .not(props.column, 'is', null);
 
-            if (error) throw error.message;
+                if (error) throw error;
+            }
         }
     }
 
     return {
-        addToStorage, changeSelectedData, currentData, deleteData, filterData,
-        realtimeInit, teardownStorage, toArray, upsertData
+        addToStorage, changeSelectedData, currentData, deleteData, 
+        filterData, realtimeInit, teardownStorage, toArray, upsertData
     }
 }
 

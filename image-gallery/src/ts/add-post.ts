@@ -9,6 +9,7 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
     private imageFiles: File[] = [];
     private notification = document.getElementById("notification_") as HTMLElement;
     private uploaderModal: Modal = new Modal(this.notification);
+    private imageTable = 'image_gallery';
     
     private imageUploadField = document.getElementById("image-upload-field") as HTMLFormElement;
     private imageTitle = document.getElementById("image-title") as HTMLInputElement;
@@ -20,7 +21,7 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
     private currentUsername: string | null = null; 
 
     constructor() {
-        super("image_gallery");
+        super();
     }
 
     async initEventListener(): Promise<void> {
@@ -121,11 +122,14 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
             if (!this.currentUserId) return;
 
             await this.insertData({
-                uploader_name: this.currentUsername || 'Anonymous User',
-                title: this.imageTitle.value.trim() || `gallery_${Date.now()}`,
-                image_name: imageNames,
-                image_url: imageUrls,
-                user_id: this.currentUserId
+                tableName: this.imageTable,
+                newData: {
+                    uploader_name: this.currentUsername || 'Anonymous User',
+                    title: this.imageTitle.value.trim() || `gallery_${Date.now()}`,
+                    image_name: imageNames,
+                    image_url: imageUrls,
+                    user_id: this.currentUserId
+                }
             });
             
             this.resetForm();
@@ -146,19 +150,14 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
         this.mediaFile.value = '';
         this.imagePreviewContainer.innerHTML = 'No Images Selected';
         this.imageFiles = [];
+        this.resetForm();
+        this.teardownStorage();
     }
 }
 
 const imageForm = new ImageForm();
+const init = () => imageForm.initEventListener();
+const teardown = () => imageForm.resetForm();
 
-function initForm(): void {
-    imageForm.initEventListener();
-}
-
-function teardownForm(): void {
-    imageForm.teardownStorage();
-    imageForm.resetForm();
-}
-
-document.addEventListener("DOMContentLoaded", initForm);
-window.addEventListener("beforeunload", teardownForm);
+document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("beforeunload", teardown);

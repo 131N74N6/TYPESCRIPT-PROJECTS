@@ -38,8 +38,19 @@ export type InsertDataProps<O> = {
     newData: Omit<O, 'id' | 'created_at'>;
 }
 
+export type UpsertDataProps<D> = {
+    tableName: string; 
+    dataToUpsert: Partial<D>;
+}
+
 export type UpdateDataProps<Y> = {
     id: string;
     tableName: string;
     newData: Partial<Omit<Y, 'id' | 'created_at'>>
+}
+
+export type DeleteDataProps = {
+    tableName: string;
+    column?: string;
+    values?: string | string[];
 }

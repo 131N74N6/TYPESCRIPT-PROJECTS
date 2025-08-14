@@ -1,3 +1,32 @@
+export type DatabaseProps<Y> = {
+    tableName: string;
+    callback: (data: Y[]) => void;
+    initialQuery?: (query: any) => any;
+    relationalQuery?: string;
+}
+
+export type InsertDataProps<G> = {
+    tableName: string;
+    newData: Omit<G, 'id' | 'created_at'>;
+}
+
+export type UpsertDataProps<X> = {
+    tableName: string;
+    upsertedData: Partial<X>;
+}
+
+export type UpdateDataProps<L> = {
+    tableName: string; 
+    values: string; 
+    newData: Partial<Omit<L, 'id'>>
+}
+
+export type DeleteDataProps = {
+    tableName: string; 
+    column?: string;
+    values?: string | string[];
+}
+
 export type BalanceDetail = {
     id: string;
     amount: number;

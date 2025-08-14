@@ -21,7 +21,7 @@ const fileContent = document.getElementById('file-content') as HTMLElement;
 const tableStorages = TableStorage<FileData>();
 const mediaStorage = SupabaseStorage();
 const storageName = 'file-example';
-const tableName = 'files_list';
+const fileTable = 'files_list';
 let temp: FileData[];
 let currentUserId: string | null = null;
 
@@ -49,7 +49,7 @@ function FilesPage () {
             }
 
             await tableStorages.realtimeInit({
-                tableName: tableName,
+                tableName: fileTable,
                 callback: (filesData) => {
                     this.showAllFiles(filesData);
                     temp = filesData;
@@ -235,8 +235,9 @@ function FilesPage () {
 
                 if (this.selectedFileId) {
                     await tableStorages.changeSelectedData({ 
-                        tableName: tableName, 
-                        id: this.selectedFileId, 
+                        tableName: fileTable, 
+                        value: this.selectedFileId, 
+                        column: 'id',
                         newData: {
                             file_name: newFileName,
                             file_type: newFileType,
@@ -247,7 +248,7 @@ function FilesPage () {
                     if (!currentUserId) return;
 
                     await tableStorages.addToStorage({
-                        tableName: tableName, 
+                        tableName: fileTable, 
                         data: {                            
                             file_name: newFileName,
                             file_type: newFileType,
@@ -268,7 +269,7 @@ function FilesPage () {
         createComponent(detail: FileData): HTMLDivElement {
             const card = document.createElement('div');
             card.className = 'border-[#B71C1C] border-[1.8px] text-[#FFFFFF] shadow-[3px_3px_#B71C1C] p-[1rem] flex flex-col gap-[0.5rem] rounded-[1rem] font-[520]';
-            card.dataset.id = detail.id.toString();
+            card.dataset.id = detail.id;
 
             const file_name = document.createElement('h3');
             file_name.className = 'file-name';
@@ -303,8 +304,21 @@ function FilesPage () {
             deleteButton.onclick = async () => {
                 try {
                     if (tableStorages.currentData.size > 0) {
-                        await tableStorages.deleteData(tableName, detail.id);
-                        await mediaStorage.RemoveFile(detail.file_url, storageName)
+                        const { data: allFiles, error: allFilesError } = await supabase
+                        .from(fileTable)
+                        .select('file_url')
+                        .eq('id', detail.id)
+
+                        if (allFilesError) throw allFilesError.message;
+
+                        const deletePromises = allFiles.map(file => mediaStorage.RemoveFile(file.file_url, 'file-example'));
+                        await Promise.all(deletePromises);
+
+                        await tableStorages.deleteData({
+                            tableName: fileTable, 
+                            column: 'id', 
+                            values: detail.id
+                        });
                     } else {    
                         this.setModal.createModal('Please add one file');
                         this.setModal.showMessage();
@@ -356,8 +370,24 @@ function FilesPage () {
 
         async deleteAllFiles(): Promise<void> {
             try {
+                if (!currentUserId) return;
+
                 if (tableStorages.currentData.size > 0) {
-                    await tableStorages.deleteData(tableName);
+                    const { data: allFiles, error: allFilesError } = await supabase
+                    .from(fileTable)
+                    .select('file_url')
+                    .eq('user_id', currentUserId);
+
+                    if (allFilesError) throw allFilesError.message;
+
+                    const deletePromises = allFiles.map(file => mediaStorage.RemoveFile(file.file_url, 'file-example'));
+                    await Promise.all(deletePromises);
+
+                    await tableStorages.deleteData({
+                        tableName: fileTable,
+                        column: 'user_id',
+                        values: currentUserId
+                    });
                     await Promise.all(tableStorages.toArray().map(data => mediaStorage.RemoveFile(data.file_url, storageName)));
                     documentsList.innerHTML = '';
                     documentsList.textContent = 'No file added...';

@@ -1,20 +1,18 @@
 import { supabase } from "./supabase-config";
 import { RealtimeChannel, type RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { DatabaseProps, DeleteDataProps, InsertDataProps, UpdateDataProps, UpsertDataProps } from "./custom-types";
 
-type DatabaseProps<TT> = {
-    callback: (data: TT[]) => void;
-    initialQuery?: (query: any) => any;
-}
-
-function TableStorage<TT extends { id: string }>(tableName: string) {
+function TableStorage<TT extends { id: string }>() {
     return {
         currentData: new Map<string, TT>() as Map<string, TT>,
         realtimeChannel: null as RealtimeChannel | null,
         isInitialize: false as boolean,
+        additionalQueryFn: null as ((query: any) => any) | null,
+        relationalQuery: null as string | null,
 
         async realtimeInit(dbProps: DatabaseProps<TT>): Promise<void> {
             if (this.isInitialize && this.realtimeChannel) {
-                console.warn(`TableStorage for ${tableName} is already initialized.`);
+                console.warn(`TableStorage for ${dbProps.tableName} is already initialized.`);
                 dbProps.callback(this.toArray());
                 return;
             }
@@ -24,21 +22,47 @@ function TableStorage<TT extends { id: string }>(tableName: string) {
                 this.realtimeChannel = null;
             }
 
+            this.additionalQueryFn = dbProps.initialQuery || null;
+            this.relationalQuery = dbProps.relationalQuery || null;
+
             this.realtimeChannel = supabase.channel('any');
             this.realtimeChannel.on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: tableName },
-                (payload: RealtimePostgresChangesPayload<TT>) => {
-
+                { event: '*', schema: 'public', table: dbProps.tableName },
+                async (payload: RealtimePostgresChangesPayload<TT>) => {
                     switch (payload.eventType) {
                         case 'INSERT': {
-                            const newItem = this.transformedData(payload.new);
+                            let mainQuery = supabase
+                            .from(dbProps.tableName)
+                            .select(dbProps.relationalQuery || '*')
+                            .eq('id', payload.new.id)
+                            .single();
+
+                            if (this.additionalQueryFn) mainQuery = this.additionalQueryFn(mainQuery);
+
+                            const { data, error } = await mainQuery;
+
+                            if (error) throw error.message;
+
+                            const newItem = this.transformedData(data);
                             this.currentData.set(newItem.id, newItem);
                             break;
                         }
                         case 'UPDATE': {
-                            const updatedItem = this.transformedData(payload.new);
-                            this.currentData.set(updatedItem.id, updatedItem);
+                            let mainQuery = supabase
+                            .from(dbProps.tableName)
+                            .select(dbProps.relationalQuery || '*')
+                            .eq('id', payload.new.id)
+                            .single();
+
+                            if (this.additionalQueryFn) mainQuery = this.additionalQueryFn(mainQuery);
+
+                            const { data, error } = await mainQuery;
+
+                            if (error) throw error.message;
+
+                            const newItem = this.transformedData(data);
+                            this.currentData.set(newItem.id, newItem);
                             break;
                         }
                         case 'DELETE': {
@@ -51,15 +75,15 @@ function TableStorage<TT extends { id: string }>(tableName: string) {
                 }
             );
 
-            let query = supabase.from(tableName).select('*');
+            let query = supabase.from(dbProps.tableName).select(dbProps.relationalQuery || '*');
 
-            if (dbProps.initialQuery) query = dbProps.initialQuery(query);
+            if (this.additionalQueryFn) query = this.additionalQueryFn(query);
             
             const { data, error } = await query;
 
             if (error) {
                 dbProps.callback([]);
-                throw error;
+                throw error.message;
             }
             
             this.currentData.clear();
@@ -80,20 +104,20 @@ function TableStorage<TT extends { id: string }>(tableName: string) {
             return item as TT;
         },
 
-        async insertData(newData: Omit<TT, 'id' | 'created_at'>): Promise<string> {
+        async insertData(props: InsertDataProps<TT>): Promise<string> {
             const { data: inserted, error } = await supabase
-            .from(tableName)
-            .insert([newData])
+            .from(props.tableName)
+            .insert([props.newData])
             .select();
 
             if (error) throw error
             return inserted[0].id;
         },
 
-        async upsertData(upsertedData: Partial<TT>): Promise<TT | null> {
+        async upsertData(props: UpsertDataProps<TT>): Promise<TT | null> {
             const { data, error } = await supabase
-            .from(tableName)
-            .upsert([upsertedData])
+            .from(props.tableName)
+            .upsert([props.upsertedData])
             .select()
             .single();
 
@@ -101,36 +125,47 @@ function TableStorage<TT extends { id: string }>(tableName: string) {
             return data;
         },
 
-        async changeSelectedData(id: string, newData: Partial<Omit<TT, 'id'>>): Promise<void> {
+        async changeSelectedData(props: UpdateDataProps<TT>): Promise<void> {
             const { error } = await supabase
-            .from(tableName)
-            .update(newData)
-            .eq('id', id);
+            .from(props.tableName)
+            .update(props.newData)
+            .eq('id', props.values);
 
             if (error) throw error
         },
 
-        async deleteSelectedData(id: string): Promise<void> {
-            const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .eq('id', id);
+        async deleteData(props: DeleteDataProps): Promise<void> {
+            if (props.column !== undefined) {
+                if (Array.isArray(props.values)) {                    
+                    const { error } = await supabase
+                    .from(props.tableName)
+                    .delete()
+                    .in(props.column, props.values);
 
-            if (error) throw error
-        },
+                    if (error) throw error.message;
+                } else if (typeof props.values === 'string') {                    
+                    const { error } = await supabase
+                    .from(props.tableName)
+                    .delete()
+                    .eq(props.column, props.values);
 
-        async deleteAllData(): Promise<void> {
-            const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .not('id', 'is', null);
+                    if (error) throw error.message;
+                } else {                    
+                    const { error } = await supabase
+                    .from(props.tableName)
+                    .delete()
+                    .not(props.column, 'is', null);
 
-            if (error) throw error
+                    if (error) throw error.message
+                }
+            }
         },
 
         teardownStorage(): void {
             this.currentData.clear();
             this.isInitialize = false;
+            this.additionalQueryFn = null;
+            this.relationalQuery = null;
             if (this.realtimeChannel) {
                 this.realtimeChannel.unsubscribe();
                 this.realtimeChannel = null;

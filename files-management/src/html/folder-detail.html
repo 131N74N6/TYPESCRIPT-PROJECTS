@@ -11,9 +11,25 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" 
     />
 </head>
-<body>
+<body class="bg-[#1A1A1A]">
+    <section id="folder-notification"></section>
     <main>
-        <section id="folder-file-list"></section>
+        <form id="change-selected-filename" title="upload-section" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-30">
+            <section class="flex flex-col gap-[0.7rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-md">
+                <input type="text" id="new-file-name" class="border-[#FF8C00] border-[1px] text-[#FFFFFF] text-[0.95rem] outline-0 p-[0.45rem]"/>
+                <div id="insert-button-wrap" class="flex flex-row gap-[0.6rem]">
+                    <button type="button" id="close-update-form" class="cursor-pointer bg-[#B71C1C] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#FFFFFF]">Close</button>
+                    <button type="submit" id="change-filename-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#1A1A1A]">Add</button>
+                </div>
+            </section>
+        </form>
+        <section>
+            <button type="button" id="delete-all-files" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">
+                <i class="fa-solid fa-trash"></i>
+                <span>Delete All</span>
+            </button>
+        </section>
+        <section id="folder-file-list" class="grid gap-[1rem] md:grid-cols-4 sm:grid-cols-2 p-[1rem] overflow-auto"></section>
     </main>
     <script type="module" src="../ts/auth-guard.ts"></script>
     <script type="module" src="../ts/folder-detail.ts"></script>

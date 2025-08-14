@@ -3,7 +3,8 @@ import Modal from "./modal";
 import type { BalanceDetail, BalanceHandlerProps } from "./custom-types";
 import { getSession, supabase } from "./supabase-config";
 
-const balanceTable = TableStorage<BalanceDetail>("finance_list");
+const tableStorage = TableStorage<BalanceDetail>();
+const financeTable = 'finance_list';
 const controller = new AbortController();
 
 const BalanceHandler = (props: BalanceHandlerProps) => ({
@@ -25,7 +26,8 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
             return;
         }
 
-        await balanceTable.realtimeInit({ 
+        await tableStorage.realtimeInit({
+            tableName: financeTable,
             callback: (data) => this.showAllBalanceData(data),
             initialQuery: (query) => query.eq('user_id', this.currentUserId)
         });
@@ -43,12 +45,12 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
 
         props.oldest.addEventListener("change", () => { 
             props.newest.checked = false; 
-            this.showAllBalanceData(balanceTable.toArray());
+            this.showAllBalanceData(tableStorage.toArray());
         }, { signal: controller.signal });
 
         props.newest.addEventListener("change", () => { 
             props.oldest.checked = false; 
-            this.showAllBalanceData(balanceTable.toArray());
+            this.showAllBalanceData(tableStorage.toArray());
         }, { signal: controller.signal });
     },
 
@@ -92,11 +94,14 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
         if (!this.currentUserId) return;
 
         try {
-            await balanceTable.insertData({
-                amount: Number(props.getBalance.value.trim()),
-                type: selectedType.value,
-                description: trimmedDescription || '-',
-                user_id: this.currentUserId
+            await tableStorage.insertData({
+                tableName: financeTable,
+                newData: {
+                    amount: Number(props.getBalance.value.trim()),
+                    type: selectedType.value,
+                    description: trimmedDescription || '-',
+                    user_id: this.currentUserId
+                }
             });
         } catch (error: any) {
             this.balanceNotification.createModal(`Error: ${error.message}`);
@@ -246,10 +251,14 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
                 }
 
                 try {
-                    await balanceTable.changeSelectedData(detail.id, {
-                        amount: trimmedNewAmount,
-                        type: selectedType.value,
-                        description: trimmedNewDescription || '-'
+                    await tableStorage.changeSelectedData({
+                        values: detail.id,
+                        tableName: financeTable,
+                        newData: {                            
+                            amount: trimmedNewAmount,
+                            type: selectedType.value,
+                            description: trimmedNewDescription || '-',
+                        }
                     });
                     
                     this.getSelectedId = null;
@@ -310,7 +319,7 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
             deleteButton.textContent = "Delete";
             deleteButton.className = "bg-[#6096BA] cursor-pointer p-[0.45rem] font-[550] text-[0.95rem] rounded-[0.45rem] w-[100px] text-[#E7ECEF] border-[1.5px] border-[#E7ECEF]";
             deleteButton.onclick = async () => {
-                const balanceData = balanceTable.toArray();
+                const balanceData = tableStorage.toArray();
                 try {
                     if (balanceData.length > 0) {
                         await this.deleteSelectedBalance(detail.id);
@@ -334,10 +343,14 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
     },
 
     async deleteSelectedBalance(id: string): Promise<void> {
-        const balanceData = balanceTable.toArray();
+        const balanceData = tableStorage.toArray();
         try {
             if (balanceData.length > 0) {
-                await balanceTable.deleteSelectedData(id);
+                await tableStorage.deleteData({
+                    tableName: financeTable,
+                    column: 'id',
+                    values: id
+                });
             } else {
                 props.balanceList.innerHTML = '';
                 props.balanceList.textContent = "...Empty...";
@@ -349,10 +362,15 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
     },
 
     async deleteAllBalanceList(): Promise<void> {
-        const balanceData = balanceTable.toArray();
         try {
-            if (balanceData.length > 0) {
-                await balanceTable.deleteAllData();
+            if (!this.currentUserId) return;
+
+            if (tableStorage.currentData.size > 0) {
+                await tableStorage.deleteData({
+                    tableName: financeTable,
+                    column: 'user_id',
+                    values: this.currentUserId
+                });
                 props.balanceList.innerHTML = '';
                 props.balanceList.textContent = "...Empty...";
             } else {
@@ -370,14 +388,14 @@ const BalanceHandler = (props: BalanceHandlerProps) => ({
         this.currentUserId = null;
         controller.abort();
         this.balanceNotification.teardownModal();
-        balanceTable.teardownStorage();
+        tableStorage.teardownStorage();
     },
 
     updateExistingComponent(balanceId: string): void {
         const existingComponent = props.balanceList.querySelector(`.balance-wrap[data-id="${balanceId}"]`);
-        const balanceData = balanceTable.toArray();
+        const balanceData = tableStorage.toArray();
         if (existingComponent) {
-            const detail = balanceTable.currentData.get(balanceId);
+            const detail = tableStorage.currentData.get(balanceId);
             if (detail) {
                 const newComponent = this.createListComponent(detail);
                 newComponent.dataset.id = balanceId;

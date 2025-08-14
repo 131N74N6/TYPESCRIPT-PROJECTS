@@ -2,9 +2,12 @@ import type { FolderData } from "./custom-types";
 import Modal from "./modal";
 import { getSession, supabase } from "./supabase-config";
 import TableStorage from "./supabase-table";
+import SupabaseStorage from './supabase-storage';
 
-const tableName = 'folder_list';
+const folderTable = 'folder_list';
+const fileTable = 'files_list';
 const tableStorages = TableStorage<FolderData>();
+const supabaseStorage = SupabaseStorage();
 
 const username = document.getElementById('username') as HTMLElement;
 const insertFolderForm = document.getElementById('make-folder-section') as HTMLFormElement;
@@ -14,6 +17,7 @@ const changeFolderForm = document.getElementById('change-folder-section') as HTM
 const newFolderName = document.getElementById('new-folder-name') as HTMLInputElement;
 const folderList = document.getElementById('folder-list') as HTMLElement;
 
+const notificationSetter = Modal(modal);
 const showInsertFolderBtn = document.getElementById('show-insert-folder-form') as HTMLButtonElement;
 const closeInsertFolderBtn = document.getElementById('close-folder-form') as HTMLButtonElement;
 const closeChangeFolderBtn = document.getElementById('close-change-folder-form') as HTMLButtonElement;
@@ -23,8 +27,6 @@ let currentUserId: string | null = null;
 let selectedFolderId: string | null = null;
 
 function FoldersPage() {
-    const notificationSetter = Modal(modal);
-
     async function initFoldersPage(): Promise<void> {
         const session = await getSession();
         if (session && session.user) {
@@ -45,7 +47,7 @@ function FoldersPage() {
         deleteAllFoldersBtn.addEventListener('click', deleteAllFolders);
 
         await tableStorages.realtimeInit({
-            tableName: tableName,
+            tableName: folderTable,
             callback: (folders) => showAllFolders(folders),
             additionalQuery: (addQuery) => addQuery.eq('user_id', currentUserId)
         });
@@ -106,7 +108,7 @@ function FoldersPage() {
 
         try {
             await tableStorages.addToStorage({
-                tableName: tableName,
+                tableName: folderTable,
                 data: {
                     folder_name: trimmedFolderName,
                     user_id: currentUserId
@@ -121,12 +123,11 @@ function FoldersPage() {
         }
     }
 
-    function showAllFolders(filesData: FolderData[]): void {
+    function showAllFolders(foldersData: FolderData[]): void {
         const fileDataFragment = document.createDocumentFragment();
         try {
-            if (filesData.length > 0) {
-
-                filesData.forEach(data => fileDataFragment.appendChild(createComponent(data)));
+            if (foldersData.length > 0) {
+                foldersData.forEach(data => fileDataFragment.appendChild(createComponent(data)));
                 folderList.innerHTML = '';
                 folderList.appendChild(fileDataFragment);
             } else {
@@ -135,17 +136,13 @@ function FoldersPage() {
         } catch (error: any) {
             notificationSetter.createModal(`Failed to load data: ${error.message || error}`);
             notificationSetter.showMessage();
-            folderList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">Error ${error.message || error}...</div>`;
+            folderList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">Error: ${error.message || error}...</div>`;
         }
     }
 
-    function createComponent(detail: FolderData) {
-        const link = document.createElement('a') as HTMLAnchorElement;
-        link.href = `folder-detail.html?id=${detail.id}`;
-
+    function createComponent(detail: FolderData): HTMLDivElement {
         const card = document.createElement('div');
         card.className = 'border-[#B71C1C] border-[1.8px] text-[#FFFFFF] shadow-[3px_3px_#B71C1C] p-[1rem] flex flex-col gap-[0.5rem] rounded-[1rem] font-[520]';
-        card.dataset.id = detail.id;
 
         const folderIcon = document.createElement('div') as HTMLDivElement;
         folderIcon.className = 'fa-solid fa-folder text-[#FFFFFF] font-[550] text-[0.9rem]'
@@ -169,30 +166,116 @@ function FoldersPage() {
         const deleteButton = document.createElement('button');
         deleteButton.className = 'bg-[#B71C1C] p-[0.4rem] text-[0.9rem] text-[#FFFFFF] cursor-pointer w-[80px] rounded-[0.4rem]';
         deleteButton.textContent = 'Delete';
+        deleteButton.onclick = async () => await deleteSelectedFolder(detail.id);
+
+        const openFolder = document.createElement('button');
+        openFolder.className = 'bg-[#4CAF50] p-[0.4rem] text-[0.9rem] text-[#FFFFFF] cursor-pointer w-[80px] rounded-[0.4rem]';
+        openFolder.textContent = 'Open';
+        openFolder.onclick = () => window.location.href = `folder-detail.html?id=${detail.id}`;
         
         const documentMeta = document.createElement('div');
         documentMeta.className = 'flex flex-col gap-[0.5rem]';
         documentMeta.append(folderIcon, folderName, uploadTime);
 
-        const documentAction = document.createElement('div');
-        documentAction.className = 'flex flex-wrap gap-[0.7rem]';
-        documentAction.append(selectButton, deleteButton);
+        const folderAction = document.createElement('div');
+        folderAction.className = 'flex flex-wrap gap-[0.7rem]';
+        folderAction.append(selectButton, deleteButton, openFolder);
         
-        card.append(documentMeta, documentAction);
-        link.append(card);
-        return link;
+        card.append(documentMeta, folderAction);
+        return card;
     }
 
     async function changeFolderName(event: SubmitEvent): Promise<void> {
         event.preventDefault();
+        const trimmedNewFolderName = newFolderName.value.trim();
 
         if (!selectedFolderId) return;
+
+        try {
+            await tableStorages.changeSelectedData({
+                value: selectedFolderId,
+                column: 'id',
+                tableName: folderTable,
+                newData: { folder_name: trimmedNewFolderName }
+            });
+        } catch (error: any) {
+            notificationSetter.createModal(`${error.message || error}`);
+            notificationSetter.showMessage();
+        } finally {
+            selectedFolderId = null;
+            changeFolderForm.reset();
+            closeChangeFolderForm();
+        }
+    }
+
+    async function deleteSelectedFolder(id: string): Promise<void> {
+        try {
+            const { data: allFiles, error: allFilesError } = await supabase
+            .from(fileTable)
+            .select('file_url')
+            .eq('folder_id', id);
+
+            if (allFilesError) throw allFilesError;
+
+            const deletePromises = allFiles.map(file => supabaseStorage.RemoveFile(file.file_url, 'file-example'));
+            await Promise.all(deletePromises);
+
+            await tableStorages.deleteData({
+                tableName: fileTable, 
+                column: 'folder_id', 
+                values: id
+            });
+            
+            await tableStorages.deleteData({
+                tableName: folderTable, 
+                column: 'id',
+                values: id
+            });
+        } catch (error: any) {
+            notificationSetter.createModal(`${error.message || error}`);
+            notificationSetter.showMessage();
+        }
     }
 
     async function deleteAllFolders(): Promise<void> {
         try {
+            if (!currentUserId) return;
+
             if (tableStorages.currentData.size > 0) {
-                await tableStorages.deleteData(tableName);
+                const { data: allFolders, error: allFoldersError } = await supabase
+                .from(folderTable)
+                .select('id')
+                .eq('user_id', currentUserId);
+
+                if (allFoldersError) throw allFoldersError.message;
+
+                if (allFolders.length === 0) throw 'No folders added.';
+
+                const folderIds: string[] = allFolders.map(folder => folder.id);
+
+                const { data: filesInFolders, error: filesError } = await supabase
+                .from(fileTable)
+                .select('file_url')
+                .in('folder_id', folderIds);
+
+                if (filesError) throw filesError.message;
+
+                if (filesInFolders.length === 0) throw 'No folders found.';
+
+                const deletePromises = filesInFolders.map(file => supabaseStorage.RemoveFile(file.file_url, 'file-example'));
+                await Promise.all(deletePromises);
+
+                await tableStorages.deleteData({
+                    tableName: fileTable,
+                    column: 'folder_id',
+                    values: folderIds
+                });
+                
+                await tableStorages.deleteData({
+                    tableName: folderTable,
+                    column: 'id',
+                    values: folderIds
+                });
             } else throw 'No folder added recently';
         } catch (error: any) {
             notificationSetter.createModal(`${error.message || error}`);

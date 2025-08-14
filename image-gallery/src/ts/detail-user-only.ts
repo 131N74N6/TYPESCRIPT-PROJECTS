@@ -13,7 +13,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
     private detailPostNotification = document.getElementById("detail-post-notification") as HTMLElement;
     private galleryDetailModal: Modal = new Modal(this.detailPostNotification);
     private storageName = 'gallery';
-    private tableName = "image_gallery";
+    private imageTable = "image_gallery";
 
     private uploaderName = document.querySelector("#uploader-name") as HTMLParagraphElement;
     private carouselContainer = document.querySelector("#carousel-container") as HTMLElement; 
@@ -24,10 +24,9 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
     constructor() {
         super();
         this.imageId = this.urlParams.get('id');
-        this.showGalleryDetail();
     }
 
-    initEventListener(): void {
+    async initEventListener(): Promise<void> {
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
             if (target.closest("#left-button")) {
@@ -44,9 +43,15 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
                 }
             }
         }, { signal: this.controller.signal });
+
+        await this.realtimeInit({
+            tableName: this.imageTable,
+            callback: (images) => this.showGalleryDetail(images),
+            initialQuery: (addQuery) => addQuery.eq('id', this.imageId)
+        });
     }
 
-    async showGalleryDetail(): Promise<void> {
+    async showGalleryDetail(imageDetail: GalleryDetails[]): Promise<void> {
         // Hapus konten carousel dan info sebelum memuat yang baru
         this.carouselContainer.innerHTML = '';
         this.imageTitle.textContent = '';
@@ -59,8 +64,6 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
         }
 
         try {
-            const getDetail = await this.selectedData(this.tableName, this.imageId);
-
             if (getDetail) {
                 this.createSliderComponent(getDetail);
             } else {
@@ -140,9 +143,10 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
         this.totalSlide = 0;
     }
 
-    teardown(): void {
+    teardownPost(): void {
         this.controller.abort();
         this.resetCarouselState();
+        this.teardownStorage();
         this.galleryDetailModal.teardownComponent();
         this.carouselContainer.innerHTML = ''; // Kosongkan hanya carousel
         this.imageTitle.textContent = '';
@@ -156,8 +160,13 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
             if (!getImageData) return;
 
             const paths: string[] = getImageData.image_url;
-            await this.deleteData(this.tableName, id); 
             await Promise.all(paths.map(path => RemoveFile(path, this.storageName)));
+            
+            await this.deleteData({
+                tableName: this.imageTable,
+                column: 'id',
+                values: id
+            }); 
             
             this.carouselContainer.innerHTML = '';
             window.location.href = '/gallery.html';
@@ -170,15 +179,8 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
 }
 
 const galleryDetail = new GalleryDetail();
+const init = () => galleryDetail.initEventListener();
+const teardown = () => galleryDetail.teardownPost();
 
-function initGallery(): void {
-    galleryDetail.initEventListener();
-}
-
-function teardownGallery(): void {
-    galleryDetail.teardownStorage();
-    galleryDetail.teardown();
-}
-
-document.addEventListener("DOMContentLoaded", initGallery);
-window.addEventListener("beforeunload", teardownGallery);
+document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("beforeunload", teardown);

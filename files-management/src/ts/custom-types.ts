@@ -11,9 +11,16 @@ export type InsertDataProps<M> = {
 }
 
 export type UpdateSelectedDataProps<K> = {
-    id: string; 
+    value: string;
+    column: string;
     tableName: string; 
     newData: Partial<Omit<K, 'id' | 'created_at'>>;
+}
+
+export type DeleteProps = {
+    tableName: string;
+    column?: string;
+    values?: string | string[];
 }
 
 export type FileData = {
