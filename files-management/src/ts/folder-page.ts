@@ -287,6 +287,7 @@ function FoldersPage() {
         notificationSetter.teardown();
         insertFolderForm.reset();
         closeInsertFolderForm();
+        currentUserId = null;
         insertFolderForm.removeEventListener('submit', insertNewFolder);
         changeFolderForm.removeEventListener('submit', changeFolderName);
         showInsertFolderBtn.removeEventListener('click', openInsertFolderForm);

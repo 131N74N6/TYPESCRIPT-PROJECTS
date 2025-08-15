@@ -473,6 +473,7 @@ function FilesPage () {
             this.hideNavbar();
             this.closeFileViewer();
             tableStorages.teardownStorage();
+            currentUserId = null;
         }
     }
 }

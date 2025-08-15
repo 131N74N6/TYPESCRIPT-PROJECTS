@@ -9,9 +9,10 @@ const Home = () => {
     let trendChart: Chart | null = null;
     let monthlyChart: Chart | null = null;
     const controller = new AbortController();
+    const financeTable = 'finance_list';
     Chart.register(...registerables);
 
-    const balanceTable = TableStorage<BalanceDetail>('finance_list');
+    const balanceTable = TableStorage<BalanceDetail>();
     const trendChartCanvas = document.getElementById('trend-chart') as HTMLCanvasElement;
     const monthlyChartCanvas = document.getElementById('monthly-chart') as HTMLCanvasElement;
     const startDateInput = document.getElementById('start-date') as HTMLInputElement;
@@ -245,10 +246,13 @@ const Home = () => {
 
             try {
                 await balanceTable.insertData({
-                    amount: Number(getBalance.value.trim()),
-                    type: selectedType.value,
-                    description: trimmedDescription || '-',
-                    user_id: currentUserId
+                    tableName: financeTable,
+                    newData: {                        
+                        amount: Number(getBalance.value.trim()),
+                        type: selectedType.value,
+                        description: trimmedDescription || '-',
+                        user_id: currentUserId
+                    }
                 });
             } catch (error: any) {
                 balanceNotification.createModal(`Error: ${error.message}`);
@@ -274,6 +278,7 @@ const Home = () => {
             balanceInputField.reset();
             balanceNotification.teardownModal();
             controller.abort();
+            currentUserId = null;
             this.hideInsertForm();
         }
     }

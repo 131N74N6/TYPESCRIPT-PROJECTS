@@ -102,21 +102,16 @@ class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
         this.showAllImages(this.toArray());
     }
 
-    teardown(): void {
+    teardownGallery(): void {
         this.controller.abort();
+        this.teardownStorage();
+        this.makeNotification.teardownComponent();
     }
 }
 
 const imageGallery = new ImageGalleryDisplayer();
+const init = () => imageGallery.initEventListener();
+const teardown = () => imageGallery.teardownGallery();
 
-async function initGallery(): Promise<void> {
-    await imageGallery.initEventListener();
-}
-
-function teardownGallery(): void {
-    imageGallery.teardownStorage();
-    imageGallery.teardown();
-}
-
-document.addEventListener("DOMContentLoaded", initGallery);
-window.addEventListener("beforeunload", teardownGallery);
+document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("beforeunload", teardown);

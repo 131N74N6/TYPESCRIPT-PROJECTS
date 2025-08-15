@@ -34,15 +34,16 @@ const TableStorage = <N extends { id: string }>() => {
                         let mainQuery = supabase
                         .from(dbProps.tableName)
                         .select(relationalQuery || '*')
-                        .eq('id', payload.new.id);
+                        .eq('id', payload.new.id)
+                        .single();
 
                         if (additionalQueryFn) mainQuery = additionalQueryFn(mainQuery);
                         
                         const { data, error } = await mainQuery;
                         
-                        if (error) throw `Realtime INSERT error ${error}`;
+                        if (error) throw `Realtime INSERT error ${error.message}`;
                         
-                        const fixed = transformedData(data[0]);
+                        const fixed = transformedData(data);
                         currentData.set(fixed.id, fixed);
                         break;
                     }
@@ -50,15 +51,16 @@ const TableStorage = <N extends { id: string }>() => {
                         let mainQuery = supabase
                         .from(dbProps.tableName)
                         .select(relationalQuery || '*')
-                        .eq('id', payload.new.id);
+                        .eq('id', payload.new.id)
+                        .single();
 
                         if (additionalQueryFn) mainQuery = additionalQueryFn(mainQuery);
                         
                         const { data, error } = await mainQuery;
                         
-                        if (error) throw `Realtime UPDATE error ${error}`;
+                        if (error) throw `Realtime UPDATE error ${error.message}`;
                         
-                        const fixed = transformedData(data[0]);
+                        const fixed = transformedData(data);
                         currentData.set(fixed.id, fixed);
                         break;
                     }
@@ -80,7 +82,7 @@ const TableStorage = <N extends { id: string }>() => {
 
         if (error) {
             dbProps.callback([]);
-            throw `Initial data fetch error: ${error}`;
+            throw `Initial data fetch error: ${error.message}`;
         }
 
         currentData.clear();

@@ -10,7 +10,32 @@ export type GalleryPost = {
 
 export type GalleryDisplayer = Pick<GalleryPost, 'id' | 'image_url' | 'title'>;
 
-export type GalleryDetails = Pick<GalleryPost, 'id' | 'created_at' | 'title' | 'uploader_name' | 'image_url'>;
+export type GalleryDetails = {
+    id: string;
+    created_at: Date;
+    title: string;
+    image_url: string[];
+    uploader_name: string;
+    like_count: number;
+    user_liked: boolean; // Status apakah user saat ini sudah like
+    post_id: string;
+}
+
+export type UserOpinion = {
+    id: string;
+    created_at: Date;
+    opinions: string;
+    username: string;
+    user_id: string;
+    post_id: string;
+}
+
+export type Like = {
+    id: string;
+    created_at: Date;
+    post_id: string;
+    user_id: string;
+}
 
 export type Users = {
     id: string;

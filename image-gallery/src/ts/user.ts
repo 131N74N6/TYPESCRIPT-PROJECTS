@@ -120,6 +120,7 @@ class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
     }
 
     teardown(): void {
+        this.currentUserId = null;
         this.controller.abort();
         this.makeNotification.teardownComponent();
         this.personalImagesGallery.innerHTML = '';

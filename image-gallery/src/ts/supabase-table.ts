@@ -3,7 +3,7 @@ import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/
 import type { DatabaseProps, DeleteDataProps, InsertDataProps, UpdateDataProps, UpsertDataProps } from "./custom-types";
 
 class DatabaseStorage <B extends { id: string }> {
-    protected currentData: Map<string, B>;
+    currentData: Map<string, B>;
     private isInitialized: boolean = false;
     private realtimeChannel: RealtimeChannel | null = null;
     private additionalQueryFn: ((query: any) => any) | null = null;
@@ -13,7 +13,7 @@ class DatabaseStorage <B extends { id: string }> {
         this.currentData = new Map<string, B>();
     }
 
-    protected async realtimeInit(db: DatabaseProps<B>): Promise<void> {
+    async realtimeInit(db: DatabaseProps<B>): Promise<void> {
         if (this.isInitialized && this.realtimeChannel) {
             console.warn(`Realtime channel for ${db.tableName} is already initialized.`);
             db.callback(this.toArray());
@@ -107,7 +107,7 @@ class DatabaseStorage <B extends { id: string }> {
         return data as B;
     }
 
-    protected async insertData(props: InsertDataProps<B>): Promise<string> {
+    async insertData(props: InsertDataProps<B>): Promise<string> {
         const { data, error } = await supabase
         .from(props.tableName)
         .insert([props.newData])
@@ -139,7 +139,7 @@ class DatabaseStorage <B extends { id: string }> {
         if (error) throw error.message;
     }
     
-    protected async deleteData(props: DeleteDataProps): Promise<void> {
+    async deleteData(props: DeleteDataProps): Promise<void> {
         if (props.column !== undefined) {          
             if (Array.isArray(props.values)) {
                 const { error } = await supabase
@@ -177,7 +177,7 @@ class DatabaseStorage <B extends { id: string }> {
         }
     }
 
-    protected toArray(): B[] {
+    toArray(): B[] {
         return Array.from(this.currentData.values());
     }
 }

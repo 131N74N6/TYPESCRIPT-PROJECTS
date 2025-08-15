@@ -64,11 +64,14 @@ class SignIn extends DatabaseStorage<Users> {
                     const username = user.user_metadata?.username || 'Pengguna Baru';
 
                     try {
-                        await this.upsertData(this.tableName, {
-                            id: user.id,
-                            email: user.email,
-                            username: username,
-                            password: this.password.value.trim()
+                        await this.upsertData({
+                            tableName: this.tableName,
+                            dataToUpsert: {
+                                id: user.id,
+                                email: user.email,
+                                username: username,
+                                password: this.password.value.trim()
+                            }
                         });
                     } catch (error: any) {
                         this.signInMessage.classList.remove('hidden');
@@ -79,10 +82,8 @@ class SignIn extends DatabaseStorage<Users> {
                     }
                 }
             }
-
-            await this.selectedData(this.tableName, data.user.id);
-
-            setTimeout(() => window.location.href = '/html/user.html', 500);
+            
+            window.location.href = '/html/user.html';
         } catch (error: any) {
             this.signInMessage.classList.remove('hidden');
             this.signInMessage.classList.add('block');

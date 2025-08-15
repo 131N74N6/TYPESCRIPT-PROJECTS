@@ -218,6 +218,7 @@ function FolderContents() {
 
     function teardownFolderContents(): void {
         selectedFileId = null;
+        currentUserId = null;
         changeFileNameForm.reset();
         changeFileNameForm.removeEventListener('submit', async (event) => await changeSelectedFileName(event));
         closeUpdateFormBtn.removeEventListener('click', closeUpdateFileNameForm);

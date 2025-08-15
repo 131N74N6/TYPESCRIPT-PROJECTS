@@ -26,15 +26,26 @@
             <p id="uploader-name" class="text-gray-700 text-lg font-medium"></p>
             <p id="image-title" class="text-gray-600 text-xl font-semibold"></p>
             <p id="created-at" class="text-gray-500 text-sm"></p>
+            <div class="flex items-center gap-4">
+                <button id="like-button" class="flex items-center gap-2">
+                    <i class="far fa-heart text-xl"></i>
+                    <span id="like-count">0</span>
+                </button>
+            </div>
         </div>
-        <div id="comment-section" class="bg-white rounded-lg shadow-xl flex g-[0.6rem] p-[0.6rem] space-y-4">
-            <form id="comment-maker" class="flex gap-[0.7rem]">
-                <textarea id="opinions" class="resize-none border-[1px] border-[rgba(0,0,0,0.3)] outline-0 w-[100px] h-[200px] p-[0.5rem] text-[1rem]"></textarea>
-                <button type="button" class="bg-[#ed9322] text-[#1A1A1A] text-[1rem] p-[0.5rem] rounded-[0.5rem]">
-                    <i class="fa-regular fa-paper-plane"></i>
+        <div id="comment-section" class="bg-white rounded-lg shadow-xl p-6 flex flex-col gap-4 col-span-3 md:col-span-1">
+            <h3 class="text-xl font-semibold text-gray-800">Comments</h3>
+            <form id="comment-maker" class="flex flex-col gap-4 p-4 border rounded-lg">
+                <textarea id="opinions" placeholder="Add your opinions..." 
+                    class="w-full p-3 border rounded-lg resize-none min-h-[100px]"></textarea>
+                <button type="submit" class="self-end bg-[#ed9322] text-white px-4 py-2 rounded-lg">
+                    <i class="fa-regular fa-paper-plane mr-2"></i>Kirim
                 </button>
             </form>
-            <section id="comments-group" class="flex flex-col g-[1rem] p-[1rem]"></section>
+            <section id="comments-group" class="space-y-4">
+                <h3 class="text-lg font-semibold border-b pb-2">Comments</h3>
+                <div id="comments-container" class="space-y-4"></div>
+            </section>
         </div>
     </main>
     <script type="module" src="../ts/detail.ts"></script>

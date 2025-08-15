@@ -1,15 +1,22 @@
 import DatabaseStorage from "./supabase-table";
 import Modal from "./modal";
-import type { GalleryDetails } from "./custom-types";
+import type { GalleryDetails, Like, UserOpinion } from "./custom-types";
+import { getSession } from "./supabase-config";
 
 class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
-    private controller = new AbortController();
     private urlParams = new URLSearchParams(window.location.search);
+    private commentStorage = new DatabaseStorage<UserOpinion>();
+    private likeStorage = new DatabaseStorage<Like>();
+    private controller = new AbortController();
+
+    private currentUserId: string | null = null;
+    private currentUserName: string | null = null;
     private imageId: string | null;
+    private currentPost: GalleryDetails | null = null;
+    
     private currentIndex = 0;
     private totalSlide = 0;
-
-    private tableName = "image_gallery";
+    private imageTable = "image_gallery";
     private detailPostNotification = document.getElementById("detail-post-notification") as HTMLElement;
     private galleryDetailModal: Modal = new Modal(this.detailPostNotification);
 
@@ -19,13 +26,26 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
     private imageTitle = document.querySelector("#image-title") as HTMLParagraphElement;
     private uploadedAt = document.querySelector("#created-at") as HTMLParagraphElement;
 
+    private likeButton = document.querySelector("#like-button") as HTMLButtonElement;
+    private likeCountElement = document.querySelector("#like-count") as HTMLSpanElement;
+    private commentForm = document.querySelector("#comment-maker") as HTMLFormElement;
+    private commentInput = document.querySelector("#opinions") as HTMLTextAreaElement;
+    private commentsContainer = document.querySelector("#comments-container") as HTMLElement;
+
     constructor() {
         super();
         this.imageId = this.urlParams.get('id');
-        this.showGalleryDetail();
     }
 
-    initEventListener(): void {
+    async initDetailPost(): Promise<void> {
+        const session = await getSession();
+        if (session && session.user) {
+            this.currentUserId = session.user.id;
+            if (this.currentUserId) this.currentUserName = session.user;
+        } else {
+            return;
+        }
+
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
             if (target.closest("#left-button")) {
@@ -38,36 +58,45 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
                 }
             } 
         }, { signal: this.controller.signal });
+
+        this.likeButton.addEventListener("click", () => this.handleLike());
+
+        this.commentForm.addEventListener("submit", async (event) => this.handleCommentSubmit(event));
+
+        await this.realtimeInit({
+            tableName: this.imageTable,
+            callback: (images) => this.showDetailPost(images),
+            initialQuery: (addQuery) => addQuery.eq('id', this.imageId),
+            relationalQuery: `
+                id, created_at, uploader_name, title, like_count, image_url,
+                image_gallery_comments (id, username, opinions), 
+                likes_data_from_image_gallery (id)
+            `
+        });
+
+        await this.commentStorage.realtimeInit({
+            tableName: "image_gallery_comments",
+            callback: (comments) => this.showAllComments(comments),
+            initialQuery: (query) => query.eq('gallery_id', this.imageId)
+        });
+
+        await this.likeStorage.realtimeInit({
+            tableName: "likes_data_from_image_gallery",
+            callback: (likes) => this.updateLikeStatus(likes),
+            initialQuery: (query) => query.eq('gallery_id', this.imageId)
+        });
+
     }
 
-    async showGalleryDetail(): Promise<void> {
-        // Hapus konten carousel dan info sebelum memuat yang baru
-        this.carouselContainer.innerHTML = '';
-        this.imageTitle.textContent = '';
-        this.uploadedAt.textContent = '';
-        this.navigationContainer.style.display = 'none'; // Sembunyikan navigasi secara default
-
-        if (!this.imageId) {
+    private showDetailPost(post: GalleryDetails[]) {
+        if (post.length === 0) {
             this.displayMessage('Image not found or has been deleted');
             return;
         }
 
-        try {
-            const getDetail = await this.selectedData(this.tableName, this.imageId);
-
-            if (getDetail) {
-                this.createSliderComponent(getDetail);
-            } else {
-                this.displayMessage('Image not found or has been deleted');
-                this.resetCarouselState();
-            }
-        } catch (error: any) {
-            console.error("Error fetching gallery detail:", error);
-            this.galleryDetailModal.createComponent(`Failed to load image: ${error.message || error}`);
-            this.galleryDetailModal.showComponent();
-            this.displayMessage('Something went wrong. Please try again later.');
-            this.resetCarouselState();
-        }
+        this.currentPost = post[0];
+        this.createSliderComponent(this.currentPost);
+        this.updateLikeUI();
     }
 
     private createSliderComponent(detail: GalleryDetails): void {
@@ -94,7 +123,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         this.totalSlide = detail.image_url.length;
         this.currentIndex = 0;
 
-        // Tampilkan/sembunyikan navigasi jika diperlukan
+        // Tampilkan/sembunyikan navigasi
         this.navigationContainer.style.display = this.totalSlide > 1 ? 'flex' : 'none'; // Tampilkan hanya jika ada lebih dari 1 gambar
 
         // Panggil updateCarousel untuk memastikan tampilan awal benar
@@ -134,11 +163,120 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         this.totalSlide = 0;
     }
 
-    teardown(): void {
+    private async handleLike(): Promise<void> {
+        if (!this.currentUserId || !this.imageId) return;
+
+        try {
+            const existingLike = this.likeStorage.toArray()
+            .find(like => like.user_id === this.currentUserId && like.post_id === this.imageId);
+
+            if (existingLike) {
+                // Unlike
+                await this.likeStorage.deleteData({
+                    tableName: "likes_data_from_image_gallery",
+                    column: "id",
+                    values: existingLike.id
+                });
+            } else {
+                // Like
+                await this.likeStorage.insertData({
+                    tableName: "likes_data_from_image_gallery",
+                    newData: {
+                        user_id: this.currentUserId,
+                        post_id: this.imageId
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("Like error:", error);
+            this.galleryDetailModal.createComponent(`Failed to update like: ${error}`);
+            this.galleryDetailModal.showComponent();
+        }
+    }
+
+    private updateLikeStatus(likes: Like[]): void {
+        if (!this.currentPost) return;
+        
+        // Update like count
+        this.currentPost.like_count = likes.length;
+        this.likeCountElement.textContent = likes.length.toString();
+        
+        // Update button appearance
+        const userLiked = !!likes.find(like => like.user_id === this.currentUserId);
+        const likeIcon = this.likeButton.querySelector('i');
+        
+        if (likeIcon) {
+            likeIcon.className = userLiked ? 'fas fa-heart text-xl' : 'far fa-heart text-xl';
+            this.likeButton.classList.toggle('text-red-500', userLiked);
+        }
+    }
+
+    private showAllComments(comments: UserOpinion[]): void {
+        this.commentsContainer.innerHTML = '';
+
+        if (comments.length === 0) {
+            this.commentsContainer.innerHTML = `
+                <p class="text-gray-500 text-center py-4">No comments yet</p>
+            `;
+            return;
+        }
+
+        comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.className = 'bg-gray-50 p-4 rounded-lg';
+            commentElement.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <strong class="text-gray-800">${comment.username}</strong>
+                        <p class="text-gray-600 mt-1">${comment.opinions}</p>
+                    </div>
+                    <span class="text-gray-400 text-sm">${new Date(comment.created_at).toLocaleTimeString()}</span>
+                </div>
+            `;
+            this.commentsContainer.appendChild(commentElement);
+        });
+    }
+
+    private async handleCommentSubmit(event: SubmitEvent): Promise<void> {
+        event.preventDefault();
+        if (!this.currentUserId || !this.imageId) return;
+        if (!this.currentUserName) return;
+        
+        const commentText = this.commentInput.value.trim();
+        if (!commentText) return;
+
+        try {
+            await this.commentStorage.insertData({
+                tableName: "image_gallery_comments",
+                newData: {
+                    post_id: this.imageId,
+                    user_id: this.currentUserId,
+                    opinions: commentText,
+                    username: this.currentUserName 
+                }
+            });
+            
+            this.commentInput.value = '';
+        } catch (error: any) {
+            this.galleryDetailModal.createComponent(`Failed to add comment: ${error.message || error}`);
+            this.galleryDetailModal.showComponent();
+        }
+    }
+
+    private updateLikeUI(): void {
+        if (!this.currentPost) return;
+        this.likeCountElement.textContent = this.currentPost.like_count.toString();
+    }
+
+    teardownPostDetail(): void {
+        this.teardownStorage();
         this.controller.abort();
         this.resetCarouselState();
+        this.imageId = null;
+        this.currentUserId = null;
+        this.currentUserName = null;
         this.galleryDetailModal.teardownComponent();
-        this.carouselContainer.innerHTML = ''; // Kosongkan hanya carousel
+        this.carouselContainer.innerHTML = '';
         this.imageTitle.textContent = '';
         this.uploadedAt.textContent = '';
         this.navigationContainer.style.display = 'none';
@@ -146,15 +284,8 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
 }
 
 const publicGalleryDetail = new PublicGalleryDetail();
+const init = () => publicGalleryDetail.initDetailPost();
+const teardown = () => publicGalleryDetail.teardownPostDetail();
 
-function initGallery(): void {
-    publicGalleryDetail.initEventListener();
-}
-
-function teardownGallery(): void {
-    publicGalleryDetail.teardownStorage();
-    publicGalleryDetail.teardown();
-}
-
-document.addEventListener("DOMContentLoaded", initGallery);
-window.addEventListener("beforeunload", teardownGallery);
+document.addEventListener("DOMContentLoaded", init);
+window.addEventListener("beforeunload", teardown);

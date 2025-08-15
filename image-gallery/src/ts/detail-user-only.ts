@@ -146,6 +146,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
     teardownPost(): void {
         this.controller.abort();
         this.resetCarouselState();
+        this.imageId = null;
         this.teardownStorage();
         this.galleryDetailModal.teardownComponent();
         this.carouselContainer.innerHTML = ''; // Kosongkan hanya carousel
@@ -172,7 +173,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
             window.location.href = '/gallery.html';
 
         } catch (error: any) {
-            this.galleryDetailModal.createComponent(`Failed to delete post: ${error.message || error}`);
+            this.galleryDetailModal.createComponent(`${error.message || error}`);
             this.galleryDetailModal.showComponent();
         }
     }
