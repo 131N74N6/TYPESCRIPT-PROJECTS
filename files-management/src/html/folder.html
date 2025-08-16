@@ -17,10 +17,8 @@
         <button type="button" id="navbar-key" class="border-0 outline-0 cursor-pointer text-[#FFFFFF] text-[1.2rem]">
             <i class="fa-solid fa-bars-staggered"></i>
         </button>
-        <button type="button" id="sign-out" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">Sign Out</button>
-        <div id="username" class="text-[#FFFFFF] font-[550] text-[0.9rem]">User</div>
     </header>
-    <main class="z-10 relative flex gap-[1rem] p-[1rem] h-[91.2dvh]">
+    <main class="z-10 relative flex gap-[1rem] p-[1rem]">
         <section id="file-viewer" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-50 p-[1rem]">
             <div class="relative bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-4xl h-[90%] flex flex-col">
                 <button id="close-file-viewer" class="absolute top-2 right-2 text-white w-[50px] h-[50px] rounded-[100%] text-2xl p-2 cursor-pointer hover:bg-[#FF8C00]">
@@ -47,7 +45,7 @@
                 </div>
             </section>
         </form>
-        <section id="folder-list-wrap" class="bg-[#000000] border-[#FFFFFF] w-[100%] border-[1.5px]">
+        <section id="folder-list-wrap" class="bg-[#000000] border-[#FFFFFF] w-[100%] border-[1.5px] h-min-[100dvh]">
             <form id="search-folder-section" title="search-section" class="px-[1rem] pt-[1rem] flex flex-wrap gap-[0.65rem] justify-center">
                 <input type="text" id="searched-folder" placeholder="search folder name" class="border-[1.8px] border-[#FF8C00] text-[#FFFFFF] outline-0 p-[0.5rem] text-[1rem] font-[500] rounded-[0.5rem] w-[250px]"/>
                 <button type="button" id="show-insert-folder-form" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">
@@ -59,7 +57,32 @@
                     <span>Delete All</span>
                 </button>
             </form>
-            <section id="folder-list" class="grid gap-[1rem] md:grid-cols-4 sm:grid-cols-2 p-[1rem] overflow-auto">
+            <section id="side-navbar" class="bg-[#00000093] fixed z-20 inset-0 hidden">
+                <div class="flex flex-col gap-[1rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] w-[270px] max-w-md">
+                    <div class="flex justify-end">
+                        <button type="button" id="close-navbar-key" class="border-0 outline-0 cursor-pointer text-[#FFFFFF] text-[1.2rem]">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="text-[#FFFFFF] flex gap-[0.7rem] items-center py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                        <i class="fa-solid fa-user"></i>
+                        <div id="username">User</div>
+                    </div>
+                    <a href="file.html" class="text-[#FFFFFF] bg-[#1A1A1A] rounded-[0.4rem] flex gap-[0.7rem] items-center cursor-pointer py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                        <i class="fa-regular fa-file"></i>
+                        <div>File</div>
+                    </a>
+                    <a href="folder.html" class="text-[#FFFFFF] bg-[#1A1A1A] rounded-[0.4rem] flex gap-[0.7rem] items-center cursor-pointer py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                        <i class="fa-regular fa-folder"></i>
+                        <div>Folder</div>
+                    </a>
+                    <button type="button" id="sign-out" class="text-[#FFFFFF] bg-[#1A1A1A] rounded-[0.4rem] flex gap-[0.7rem] items-center cursor-pointer py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                        <i class="fa-solid fa-door-open"></i>
+                        <div>Sign Out</div>
+                    </button>
+                </div>
+            </section>
+            <section id="folder-list" class="grid gap-[1rem] md:grid-cols-4 sm:grid-cols-2 p-[1rem]">
                 <div class="text-[2rem] text-[#FFFFFF]">No folders added...</div>
             </section>
         </section>

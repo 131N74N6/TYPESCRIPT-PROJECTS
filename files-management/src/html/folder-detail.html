@@ -13,21 +13,62 @@
 </head>
 <body class="bg-[#1A1A1A]">
     <section id="folder-notification"></section>
+    <header id="header" class="bg-[#000000] p-[1rem] border-[#FFFFFF] border-[1.8px] flex flex-wrap items-center gap-[1rem]">
+        <button type="button" id="navbar-key" class="border-0 outline-0 cursor-pointer text-[#FFFFFF] text-[1.2rem]">
+            <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+    </header>
     <main>
         <form id="change-selected-filename" title="upload-section" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-30">
             <section class="flex flex-col gap-[0.7rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-md">
+                <label class="text-[#FF8C00] font-[550] text-[1.1rem]" for="new-file-name">New File Name</label>
                 <input type="text" id="new-file-name" class="border-[#FF8C00] border-[1px] text-[#FFFFFF] text-[0.95rem] outline-0 p-[0.45rem]"/>
+                <label class="text-[#FF8C00] font-[550] text-[1.1rem]" for="move-to-folder">Move To</label>
+                <select name="move-to-folder" id="move-to-folder" class="p-[0.5rem] outline-0 border-[#FF8C00] border-[1.8px] text-[#FF8C00] rounded-[0.5rem]"></select>
                 <div id="insert-button-wrap" class="flex flex-row gap-[0.6rem]">
                     <button type="button" id="close-update-form" class="cursor-pointer bg-[#B71C1C] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#FFFFFF]">Close</button>
-                    <button type="submit" id="change-filename-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#1A1A1A]">Add</button>
+                    <button type="submit" id="change-filename-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#1A1A1A]">Save</button>
                 </div>
             </section>
         </form>
+        <section id="side-navbar" class="bg-[#00000093] fixed z-20 inset-0 hidden">
+            <div class="flex flex-col gap-[1rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] w-[270px] max-w-md">
+                <div class="flex justify-end">
+                    <button type="button" id="close-navbar-key" class="border-0 outline-0 cursor-pointer text-[#FFFFFF] text-[1.2rem]">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="text-[#FFFFFF] flex gap-[0.7rem] items-center py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                    <i class="fa-solid fa-user"></i>
+                    <div id="username">User</div>
+                </div>
+                <a href="file.html" class="text-[#FFFFFF] bg-[#1A1A1A] rounded-[0.4rem] flex gap-[0.7rem] items-center cursor-pointer py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                    <i class="fa-regular fa-file"></i>
+                    <div>File</div>
+                </a>
+                <a href="folder.html" class="text-[#FFFFFF] bg-[#1A1A1A] rounded-[0.4rem] flex gap-[0.7rem] items-center cursor-pointer py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                    <i class="fa-regular fa-folder"></i>
+                    <div>Folder</div>
+                </a>
+                <button type="button" id="sign-out" class="text-[#FFFFFF] bg-[#1A1A1A] rounded-[0.4rem] flex gap-[0.7rem] items-center cursor-pointer py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                    <i class="fa-solid fa-door-open"></i>
+                    <div>Sign Out</div>
+                </button>
+            </div>
+        </section>
         <section>
             <button type="button" id="delete-all-files" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">
                 <i class="fa-solid fa-trash"></i>
                 <span>Delete All</span>
             </button>
+        </section>
+        <section id="file-viewer" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-50 p-[1rem]">
+            <div class="relative bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-4xl h-[90%] flex flex-col">
+                <button id="close-file-viewer" class="absolute top-2 right-2 text-[#1A1A1A] w-[50px] h-[50px] rounded-[100%] text-2xl p-2 cursor-pointer hover:bg-[#FF8C00]">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div id="file-content" class="flex-1 overflow-auto bg-white p-4 rounded-[0.5rem]"></div>
+            </div>
         </section>
         <section id="folder-file-list" class="grid gap-[1rem] md:grid-cols-4 sm:grid-cols-2 p-[1rem] overflow-auto"></section>
     </main>

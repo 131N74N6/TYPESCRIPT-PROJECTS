@@ -1,7 +1,7 @@
 import DatabaseStorage from "./supabase-table";
 import Modal from "./modal";
 import type { GalleryDetails, Like, UserOpinion } from "./custom-types";
-import { getSession } from "./supabase-config";
+import { getSession, supabase } from "./supabase-config";
 
 class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
     private urlParams = new URLSearchParams(window.location.search);
@@ -14,9 +14,13 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
     private imageId: string | null;
     private currentPost: GalleryDetails | null = null;
     
+    private imageTable = "image_gallery";
+    private galleryUserTable = 'image_gallery_user';
+    private commentPostTable = 'image_gallery_comments';
+
     private currentIndex = 0;
     private totalSlide = 0;
-    private imageTable = "image_gallery";
+
     private detailPostNotification = document.getElementById("detail-post-notification") as HTMLElement;
     private galleryDetailModal: Modal = new Modal(this.detailPostNotification);
 
@@ -41,9 +45,9 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         const session = await getSession();
         if (session && session.user) {
             this.currentUserId = session.user.id;
-            if (this.currentUserId) this.currentUserName = session.user;
+            if (this.currentUserId) await this.getUserName(this.currentUserId);
         } else {
-            return;
+            window.location.replace('/html/signin.html');
         }
 
         document.addEventListener("click", (event) => {
@@ -75,17 +79,28 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         });
 
         await this.commentStorage.realtimeInit({
-            tableName: "image_gallery_comments",
+            tableName: this.commentPostTable,
             callback: (comments) => this.showAllComments(comments),
-            initialQuery: (query) => query.eq('gallery_id', this.imageId)
+            initialQuery: (query) => query.eq('post_id', this.imageId)
         });
 
         await this.likeStorage.realtimeInit({
             tableName: "likes_data_from_image_gallery",
             callback: (likes) => this.updateLikeStatus(likes),
-            initialQuery: (query) => query.eq('gallery_id', this.imageId)
+            initialQuery: (query) => query.eq('post_id', this.imageId)
         });
+    }
 
+    private async getUserName(userId: string): Promise<void> {
+        const { data, error } = await supabase
+        .from(this.galleryUserTable)
+        .select('username')
+        .eq('id', userId)
+        .single();
+
+        if (error) throw error.message;
+
+        this.currentUserName = data.username;
     }
 
     private showDetailPost(post: GalleryDetails[]) {
@@ -247,7 +262,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
 
         try {
             await this.commentStorage.insertData({
-                tableName: "image_gallery_comments",
+                tableName: this.commentPostTable,
                 newData: {
                     post_id: this.imageId,
                     user_id: this.currentUserId,
@@ -275,6 +290,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         this.imageId = null;
         this.currentUserId = null;
         this.currentUserName = null;
+        this.currentPost = null;
         this.galleryDetailModal.teardownComponent();
         this.carouselContainer.innerHTML = '';
         this.imageTitle.textContent = '';

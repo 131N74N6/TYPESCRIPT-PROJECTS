@@ -5,6 +5,12 @@ export type DatabaseProps<J> = {
     relationalQuery?: string;
 }
 
+export type FileBucketProps = {
+    oldFilePath: string; 
+    newFileName: string; 
+    bucketName: string;
+}
+
 export type InsertDataProps<M> = {
     tableName: string; 
     data: Omit<M, 'id' | 'created_at'>;
@@ -30,6 +36,7 @@ export type FileData = {
     file_type: string;
     file_url: string;
     user_id: string;
+    folder_id?: string;
 }
 
 export type User = {

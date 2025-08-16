@@ -1,38 +1,40 @@
-const Modal = (modal: HTMLElement) => ({
-    messageWrap: document.createElement("p") as HTMLParagraphElement,
-    notification: document.createElement("div") as HTMLDivElement,
-    timeout: null as number | null,
+function Modal(modal: HTMLElement) {
+    let messageWrap = document.createElement("p") as HTMLParagraphElement;
+    let notification = document.createElement("div") as HTMLDivElement;
+    let timeout: number | null = null;
 
-    createModal(message: string): void {
-        this.notification.className = "p-[0.45rem]";
+    function createModal(message: string): void {
+        notification.className = "p-[0.45rem]";
 
-        this.messageWrap.className = "text-[#FFFFFF] font-[550] text-[0.9rem]";
-        this.messageWrap.textContent = message;
+        messageWrap.className = "text-[#FFFFFF] font-[550] text-[0.9rem]";
+        messageWrap.textContent = message;
 
-        this.notification.appendChild(this.messageWrap);
-        modal.appendChild(this.notification);
-        this.showMessage();
-    },
+        notification.appendChild(messageWrap);
+        modal.appendChild(notification);
+        showMessage();
+    }
 
-    showMessage(): void {
-        this.notification.classList.add("show");
-        this.timeout = window.setTimeout(() => this.teardown(), 3000);
-    },
+    function showMessage(): void {
+        notification.classList.add("show");
+        timeout = window.setTimeout(() => teardown(), 3000);
+    }
 
-    teardown(): void {
-        if (this.notification.parentElement) {
-            this.notification.parentElement.removeChild(this.notification);
+    function teardown(): void {
+        if (notification.parentElement) {
+            notification.parentElement.removeChild(notification);
         }
         
-        if (this.timeout) {
-            this.notification.classList.remove("show");
-            clearTimeout(this.timeout);
-            this.timeout = null;
+        if (timeout) {
+            notification.classList.remove("show");
+            clearTimeout(timeout);
+            timeout = null;
         }
 
-        this.notification.innerHTML = '';
-        this.messageWrap.textContent = '';
+        notification.innerHTML = '';
+        messageWrap.textContent = '';
     }
-});
+
+    return { createModal, showMessage, teardown }
+}
 
 export default Modal;

@@ -4,6 +4,7 @@ import { getSession, supabase } from "./supabase-config";
 import TableStorage from "./supabase-table";
 import SupabaseStorage from './supabase-storage';
 
+const cloudUserTable = 'cloud_user';
 const folderTable = 'folder_list';
 const fileTable = 'files_list';
 const tableStorages = TableStorage<FolderData>();
@@ -14,10 +15,13 @@ const insertFolderForm = document.getElementById('make-folder-section') as HTMLF
 const folderName = document.getElementById('folder-name') as HTMLInputElement;
 const modal = document.getElementById('folder-notification') as HTMLElement;
 const changeFolderForm = document.getElementById('change-folder-section') as HTMLFormElement;
-const newFolderName = document.getElementById('new-folder-name') as HTMLInputElement;
-const folderList = document.getElementById('folder-list') as HTMLElement;
+const newFolderName = document.querySelector('#new-folder-name') as HTMLInputElement;
+const folderList = document.querySelector('#folder-list') as HTMLElement;
+const sideNavBar = document.querySelector('#side-navbar') as HTMLElement
 
 const notificationSetter = Modal(modal);
+const sideNavBarBtn = document.querySelector('#navbar-key') as HTMLButtonElement;
+const closeSideNavBarBtn = document.querySelector('#close-navbar-key') as HTMLButtonElement;
 const showInsertFolderBtn = document.getElementById('show-insert-folder-form') as HTMLButtonElement;
 const closeInsertFolderBtn = document.getElementById('close-folder-form') as HTMLButtonElement;
 const closeChangeFolderBtn = document.getElementById('close-change-folder-form') as HTMLButtonElement;
@@ -35,16 +39,20 @@ function FoldersPage() {
         } else {
             notificationSetter.createModal('Please sign in to add folder');
             notificationSetter.showMessage();
+            window.location.replace('/html/signin.html');
             return;
         }
         
         insertFolderForm.addEventListener('submit', async (event) => await insertNewFolder(event));
         changeFolderForm.addEventListener('submit', async (event) => await changeFolderName(event));
+        
+        sideNavBarBtn.addEventListener('click', openSideNavBar);
+        closeSideNavBarBtn.addEventListener('click', closeSideNavBar);
 
         showInsertFolderBtn.addEventListener('click', openInsertFolderForm);
         closeInsertFolderBtn.addEventListener('click', closeInsertFolderForm);
         closeChangeFolderBtn.addEventListener('click', closeChangeFolderForm);
-        deleteAllFoldersBtn.addEventListener('click', deleteAllFolders);
+        deleteAllFoldersBtn.addEventListener('click', async () => await deleteAllFolders());
 
         await tableStorages.realtimeInit({
             tableName: folderTable,
@@ -53,12 +61,12 @@ function FoldersPage() {
         });
     }
 
-    async function showUserName(id: string) {
+    async function showUserName(userId: string) {
         try {    
             const { data, error } = await supabase
-            .from('cloud_user')
+            .from(cloudUserTable)
             .select('username')
-            .eq('id', id)
+            .eq('id', userId)
             .single();
 
             if (error) throw 'Failed to get and show username';
@@ -74,6 +82,16 @@ function FoldersPage() {
             notificationSetter.createModal(`Error: ${error.message || error}`);
             notificationSetter.showMessage();
         }
+    }
+
+    function openSideNavBar(): void {
+        sideNavBar.classList.remove('hidden');
+        sideNavBar.classList.add('flex');
+    }
+
+    function closeSideNavBar(): void {
+        sideNavBar.classList.remove('flex');
+        sideNavBar.classList.add('hidden');
     }
 
     function openInsertFolderForm(): void {
@@ -134,8 +152,6 @@ function FoldersPage() {
                 folderList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">No folders added...</div>`;
             }
         } catch (error: any) {
-            notificationSetter.createModal(`Failed to load data: ${error.message || error}`);
-            notificationSetter.showMessage();
             folderList.innerHTML = `<div class="text-[2rem] text-[#FFFFFF]">Error: ${error.message || error}...</div>`;
         }
     }
@@ -285,15 +301,17 @@ function FoldersPage() {
 
     function teradownFoldersPage(): void {
         notificationSetter.teardown();
-        insertFolderForm.reset();
+        closeChangeFolderForm();
         closeInsertFolderForm();
         currentUserId = null;
-        insertFolderForm.removeEventListener('submit', insertNewFolder);
-        changeFolderForm.removeEventListener('submit', changeFolderName);
+        sideNavBarBtn.removeEventListener('click', openSideNavBar);
+        closeSideNavBarBtn.removeEventListener('click', closeSideNavBar);
+        insertFolderForm.removeEventListener('submit', async (event) => insertNewFolder(event));
+        changeFolderForm.removeEventListener('submit', async (event) => await changeFolderName(event));
         showInsertFolderBtn.removeEventListener('click', openInsertFolderForm);
         closeInsertFolderBtn.removeEventListener('click', closeInsertFolderForm);
         closeChangeFolderBtn.removeEventListener('click', closeChangeFolderForm);
-        deleteAllFoldersBtn.removeEventListener('click', deleteAllFolders);
+        deleteAllFoldersBtn.removeEventListener('click', async () => await deleteAllFolders());
     }
 
     return { initFoldersPage, teradownFoldersPage }

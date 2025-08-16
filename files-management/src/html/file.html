@@ -17,13 +17,11 @@
         <button type="button" id="navbar-key" class="border-0 outline-0 cursor-pointer text-[#FFFFFF] text-[1.2rem]">
             <i class="fa-solid fa-bars-staggered"></i>
         </button>
-        <button type="button" id="sign-out" class="bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]">Sign Out</button>
-        <div id="username" class="text-[#FFFFFF] font-[550] text-[0.9rem]">User</div>
     </header>
-    <main class="z-10 relative flex gap-[1rem] p-[1rem] h-[91.2dvh]">
+    <main class="z-10 relative flex gap-[1rem] p-[1rem]">
         <section id="file-viewer" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-50 p-[1rem]">
             <div class="relative bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-4xl h-[90%] flex flex-col">
-                <button id="close-file-viewer" class="absolute top-2 right-2 text-white w-[50px] h-[50px] rounded-[100%] text-2xl p-2 cursor-pointer hover:bg-[#FF8C00]">
+                <button id="close-file-viewer" class="absolute top-2 right-2 text-[#1A1A1A] w-[50px] h-[50px] rounded-[100%] text-2xl p-2 cursor-pointer hover:bg-[#FF8C00]">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
                 <div id="file-content" class="flex-1 overflow-auto bg-white p-4 rounded-[0.5rem]"></div>
@@ -40,30 +38,42 @@
                 </div>
             </section>
         </form>
-        <form id="make-folder-section" title="upload-section" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-30">
-            <section class="flex flex-col gap-[0.7rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-md">
-                <input type="text" id="folder-name" placeholder="foldername" class="border-[#FF8C00] border-[1px] text-[#FFFFFF] text-[0.95rem] outline-0 p-[0.45rem]"/>
-                <div id="insert-button-wrap" class="flex flex-row gap-[0.6rem]">
-                    <button type="button" id="close-folder-form" class="cursor-pointer bg-[#B71C1C] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#FFFFFF]">Close</button>
-                    <button type="submit" id="save-folder-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#1A1A1A]">Add</button>
-                </div>
-            </section>
-        </form>
         <form id="change-selected-filename" title="upload-section" class="fixed inset-0 bg-[#00000093] hidden justify-center items-center z-30">
             <section class="flex flex-col gap-[0.7rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-full max-w-md">
-                <input type="text" id="file-name" class="border-[#FF8C00] border-[1px] text-[#FFFFFF] text-[0.95rem] outline-0 p-[0.45rem]"/>
+                <label class="text-[#FF8C00] font-[550] text-[1.1rem]" for="new-file-name">New File Name</label>
+                <input type="text" id="new-file-name" class="border-[#FF8C00] border-[1px] text-[#FFFFFF] text-[0.95rem] outline-0 p-[0.45rem]"/>
+                <label class="text-[#FF8C00] font-[550] text-[1.1rem]" for="move-to-folder">Move To</label>
+                <select name="move-to-folder" id="move-to-folder" class="p-[0.5rem] outline-0 border-[#FF8C00] border-[1.8px] text-[#FF8C00] rounded-[0.5rem]"></select>
                 <div id="insert-button-wrap" class="flex flex-row gap-[0.6rem]">
                     <button type="button" id="close-update-form" class="cursor-pointer bg-[#B71C1C] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#FFFFFF]">Close</button>
-                    <button type="submit" id="change-filename-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#1A1A1A]">Add</button>
+                    <button type="submit" id="change-filename-btn" class="cursor-pointer bg-[#FF8C00] text-[1rem] font-[540] p-[0.4rem] rounded-[0.4rem] w-[120px] text-[#1A1A1A]">Save</button>
                 </div>
             </section>
         </form>
-        <section id="category-filter" class="bg-[#00000093] fixed z-20 inset-0 hidden">
-            <div class="flex flex-col gap-[1rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] rounded-[1rem] w-[270px] max-w-md">
-                <button type="button" id="close-navbar-key" class="border-0 outline-0 cursor-pointer text-[#FFFFFF] text-[1.2rem]">
-                    <i class="fa-solid fa-xmark"></i>
+        <section id="side-navbar" class="bg-[#00000093] fixed z-20 inset-0 hidden">
+            <div class="flex flex-col gap-[1rem] bg-black border-[2px] border-[#FF8C00] shadow-[3px_3px_#FF8C00] p-[1rem] w-[270px] max-w-md">
+                <div class="flex justify-end">
+                    <button type="button" id="close-navbar-key" class="border-0 outline-0 cursor-pointer text-[#FFFFFF] text-[1.2rem]">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="text-[#FFFFFF] flex gap-[0.7rem] items-center py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                    <i class="fa-solid fa-user"></i>
+                    <div id="username">User</div>
+                </div>
+                <a href="file.html" class="text-[#FFFFFF] bg-[#1A1A1A] rounded-[0.4rem] flex gap-[0.7rem] items-center cursor-pointer py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                    <i class="fa-regular fa-file"></i>
+                    <div>File</div>
+                </a>
+                <a href="folder.html" class="text-[#FFFFFF] bg-[#1A1A1A] rounded-[0.4rem] flex gap-[0.7rem] items-center cursor-pointer py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                    <i class="fa-regular fa-folder"></i>
+                    <div>Folder</div>
+                </a>
+                <button type="button" id="sign-out" class="text-[#FFFFFF] bg-[#1A1A1A] rounded-[0.4rem] flex gap-[0.7rem] items-center cursor-pointer py-[0.5rem] px-[1rem] text-[1rem] font-[550]">
+                    <i class="fa-solid fa-door-open"></i>
+                    <div>Sign Out</div>
                 </button>
-                <input class="hidden" type="checkbox" name="file-type" id="pdf" value="application/pdf" checked/>
+                <!-- <input class="hidden" type="checkbox" name="file-type" id="pdf" value="application/pdf" checked/>
                 <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="pdf">PDF</label>
                 <input class="hidden" type="checkbox" name="file-type" id="jpg" value="image/jpg" checked/>
                 <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="jpg">JPG</label>
@@ -74,10 +84,10 @@
                 <input class="hidden" type="checkbox" name="file-type" id="txt" value="text/plain" checked/>
                 <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="txt">TXT</label>
                 <input class="hidden" type="checkbox" name="file-type" id="word/doc" value="application/vnd.openxmlformats-officedocument.wordprocessingml.document" checked/>
-                <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="word/doc">WORD/DOC</label>
+                <label class="w-[100px] text-center bg-[#1A1A1A] rounded-[0.4rem] text-[#FFFFFF] font-[550] text-[0.9rem] cursor-pointer p-[0.4rem]" for="word/doc">WORD/DOC</label> -->
             </div>
         </section>
-        <section id="documents-list-wrap" class="bg-[#000000] border-[#FFFFFF] w-[100%] border-[1.5px]">
+        <section id="documents-list-wrap" class="bg-[#000000] border-[#FFFFFF] w-[100%] border-[1.5px] h-min-[100dvh]">
             <form id="search-file-section" title="search-section" class="px-[1rem] pt-[1rem] flex flex-wrap gap-[0.65rem] justify-center">
                 <input type="text" id="searched-data" placeholder="search file name" class="border-[1.8px] border-[#FF8C00] text-[#FFFFFF] outline-0 p-[0.5rem] text-[1rem] font-[500] rounded-[0.5rem] w-[250px]"/>
                 <select name="sorting-data" id="sorting-data" class="bg-[#1A1A1A] p-[0.5rem] outline-0 border-[#FF8C00] border-[1.8px] text-[#FF8C00] rounded-[0.5rem] w-[250px]">
@@ -96,7 +106,7 @@
                     <span>Delete All</span>
                 </button>
             </form>
-            <section id="documents-list" class="grid gap-[1rem] md:grid-cols-4 sm:grid-cols-2 p-[1rem] overflow-auto">
+            <section id="documents-list" class="grid gap-[1rem] md:grid-cols-4 sm:grid-cols-2 p-[1rem]">
                 <div class="text-[2rem] text-[#FFFFFF]">No files added...</div>
             </section>
         </section>
