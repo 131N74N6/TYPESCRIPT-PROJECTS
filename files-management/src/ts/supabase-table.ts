@@ -48,20 +48,12 @@ const TableStorage = <N extends { id: string }>() => {
                         break;
                     }
                     case 'UPDATE': {
-                        let mainQuery = supabase
-                        .from(dbProps.tableName)
-                        .select(relationalQuery || '*')
-                        .eq('id', payload.new.id)
-                        .single();
-
-                        if (additionalQueryFn) mainQuery = additionalQueryFn(mainQuery);
-                        
-                        const { data, error } = await mainQuery;
-                        
-                        if (error) throw `Realtime UPDATE error ${error.message}`;
-                        
-                        const fixed = transformedData(data);
-                        currentData.set(fixed.id, fixed);
+                        const id = payload.new.id;
+                        if (currentData.has(id)) {
+                            const getOldData = currentData.get(id);
+                            const updatedData = { ...getOldData, ...payload.new };
+                            currentData.set(id, transformedData(updatedData));
+                        }
                         break;
                     }
                     case 'DELETE': {
@@ -179,7 +171,7 @@ const TableStorage = <N extends { id: string }>() => {
                 .delete()
                 .not(props.column, 'is', null);
 
-                if (error) throw error;
+                if (error) throw error.message;
             }
         }
     }

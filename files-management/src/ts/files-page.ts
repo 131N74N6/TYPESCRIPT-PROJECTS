@@ -11,7 +11,6 @@ const preview = document.getElementById('preview') as HTMLDivElement;
 
 const navbar = document.getElementById('side-navbar') as HTMLElement;
 const searchedFile = document.getElementById('searched-data') as HTMLInputElement;
-const checkboxCategory = document.querySelectorAll<HTMLInputElement>('#side-navbar input[type="checkbox"]');
 const sortingData = document.getElementById('sorting-data') as HTMLSelectElement;
 const documentsList = document.getElementById('documents-list') as HTMLElement;
 const modal = document.getElementById('file-notification') as HTMLElement;
@@ -36,10 +35,6 @@ const controller = new AbortController();
 let selectedFileId = null as string | null;
 let currentFile = null as File | null;
 let currentFileDataUrl = '';
-let selectedCategories = [
-    'application/pdf', 'image/jpg', 'image/jpeg', 'image/png', 'text/plain',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-];
 
 function FilesPage () { 
     async function initFilesPage(): Promise<void> {
@@ -111,15 +106,6 @@ function FilesPage () {
                 }
             }
         }
-
-        checkboxCategory.forEach(checkbox => {
-            checkbox.onchange = () => {
-                selectedCategories = Array.from(checkboxCategory)
-                .filter(selected => selected.checked)
-                .map(get_value => get_value.value as FileData['file_type']);
-                showAllFiles(temp);
-            }
-        });
     }
 
     async function folderOptionComponent(): Promise<void> {
@@ -178,10 +164,7 @@ function FilesPage () {
         const fileDataFragment = document.createDocumentFragment();
         try {
             if (filesData.length > 0) {
-                const filteredData = filesData.filter(data => selectedCategories.includes(data.file_type));
-                let sortedData = filteredData;
-
-                sortedData.forEach(data => fileDataFragment.appendChild(createComponent(data)));
+                filesData.forEach(fileData => fileDataFragment.appendChild(createComponent(fileData)));
                 documentsList.innerHTML = '';
                 documentsList.appendChild(fileDataFragment);
             } else {
@@ -241,12 +224,13 @@ function FilesPage () {
             setModal.showMessage();
         } finally {
             closeInsertForm();
+            fileInput.value = '';
         }
     }
 
     function createComponent(detail: FileData): HTMLDivElement {
         const card = document.createElement('div');
-        card.className = 'border-[#B71C1C] border-[1.8px] text-[#FFFFFF] shadow-[3px_3px_#B71C1C] p-[1rem] flex flex-col gap-[0.5rem] rounded-[1rem] font-[520]';
+        card.className = 'border-[#B71C1C] bg-[#2D2D2D] border-[1.8px] text-[#FFFFFF] shadow-[3px_3px_#B71C1C] p-[1rem] flex flex-col gap-[0.5rem] rounded-[1rem] font-[520]';
         card.dataset.id = detail.id;
 
         const file_name = document.createElement('h3');
@@ -322,15 +306,15 @@ function FilesPage () {
         showAllFiles(temp);
     }
 
-    function fileIcon(file: FileData): HTMLElement {
+    function fileIcon(fileData: FileData): HTMLElement {
         const icon = document.createElement('i') as HTMLElement;
-        if (file.file_name.includes('.pdf')) icon.className = 'fa-solid fa-file-pdf';
-        else if (file.file_name.includes('.txt')) icon.className = 'fa-solid fa-file-lines';
-        else if (file.file_name.includes('.doc')) icon.className = 'fa-solid fa-file-word';
-        else if (file.file_name.includes('.docx')) icon.className = 'fa-solid fa-file-word';
-        else if (file.file_name.includes('.jpg')) icon.className = 'fa-solid fa-image';
-        else if (file.file_name.includes('.jpeg')) icon.className = 'fa-solid fa-image';
-        else if (file.file_name.includes('.png')) icon.className = 'fa-solid fa-image';
+        if (fileData.file_name.includes('.pdf')) icon.className = 'fa-solid fa-file-pdf';
+        else if (fileData.file_type.startsWith('image/')) icon.className = 'fa-solid fa-image';
+        else if (fileData.file_type.startsWith('text/')) icon.className = 'fa-solid fa-file-lines';
+        else if (fileData.file_name.includes('.docx')) icon.className = 'fa-solid fa-file-word';
+        else if (fileData.file_name.includes('.pptx')) icon.className = 'fa-solid fa-file-powerpoint';
+        else if (fileData.file_name.includes('.xlsx')) icon.className = 'fa-solid fa-file-excel';
+        else icon.className = 'fa-solid fa-file';
 
         return icon;
     }
@@ -424,6 +408,7 @@ function FilesPage () {
     function closeInsertForm(): void {
         fileUploaderForm.classList.remove('flex');
         fileUploaderForm.classList.add('hidden');
+        fileInput.value = '';
     }
 
     function openChangeFilenameForm(): void {
@@ -455,15 +440,14 @@ function FilesPage () {
         const fileType = fileData.file_type;
         const fileUrl = fileData.file_url;
         const isOfficeFile = [
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',      // .xlsx
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation' // .pptx
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation'
         ].includes(fileType);
 
         if (fileType.startsWith('image/')) {
             fileContent.innerHTML = `<img src="${fileUrl}" class="w-full h-full object-contain" alt="${fileData.file_name}"/>`;
         } else if (isOfficeFile || fileType === 'application/pdf') {
-            // Menggunakan Google Docs Viewer untuk menampilkan file Office dan PDF
             const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
             fileContent.innerHTML = `<iframe src="${viewerUrl}" class="w-full h-full" frameborder="0"></iframe>`;
         } else {

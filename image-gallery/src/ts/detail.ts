@@ -63,17 +63,21 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
             } 
         }, { signal: this.controller.signal });
 
-        this.likeButton.addEventListener("click", () => this.handleLike());
+        this.likeButton.addEventListener("click", () => this.handleLike(), {
+            signal: this.controller.signal
+        });
 
-        this.commentForm.addEventListener("submit", async (event) => this.handleCommentSubmit(event));
+        this.commentForm.addEventListener("submit", async (event) => this.handleCommentSubmit(event), {
+            signal: this.controller.signal
+        });
 
         await this.realtimeInit({
             tableName: this.imageTable,
-            callback: (images) => this.showDetailPost(images),
+            callback: (images) => {this.showDetailPost(images); console.log(images)},
             initialQuery: (addQuery) => addQuery.eq('id', this.imageId),
             relationalQuery: `
                 id, created_at, uploader_name, title, like_count, image_url,
-                image_gallery_comments (id, username, opinions), 
+                image_gallery_comments (id, username, opinions, user_id), 
                 likes_data_from_image_gallery (id)
             `
         });
@@ -92,15 +96,21 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
     }
 
     private async getUserName(userId: string): Promise<void> {
-        const { data, error } = await supabase
-        .from(this.galleryUserTable)
-        .select('username')
-        .eq('id', userId)
-        .single();
+        try {            
+            const { data, error } = await supabase
+            .from(this.galleryUserTable)
+            .select('username')
+            .eq('id', userId)
+            .single();
 
-        if (error) throw error.message;
+            if (error) throw error.message;
 
-        this.currentUserName = data.username;
+            this.currentUserName = data.username;
+        } catch (error: any) {
+            this.currentUserName = error.message || error;
+            this.galleryDetailModal.createComponent(`Error: ${error.message || error}`);
+            this.galleryDetailModal.showComponent();
+        }
     }
 
     private showDetailPost(post: GalleryDetails[]) {
@@ -203,7 +213,6 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
                 });
             }
         } catch (error) {
-            console.error("Like error:", error);
             this.galleryDetailModal.createComponent(`Failed to update like: ${error}`);
             this.galleryDetailModal.showComponent();
         }
@@ -270,11 +279,11 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
                     username: this.currentUserName 
                 }
             });
-            
-            this.commentInput.value = '';
         } catch (error: any) {
             this.galleryDetailModal.createComponent(`Failed to add comment: ${error.message || error}`);
             this.galleryDetailModal.showComponent();
+        } finally {
+            this.commentInput.value = '';
         }
     }
 

@@ -10,6 +10,7 @@ const fileTable = 'files_list';
 const cloudUserTable = 'cloud_user';
 const folderTable = 'folder_list';
 const bucketName = 'file-example';
+const controller = new AbortController();
 const tableStorage = TableStorage<FileData>();
 const mediaStorage = SupabaseStorage();
 
@@ -18,7 +19,7 @@ const openNavBarBtn = document.querySelector('#navbar-key') as HTMLButtonElement
 const closeNavBarBtn = document.querySelector('#close-navbar-key') as HTMLButtonElement;
 const folderMover = document.querySelector('#move-to-folder') as HTMLSelectElement;
 const username = document.querySelector('#username') as HTMLDivElement;
-const changeFileNameForm = document.getElementById('change-selected-filename') as HTMLFormElement;
+const changeFileLocationForm = document.getElementById('change-folder-location') as HTMLFormElement;
 const newFileName = document.getElementById('new-file-name') as HTMLInputElement;
 const folderFileList = document.getElementById('folder-file-list') as HTMLElement;
 const modal = document.getElementById('folder-notification') as HTMLElement;
@@ -49,9 +50,19 @@ function FolderContents() {
         openNavBarBtn.onclick = () => showNavbar();
         closeNavBarBtn.onclick = () => hideNavbar();
         closeFileViewerBtn.onclick = () => closeFileViewer();
-        changeFileNameForm.addEventListener('submit', async (event) => await changeSelectedFileName(event));
-        closeUpdateFormBtn.addEventListener('click', closeUpdateFileNameForm);
-        deleteAllFilesBtn.addEventListener('click', async () => await deleteAllFiles());
+
+        changeFileLocationForm.addEventListener('submit', async (event) => await handleChangeLocation(event), {
+            signal: controller.signal
+        });
+
+        closeUpdateFormBtn.addEventListener('click', () => closeUpdateFileNameForm(), {
+            signal: controller.signal
+        });
+
+        deleteAllFilesBtn.addEventListener('click', async () => await deleteAllFiles(), {
+            signal: controller.signal
+        });
+
 
         folderOptionComponent();
 
@@ -71,8 +82,6 @@ function FolderContents() {
         navbar.classList.remove('flex');
         navbar.classList.add('hidden');
     }
-
-    
 
     function closeFileViewer(): void {
         fileViewer.classList.remove('flex');
@@ -125,8 +134,10 @@ function FolderContents() {
     function showAllFilesInFolder(filesData: FileData[]): void {
         const fileDataFragment = document.createDocumentFragment();
         try {
-            if (filesData.length > 0) {
-                filesData.forEach(data => fileDataFragment.appendChild(createComponent(data)));
+            const filteredFilesData = filesData.filter((file) => file.folder_id === folderId);
+
+            if (filteredFilesData.length > 0) {
+                filteredFilesData.forEach(data => fileDataFragment.appendChild(createComponent(data)));
                 folderFileList.innerHTML = '';
                 folderFileList.appendChild(fileDataFragment);
             } else {
@@ -139,7 +150,7 @@ function FolderContents() {
 
     function createComponent(folderContent: FileData) {
         const card = document.createElement('div');
-        card.className = 'border-[#B71C1C] border-[1.8px] text-[#FFFFFF] shadow-[3px_3px_#B71C1C] p-[1rem] flex flex-col gap-[0.5rem] rounded-[1rem] font-[520]';
+        card.className = 'border-[#B71C1C] bg-[#2D2D2D] border-[1.8px] text-[#FFFFFF] shadow-[3px_3px_#B71C1C] p-[1rem] flex flex-col gap-[0.5rem] rounded-[1rem] font-[520]';
         card.dataset.id = folderContent.id;
 
         const file_name = document.createElement('h3');
@@ -181,7 +192,7 @@ function FolderContents() {
         return card;
     }
 
-    async function changeSelectedFileName(event: SubmitEvent): Promise<void> {
+    async function handleChangeLocation(event: SubmitEvent): Promise<void> {
         event.preventDefault();
         try {
             const trimmedNewFileName = newFileName.value.trim();
@@ -218,12 +229,13 @@ function FolderContents() {
                     folder_id: getFolderId
                 }
             });
+            showAllFilesInFolder(tableStorage.toArray());
         } catch (error: any) {
             setNotification.createModal(error.message || error);
             setNotification.showMessage();
         } finally {
             selectedFileId = null;
-            changeFileNameForm.reset();
+            changeFileLocationForm.reset();
             closeUpdateFileNameForm();
         }
     }
@@ -257,13 +269,14 @@ function FolderContents() {
     }
 
     async function deleteAllFiles(): Promise<void> {
-        if (!currentUserId) return;
         try {
+            if (!folderId) return;
+            
             if (tableStorage.currentData.size > 0) {
                 const { data: allFiles, error: errorAllFiles } = await supabase
                 .from(fileTable)
                 .select('file_url')
-                .eq('user_id', currentUserId);
+                .eq('folder_id', folderId);
 
                 if (errorAllFiles) throw errorAllFiles.message;
 
@@ -272,8 +285,8 @@ function FolderContents() {
 
                 await tableStorage.deleteData({
                     tableName: fileTable,
-                    column: 'user_id',
-                    values: currentUserId
+                    column: 'folder_id',
+                    values: folderId
                 });
             }
         } catch (error: any) {
@@ -290,9 +303,9 @@ function FolderContents() {
         const fileType = fileData.file_type;
         const fileUrl = fileData.file_url;
         const isOfficeFile = [
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',      // .xlsx
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation' // .pptx
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation'
         ].includes(fileType);
 
         if (fileType.startsWith('image/')) {
@@ -318,24 +331,23 @@ function FolderContents() {
     }
 
     function openUpdateFileNameForm(): void {
-        changeFileNameForm.classList.remove('hidden');
-        changeFileNameForm.classList.add('flex');
+        changeFileLocationForm.classList.remove('hidden');
+        changeFileLocationForm.classList.add('flex');
     }
 
     function closeUpdateFileNameForm(): void {
-        changeFileNameForm.classList.remove('flex');
-        changeFileNameForm.classList.add('hidden');
+        changeFileLocationForm.classList.remove('flex');
+        changeFileLocationForm.classList.add('hidden');
     }
 
-    function fileIcon(file: FileData): HTMLElement {
+    function fileIcon(fileData: FileData): HTMLElement {
         const icon = document.createElement('i') as HTMLElement;
-        if (file.file_name.includes('.pdf')) icon.className = 'fa-solid fa-file-pdf';
-        else if (file.file_name.includes('.txt')) icon.className = 'fa-solid fa-file-lines';
-        else if (file.file_name.includes('.doc')) icon.className = 'fa-solid fa-file-word';
-        else if (file.file_name.includes('.docx')) icon.className = 'fa-solid fa-file-word';
-        else if (file.file_name.includes('.jpg')) icon.className = 'fa-solid fa-image';
-        else if (file.file_name.includes('.jpeg')) icon.className = 'fa-solid fa-image';
-        else if (file.file_name.includes('.png')) icon.className = 'fa-solid fa-image';
+        if (fileData.file_type.startsWith('image/')) icon.className = 'fa-solid fa-image';
+        else if (fileData.file_type.startsWith('text/')) icon.className = 'fa-solid fa-file-lines';
+        else if (fileData.file_name.includes('.pdf')) icon.className = 'fa-solid fa-file-pdf';
+        else if (fileData.file_name.includes('.docx')) icon.className = 'fa-solid fa-file-word';
+        else if (fileData.file_name.includes('.pptx')) icon.className = 'fa-solid fa-file-powerpoint';
+        else if (fileData.file_name.includes('.xlsx')) icon.className = 'fa-solid fa-file-excel';
         else icon.className = 'fa-solid fa-file';
 
         return icon;
@@ -345,10 +357,8 @@ function FolderContents() {
         selectedFileId = null;
         setNotification.teardown();
         currentUserId = null;
-        changeFileNameForm.reset();
-        changeFileNameForm.removeEventListener('submit', async (event) => await changeSelectedFileName(event));
-        closeUpdateFormBtn.removeEventListener('click', closeUpdateFileNameForm);
-        deleteAllFilesBtn.removeEventListener('click', async () => await deleteAllFiles());
+        changeFileLocationForm.reset();
+        controller.abort();
     }
 
     return { initFolderContents, teardownFolderContents }

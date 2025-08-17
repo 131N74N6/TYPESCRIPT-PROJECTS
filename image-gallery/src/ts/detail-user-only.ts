@@ -149,7 +149,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
         this.imageId = null;
         this.teardownStorage();
         this.galleryDetailModal.teardownComponent();
-        this.carouselContainer.innerHTML = ''; // Kosongkan hanya carousel
+        this.carouselContainer.innerHTML = '';
         this.imageTitle.textContent = '';
         this.uploadedAt.textContent = '';
         this.navigationContainer.style.display = 'none';
@@ -170,7 +170,7 @@ class GalleryDetail extends DatabaseStorage<GalleryDetails> {
             }); 
             
             this.carouselContainer.innerHTML = '';
-            window.location.href = '/gallery.html';
+            window.location.replace('/gallery.html');
 
         } catch (error: any) {
             this.galleryDetailModal.createComponent(`${error.message || error}`);
