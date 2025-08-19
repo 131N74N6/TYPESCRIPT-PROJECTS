@@ -1,31 +1,43 @@
 import { supabase } from './supabase-config';
 import TableStorage from './supabase-table';
-import { getSession } from './auth';
-import { getUserProfile } from './auth';
+import { getSession, signOut, getUserProfile } from './auth';
 import type { Attendance, Profile } from './custom-types';
 import Modal from './components/modal';
 
 export default function StudentPage(appElement: HTMLElement, userId: string) {
-    const notification = document.getElementById('notification') as HTMLElement;
-    const makeNotification = Modal(notification);
+    const controllers: AbortController[] = [];
+    const notification = Modal(document.getElementById('notification') as HTMLElement);
     const attendanceStorage = TableStorage<Attendance>();
     const profileStorage = TableStorage<Profile>();
-    const controller = new AbortController();
     const attendanceTable = 'attendances';
-    const profileTable = 'attendance_profiles';
+    const profileTable = 'profiles';
+
+    function cleanupEventListeners() {
+        controllers.forEach(controller => controller.abort());
+        controllers.length = 0;
+    }
 
     async function render() {
+        cleanupEventListeners();
+
         const session = await getSession();
-        if (!session) return;
+        if (!session) {
+            window.location.href = '/';
+            return;
+        }
         
         const profile = await getUserProfile(userId);
+
+        const currentController = new AbortController();
+        controllers.push(currentController);
+        const { signal } = currentController;
         
         appElement.innerHTML = `
             <div class="container mx-auto p-4">
                 <header class="bg-white shadow-md p-4 rounded-lg mb-6 flex justify-between items-center">
                     <div>
                         <h1 class="text-2xl font-bold">Dashboard Mahasiswa</h1>
-                        <p class="text-gray-600">${profile.full_name} (${profile.nim})</p>
+                        <p class="text-gray-600">${profile.full_name} (${profile.nip_or_nim})</p>
                     </div>
                     <div class="flex items-center gap-4">
                         <button id="profile-btn" class="bg-gray-200 hover:bg-gray-300 p-2 rounded-full">
@@ -56,7 +68,7 @@ export default function StudentPage(appElement: HTMLElement, userId: string) {
                             </div>
                             <div>
                                 <label class="block text-gray-700 mb-2">NIM</label>
-                                <input type="text" id="nim" value="${profile.nim}" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                <input type="text" id="nip_or_nim" value="${profile.nip_or_nim}" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-gray-700 mb-2">Kelas</label>
@@ -71,48 +83,48 @@ export default function StudentPage(appElement: HTMLElement, userId: string) {
 
         // Event listeners
         document.getElementById('logout-btn')?.addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            location.reload();
-        }, { signal: controller.signal });
+            await signOut();
+            window.location.href = '/';
+        }, { signal });
 
         document.getElementById('profile-btn')?.addEventListener('click', () => {
             (document.getElementById('profile-modal') as HTMLDivElement).classList.remove('hidden');
-        }, { signal: controller.signal });
+        }, { signal });
 
         document.getElementById('close-profile-modal')?.addEventListener('click', () => {
             (document.getElementById('profile-modal') as HTMLDivElement).classList.add('hidden');
-        }, { signal: controller.signal });
+        }, { signal });
 
         document.getElementById('profile-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             try {
                 const fullName = (document.getElementById('full-name') as HTMLInputElement).value;
-                const nim = (document.getElementById('nim') as HTMLInputElement).value;
+                const nipOrNim = (document.getElementById('nip_or_nim') as HTMLInputElement).value;
                 const className = (document.getElementById('class') as HTMLInputElement).value;
                 
                 await profileStorage.updateData({
                     tableName: profileTable,
-                    values: userId,
                     column: 'user_id',
+                    values: userId,
                     newData: {
                         full_name: fullName,
-                        nim: nim,
+                        nip_or_nim: nipOrNim,
                         class: className
                     }
                 });
                 
-                makeNotification.createModal('Profile Sucessfully Updated!');
-                makeNotification.showMessage();
+                notification.createModal('Profile Successfully Updated!');
+                notification.showMessage();
                 (document.getElementById('profile-modal') as HTMLDivElement).classList.add('hidden');
                 render();
             } catch (error: any) {
-                makeNotification.createModal(`Gagal memperbarui profil: ${error.message}`, 'error');
-                makeNotification.showMessage();
+                notification.createModal(`Gagal memperbarui profil: ${error.message}`, 'error');
+                notification.showMessage();
             }
-        }, { signal: controller.signal });
+        }, { signal });
 
         // Render attendance status
-        renderAttendanceStatus();
+        await renderAttendanceStatus();
     }
 
     async function renderAttendanceStatus() {
@@ -123,10 +135,10 @@ export default function StudentPage(appElement: HTMLElement, userId: string) {
         try {
             // Cek apakah ada pengaturan presensi hari ini
             const { data: setting, error: settingError } = await supabase
-            .from('attendance_settings')
-            .select('*')
-            .eq('date', today)
-            .single();
+                .from('attendance_settings')
+                .select('*')
+                .eq('date', today)
+                .single();
             
             if (settingError || !setting) {
                 statusElement.innerHTML = `
@@ -140,13 +152,15 @@ export default function StudentPage(appElement: HTMLElement, userId: string) {
             
             // Cek apakah mahasiswa sudah melakukan presensi
             const { data: attendance, error: attendanceError } = await supabase
-            .from(attendanceTable)
-            .select('*')
-            .eq('student_id', userId)
-            .eq('setting_id', setting.id)
-            .single();
+                .from(attendanceTable)
+                .select('*')
+                .eq('student_id', userId)
+                .eq('setting_id', setting.id)
+                .single();
 
-            if (attendanceError) attendanceError.message;
+            if (attendanceError && attendanceError.code !== 'PGRST116') {
+                console.error('Attendance error:', attendanceError);
+            }
             
             if (attendance) {
                 let statusClass = '';
@@ -220,6 +234,9 @@ export default function StudentPage(appElement: HTMLElement, userId: string) {
                     </form>
                 `;
                 
+                const formController = new AbortController();
+                controllers.push(formController);
+                
                 document.getElementById('attendance-form-inner')?.addEventListener('submit', async (event) => {
                     event.preventDefault();
                     try {
@@ -234,22 +251,27 @@ export default function StudentPage(appElement: HTMLElement, userId: string) {
                             }
                         });
                         
-                        makeNotification.createModal('Presensi berhasil dicatat');
-                        makeNotification.showMessage();
+                        notification.createModal('Presensi berhasil dicatat');
+                        notification.showMessage();
                         render();
                     } catch (error: any) {
-                        makeNotification.createModal(`Gagal mencatat presensi: ${error.message}`, 'error');
-                        makeNotification.showMessage();
+                        notification.createModal(`Gagal mencatat presensi: ${error.message}`, 'error');
+                        notification.showMessage();
                     }
-                }, { signal: controller.signal });
+                }, { signal: formController.signal });
             }
         } catch (error: any) {
-            makeNotification.createModal(`Error: ${error.message}`, 'error');
-            makeNotification.showMessage();
+            console.error('Error in renderAttendanceStatus:', error);
+            notification.createModal(`Error: ${error.message}`, 'error');
+            notification.showMessage();
         }
     }
 
-    const teardown = () => controller.abort();
+    const teardown = () => {
+        cleanupEventListeners();
+        attendanceStorage.teardownDatabase();
+        profileStorage.teardownDatabase();
+    };
 
-    return { render, teardown }
+    return { render, teardown };
 }

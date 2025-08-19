@@ -1,10 +1,10 @@
 import { supabase } from '../supabase-config';
 import TableStorage from '../supabase-table';
-import type { Attendance } from '../custom-types';
+import type { Attendance, AttendanceListProps } from '../custom-types';
 import Modal from './modal';
 
-export default function AttendanceList(container: HTMLElement, notification: HTMLElement) {
-    const makeModal = Modal(notification);
+export default function AttendanceList(props: AttendanceListProps) {
+    const makeModal = Modal(props.notification);
     const attendanceStorage = TableStorage<Attendance>();
     const today = new Date().toISOString().split('T')[0];
     
@@ -17,7 +17,7 @@ export default function AttendanceList(container: HTMLElement, notification: HTM
         .single();
         
         if (settingError || !setting) {
-            container.innerHTML = `
+            props.container.innerHTML = `
                 <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4">
                     <p class="text-yellow-700">Tidak ada pengaturan presensi untuk hari ini.</p>
                 </div>
@@ -35,7 +35,7 @@ export default function AttendanceList(container: HTMLElement, notification: HTM
     
     function renderList(attendances: Attendance[]) {
         if (attendances.length === 0) {
-            container.innerHTML = `
+            props.container.innerHTML = `
                 <div class="bg-gray-100 border-l-4 border-gray-500 p-4">
                     <p class="text-gray-700">Belum ada presensi yang dicatat.</p>
                 </div>
@@ -100,13 +100,13 @@ export default function AttendanceList(container: HTMLElement, notification: HTM
         });
         
         html += `</tbody></table>`;
-        container.innerHTML = html;
+        props.container.innerHTML = html;
         
         // Tambahkan event listener untuk setiap dropdown
         document.querySelectorAll('.status-selector').forEach(select => {
-            select.addEventListener('change', async (e) => {
-                const attendanceId = (e.target as HTMLSelectElement).dataset.id;
-                const newStatus = (e.target as HTMLSelectElement).value;
+            select.addEventListener('change', async (event) => {
+                const attendanceId = (event.target as HTMLSelectElement).dataset.id;
+                const newStatus = (event.target as HTMLSelectElement).value;
 
                 if (!attendanceId) return;
                 
@@ -124,7 +124,7 @@ export default function AttendanceList(container: HTMLElement, notification: HTM
                     makeModal.createModal(`Gagal memperbarui status: ${error.message}`, 'error');
                     makeModal.showMessage();
                 }
-            });
+            }, { signal: props.signal });
         });
     }
     
@@ -138,5 +138,5 @@ export default function AttendanceList(container: HTMLElement, notification: HTM
         }
     }
     
-    render();
+    return { render }
 }

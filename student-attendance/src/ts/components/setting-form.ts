@@ -1,13 +1,13 @@
 import { supabase } from '../supabase-config';
 import TableStorage from '../supabase-table';
-import type { AttendanceSetting } from '../custom-types';
+import type { AttendanceSetting, SettingsFormProps } from '../custom-types';
 import Modal from './modal';
 
-export default function SettingsForm(container: HTMLElement, userId: string, notification: HTMLElement) {
+export default function SettingsForm(props: SettingsFormProps) {
     const settingStorage = TableStorage<AttendanceSetting>();
     const attendanceSettingTable = 'attendance_settings';
     const today = new Date().toISOString().split('T')[0];
-    const makeNotification = Modal(notification);
+    const makeNotification = Modal(props.notification);
     const controller = new AbortController();
     
     async function render() {
@@ -18,7 +18,7 @@ export default function SettingsForm(container: HTMLElement, userId: string, not
         .eq('date', today)
         .single();
         
-        container.innerHTML = `
+        props.container.innerHTML = `
             <form id="settings-form-inner" class="space-y-4">
                 <div>
                     <label class="block text-gray-700 mb-2">Tanggal</label>
@@ -59,7 +59,7 @@ export default function SettingsForm(container: HTMLElement, userId: string, not
                     await settingStorage.insertData({
                         tableName: attendanceSettingTable,
                         newData: {
-                            user_id: userId,
+                            user_id: props.userId,
                             date: date,
                             start_time: startTime,
                             end_time: endTime

@@ -1,31 +1,43 @@
-import { supabase } from './supabase-config';
 import TableStorage from './supabase-table';
-import { getSession } from './auth';
-import { getUserProfile, updateProfile } from './auth';
+import { getSession, signOut, getUserProfile } from './auth';
 import type { Attendance, Profile } from './custom-types';
 import Modal from './components/modal';
 import AttendanceList from './components/attendance-list';
 import SettingsForm from './components/setting-form';
 
 export default function InstructorPage(appElement: HTMLElement, userId: string) {
-    const controller = new AbortController();
+    const controllers: AbortController[] = [];
     const notification = Modal(document.getElementById('notification') as HTMLElement);
     const attendanceStorage = TableStorage<Attendance>();
     const profileStorage = TableStorage<Profile>();
-    const profileTable = 'attendance_profiles';
+    const profileTable = 'profiles';
+
+    function cleanupEventListeners() {
+        controllers.forEach(controller => controller.abort());
+        controllers.length = 0;
+    }
 
     async function render() {
+        cleanupEventListeners();
+
         const session = await getSession();
-        if (!session) return;
+        if (!session) {
+            window.location.href = '/';
+            return;
+        }
         
         const profile = await getUserProfile(userId);
-        
+
+        const currentController = new AbortController();
+        controllers.push(currentController);
+        const { signal } = currentController;
+
         appElement.innerHTML = `
             <div class="container mx-auto p-4">
                 <header class="bg-white shadow-md p-4 rounded-lg mb-6 flex justify-between items-center">
                     <div>
                         <h1 class="text-2xl font-bold">Dashboard Dosen</h1>
-                        <p class="text-gray-600">${profile.full_name} (${profile.nim})</p>
+                        <p class="text-gray-600">${profile.full_name} (${profile.nip_or_nim})</p>
                     </div>
                     <div class="flex items-center gap-4">
                         <button id="profile-btn" class="bg-gray-200 hover:bg-gray-300 p-2 rounded-full">
@@ -66,7 +78,7 @@ export default function InstructorPage(appElement: HTMLElement, userId: string) 
                             </div>
                             <div>
                                 <label class="block text-gray-700 mb-2">NIP</label>
-                                <input type="text" id="nim" value="${profile.nim}" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                <input type="text" id="nip_or_nim" value="${profile.nip_or_nim}" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-gray-700 mb-2">Kelas</label>
@@ -81,32 +93,32 @@ export default function InstructorPage(appElement: HTMLElement, userId: string) 
 
         // Event listeners
         document.getElementById('logout-btn')?.addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            location.reload();
-        }, { signal: controller.signal });
+            await signOut();
+            window.location.href = '/';
+        }, { signal });
 
         document.getElementById('profile-btn')?.addEventListener('click', () => {
             (document.getElementById('profile-modal') as HTMLDivElement).classList.remove('hidden');
-        }, { signal: controller.signal });
+        }, { signal });
 
         document.getElementById('close-profile-modal')?.addEventListener('click', () => {
             (document.getElementById('profile-modal') as HTMLDivElement).classList.add('hidden');
-        }, { signal: controller.signal });
+        }, { signal });
 
         document.getElementById('profile-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             try {
-                const fullName = (document.getElementById('full-name') as HTMLInputElement).value;
-                const nim = (document.getElementById('nim') as HTMLInputElement).value;
-                const className = (document.getElementById('class') as HTMLInputElement).value;
+                const fullName = (document.getElementById('full-name') as HTMLInputElement).value.trim();
+                const nipOrNim = (document.getElementById('nip_or_nim') as HTMLInputElement).value.trim();
+                const className = (document.getElementById('class') as HTMLInputElement).value.trim();
                 
                 await profileStorage.updateData({
                     tableName: profileTable,
-                    values: userId,
                     column: 'user_id',
+                    values: userId,
                     newData: {
                         full_name: fullName,
-                        nim: nim,
+                        nip_or_nim: nipOrNim,
                         class: className
                     }
                 });
@@ -116,17 +128,33 @@ export default function InstructorPage(appElement: HTMLElement, userId: string) 
                 (document.getElementById('profile-modal') as HTMLDivElement).classList.add('hidden');
                 render();
             } catch (error: any) {
-                notification.createModal(`Error: ${error.message || error}`);
+                notification.createModal(`Error: ${error.message || error}`, 'error');
                 notification.showMessage();
             }
-        }, { signal: controller.signal });
+        }, { signal });
 
         // Render components
-        SettingsForm(document.getElementById('settings-form') as HTMLFormElement, userId, notification);
-        AttendanceList(document.getElementById('attendance-list') as HTMLElement, notification);
+        const settingsForm = SettingsForm({
+            container: document.getElementById('settings-form') as HTMLDivElement, 
+            userId: userId, 
+            notification: notification, 
+            signal: signal
+        });
+        settingsForm.render();
+
+        const attendanceList = AttendanceList({
+            container: document.getElementById('attendance-list') as HTMLDivElement, 
+            notification: notification, 
+            signal: signal
+        });
+        attendanceList.render();
     }
 
-    const teardown = () => controller.abort();
+    const teardown = () => {
+        cleanupEventListeners();
+        attendanceStorage.teardownDatabase();
+        profileStorage.teardownDatabase();
+    };
 
-    return { render, teardown }
+    return { render, teardown };
 }

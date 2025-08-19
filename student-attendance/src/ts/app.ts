@@ -1,5 +1,5 @@
 import { supabase } from './supabase-config';
-import { getSession } from './auth';
+import { getSession, signIn } from './auth';
 import InstructorPage from './instructor';
 import StudentPage from './student';
 import Modal from './components/modal';
@@ -9,8 +9,17 @@ const notification = document.getElementById('notification') as HTMLElement;
 const makeNotification = Modal(notification);
 const appElement = document.getElementById('app') as HTMLElement;
 
+// Simpan referensi ke halaman saat ini
+let currentPage: { render: () => void; teardown: () => void } | null = null;
+
 async function initApp() {
     try {
+        // Bersihkan halaman sebelumnya jika ada
+        if (currentPage) {
+            currentPage.teardown();
+            currentPage = null;
+        }
+        
         const session = await getSession();
         
         if (!session) {
@@ -19,17 +28,19 @@ async function initApp() {
         }
         
         const { data: user, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
             
         if (error) throw error;
         
-        if (user.role === 'teacher') {
-            InstructorPage(appElement, session.user.id).render();
+        if (user.role === 'instructor') {
+            currentPage = InstructorPage(appElement, session.user.id);
+            currentPage.render();
         } else if (user.role === 'student') {
-            StudentPage(appElement, session.user.id).render();
+            currentPage = StudentPage(appElement, session.user.id);
+            currentPage.render();
         }
     } catch (error: any) {
         makeNotification.createModal(`Error: ${error.message}`, 'error');
@@ -63,7 +74,7 @@ function renderLoginForm(appElement: HTMLElement, notification: any) {
         const password = (document.getElementById('password') as HTMLInputElement).value;
         
         try {
-            await supabase.auth.signInWithPassword({ email, password });
+            await signIn(email, password);
             location.reload();
         } catch (error: any) {
             notification.createModal(`Login gagal: ${error.message}`, 'error');
@@ -74,8 +85,12 @@ function renderLoginForm(appElement: HTMLElement, notification: any) {
 
 const teardown = () => { 
     controller.abort();
+    if (currentPage) {
+        currentPage.teardown();
+        currentPage = null;
+    }
     makeNotification.teardown();
-};
+}
 
 document.addEventListener('DOMContentLoaded', initApp);
 window.addEventListener('beforeunload', teardown);
