@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokedex</title>
+    <link rel="stylesheet" href="./src/css/index.css"/>
+</head>
+<body>
+    <main class="bg-[#F8F9FA] font-sans">
+        <header class="bg-[#2D3748] text-[#E2E8F0] p-4 text-center">
+            <h1 class="text-4xl font-bold tracking-wider">Pokedex</h1>
+        </header>
+        <section id="pokemon-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4"></section>
+        <div id="pagination" class="flex justify-center items-center my-8">
+            <button id="prev-btn" class="cursor-pointer bg-[#FFBF00] text-[#2D3748] font-bold py-2 px-4 rounded-full mr-4 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+            <button id="next-btn" class="cursor-pointer bg-[#FFBF00] text-[#2D3748] font-bold py-2 px-4 rounded-full transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+        </div>
+        <section id="error-notification" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"></section>
+    </main>
+    <script src="./src/ts/index.ts" type="module"></script>
+</body>
+</html>
