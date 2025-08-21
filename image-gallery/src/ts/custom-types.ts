@@ -16,8 +16,8 @@ export type GalleryDetails = {
     title: string;
     image_url: string[];
     uploader_name: string;
-    like_count: number;
-    user_liked: boolean; // Status apakah user saat ini sudah like
+    like_total: number;
+    user_liked: boolean;
     post_id: string;
 }
 
@@ -33,6 +33,7 @@ export type UserOpinion = {
 export type Like = {
     id: string;
     created_at: Date;
+    likes_count: number;
     post_id: string;
     user_id: string;
 }

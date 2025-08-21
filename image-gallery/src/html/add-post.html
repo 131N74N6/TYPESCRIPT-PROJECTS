@@ -9,29 +9,29 @@
     <title>Add New Post</title>
 </head>
 <body class="relative">
-    <main id="app" class="flex justify-center items-center h-[100dvh]">
+    <header class="bg-[#420039] p-[1rem] flex gap-[1rem]">
+        <a href="add-post.html" class="text-[#F6F2FF] text-[1.1rem] font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+            <i class="fa-solid fa-plus"></i>
+        </a>
+        <a href="gallery.html" class="text-[#F6F2FF] text-[1.1rem] font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+            <i class="fa-solid fa-images"></i>
+        </a>
+        <a href="user.html" class="text-[#F6F2FF] text-[1.1rem] font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+            <i class="fa-solid fa-user"></i>
+        </a>
+        <a href="setting.html" class="text-[#F6F2FF] text-[1.1rem] font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+            <i class="fa-solid fa-user-gear"></i>
+        </a>
+    </header>
+    <main id="app" class="flex justify-center items-center relative z-10 h-[100dvh]">
         <section id="notification_"></section>
-        <form id="image-upload-field" title="image-upload-field" class="flex gap-[1.3rem] p-[1.3rem] rounded-[1.3rem] flex-col shadow-[0_0_6px_rgba(0,0,0,0.3)]">
+        <form id="image-upload-field" title="image-upload-field" class="flex gap-[1.3rem] w-[320px] p-[1rem] rounded-[1rem] flex-col shadow-[0_0_6px_rgba(0,0,0,0.3)]">
             <input type="file" id="media-file" class="hidden" multiple accept=".jpg,.png,.jpeg" placeholder="select-your-file"/>
-            <section id="image-preview-container" class="border-dashed border-[1px] p-[0.5rem] cursor-pointer border-[rgba(0,0,0,0.3)]">No Images Selected</section>
+            <section id="image-preview-container" class="border-dashed border-[1px] h-[250px] p-[0.5rem] cursor-pointer border-[rgba(0,0,0,0.3)]">No Images Selected</section>
             <input type="text" id="image-title" placeholder="enter-image-title..." class="p-[0.45rem] border-[1px] outline-0 border-[rgba(0,0,0,0.3)] text-[0.9rem] font-[550]"/>
             <button type="submit" id="add-post-button" class="text-[0.9rem] p-[0.45rem] rounded-[0.45rem] font-[550] cursor-pointer bg-[#765898] text-[#FFFFFF]">Add Post</button>
         </form>
     </main>
-    <footer class="bg-[#32364f] p-[1rem] flex justify-center gap-[1rem] sticky bottom-0 top-[80%]">
-        <a href="add-post.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
-            <i class="fa-solid fa-plus"></i>
-        </a>
-        <a href="gallery.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
-            <i class="fa-solid fa-images"></i>
-        </a>
-        <a href="user.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
-            <i class="fa-solid fa-user"></i>
-        </a>
-        <a href="setting.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
-            <i class="fa-solid fa-user-gear"></i>
-        </a>
-    </footer>
     <script type="module" src="../ts/add-post.ts"></script>
     <script type="module" src="../ts/auth-guard.ts"></script>
 </body>

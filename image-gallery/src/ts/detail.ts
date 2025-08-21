@@ -17,6 +17,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
     private imageTable = "image_gallery";
     private galleryUserTable = 'image_gallery_user';
     private commentPostTable = 'image_gallery_comments';
+    private galleryLikesTable = 'image_gallery_likes';
 
     private currentIndex = 0;
     private totalSlide = 0;
@@ -53,11 +54,11 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         document.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
             if (target.closest("#left-button")) {
-                if (this.totalSlide > 1) { // Hanya geser jika ada lebih dari 1 slide
+                if (this.totalSlide > 1) { 
                     this.prevSlide();
                 }
             } else if (target.closest("#right-button")) {
-                if (this.totalSlide > 1) { // Hanya geser jika ada lebih dari 1 slide
+                if (this.totalSlide > 1) { 
                     this.nextSlide();
                 }
             } 
@@ -76,9 +77,9 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
             callback: (images) => {this.showDetailPost(images); console.log(images)},
             initialQuery: (addQuery) => addQuery.eq('id', this.imageId),
             relationalQuery: `
-                id, created_at, uploader_name, title, like_count, image_url,
+                id, created_at, uploader_name, title, image_url,
                 image_gallery_comments (id, username, opinions, user_id), 
-                likes_data_from_image_gallery (id)
+                image_gallery_likes (id, likes_count)
             `
         });
 
@@ -89,7 +90,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         });
 
         await this.likeStorage.realtimeInit({
-            tableName: "likes_data_from_image_gallery",
+            tableName: this.galleryLikesTable,
             callback: (likes) => this.updateLikeStatus(likes),
             initialQuery: (query) => query.eq('post_id', this.imageId)
         });
@@ -198,16 +199,17 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
             if (existingLike) {
                 // Unlike
                 await this.likeStorage.deleteData({
-                    tableName: "likes_data_from_image_gallery",
+                    tableName: this.galleryLikesTable,
                     column: "id",
                     values: existingLike.id
                 });
             } else {
                 // Like
                 await this.likeStorage.insertData({
-                    tableName: "likes_data_from_image_gallery",
+                    tableName: this.galleryLikesTable,
                     newData: {
                         user_id: this.currentUserId,
+                        likes_count: 1,
                         post_id: this.imageId
                     }
                 });
@@ -222,8 +224,8 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
         if (!this.currentPost) return;
         
         // Update like count
-        this.currentPost.like_count = likes.length;
-        this.likeCountElement.textContent = likes.length.toString();
+        this.currentPost.like_total = likes.length;
+        this.likeCountElement.textContent = `${likes.length}`;
         
         // Update button appearance
         const userLiked = !!likes.find(like => like.user_id === this.currentUserId);
@@ -289,7 +291,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
 
     private updateLikeUI(): void {
         if (!this.currentPost) return;
-        this.likeCountElement.textContent = this.currentPost.like_count.toString();
+        this.likeCountElement.textContent = `${this.currentPost.like_total}`;
     }
 
     teardownPostDetail(): void {

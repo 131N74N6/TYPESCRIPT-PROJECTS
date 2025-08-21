@@ -13,10 +13,10 @@ class DatabaseStorage <B extends { id: string }> {
         this.currentData = new Map<string, B>();
     }
 
-    async realtimeInit(db: DatabaseProps<B>): Promise<void> {
+    async realtimeInit(props: DatabaseProps<B>): Promise<void> {
         if (this.isInitialized && this.realtimeChannel) {
-            console.warn(`Realtime channel for ${db.tableName} is already initialized.`);
-            db.callback(this.toArray());
+            console.warn(`Realtime channel for ${props.tableName} is already initialized.`);
+            props.callback(this.toArray());
             return;
         }
 
@@ -25,18 +25,18 @@ class DatabaseStorage <B extends { id: string }> {
             this.realtimeChannel = null;
         }
 
-        this.additionalQueryFn = db.initialQuery || null;
-        this.relationalQuery = db.relationalQuery || null;
+        this.additionalQueryFn = props.initialQuery || null;
+        this.relationalQuery = props.relationalQuery || null;
         
         this.realtimeChannel = supabase.channel('any');
         this.realtimeChannel.on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: db.tableName },
+            { event: '*', schema: 'public', table: props.tableName },
             async (payload: RealtimePostgresChangesPayload<B>) => {
                 switch(payload.eventType) {
                     case "INSERT": {
                         let query = supabase
-                        .from(db.tableName)
+                        .from(props.tableName)
                         .select(this.relationalQuery || '*')
                         .eq('id', payload.new.id)
                         .single();
@@ -53,7 +53,7 @@ class DatabaseStorage <B extends { id: string }> {
                     }
                     case "UPDATE": {
                         let query = supabase
-                        .from(db.tableName)
+                        .from(props.tableName)
                         .select(this.relationalQuery || '*')
                         .eq('id', payload.new.id)
                         .single();
@@ -74,18 +74,18 @@ class DatabaseStorage <B extends { id: string }> {
                         break;
                     }
                 }
-                db.callback(this.toArray());
+                props.callback(this.toArray());
             }
         );
         
-        let query = supabase.from(db.tableName).select(this.relationalQuery || '*');
+        let query = supabase.from(props.tableName).select(this.relationalQuery || '*');
 
         if (this.additionalQueryFn) query = this.additionalQueryFn(query);
 
         const { data, error } = await query;
 
         if (error) {
-            db.callback([]);
+            props.callback([]);
             throw new Error(`Error fetching data: ${error.message}`);
         }
 
@@ -95,7 +95,7 @@ class DatabaseStorage <B extends { id: string }> {
             this.currentData.set(transformData.id, transformData)
         });
 
-        db.callback(this.toArray());
+        props.callback(this.toArray());
         this.realtimeChannel.subscribe();
         this.isInitialized = true;
     }
@@ -171,6 +171,7 @@ class DatabaseStorage <B extends { id: string }> {
         this.isInitialized = false;
         this.additionalQueryFn = null;
         this.relationalQuery = null;
+        
         if (this.realtimeChannel) {
             this.realtimeChannel.unsubscribe();
             this.realtimeChannel = null;

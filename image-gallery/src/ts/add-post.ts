@@ -79,7 +79,7 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
         if (!files || files.length === 0) return;
         
         // Reset preview container
-        this.imagePreviewContainer.innerHTML = 'No Images Selected';
+        this.imagePreviewContainer.innerHTML = '';
         this.imageFiles = [];
         
         // Process each selected file

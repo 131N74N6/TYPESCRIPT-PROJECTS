@@ -10,27 +10,27 @@
 </head>
 <body class="relative">
     <section id="setting-notification" class="fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 bg-[#E07BE0] text-[#420039] hidden"></section>
-    <header class="p-[1rem] flex items-center">
-        <button type="button" id="sign-out" class="bg-[#E07BE0] text-[#32364f] font-[550] text-[0.9rem] p-[0.46rem] rounded-[0.46rem] cursor-pointer">Sign Out</button>
-    </header>
-    <main class="h-[100dvh]">
-        <div class="text-[1.3rem]" id="signed-in-username"></div>
-        <button id="delete-all-post" class="bg-[#E07BE0] text-[#32364f] font-[550] text-[0.9rem] p-[0.46rem] rounded-[0.46rem] cursor-pointer">Delete All Post</button>
-    </main>
-    <footer class="bg-[#32364f] p-[1rem] flex justify-center gap-[1rem] sticky bottom-0 top-[80%]">
-        <a href="add-post.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+    <header class="lg:bg-[#32364f] lg:p-[1rem] lg:flex lg:items-center lg:gap-[1rem] hidden">
+        <a href="add-post.html" class="text-[#F6F2FF] text-[1.1rem] font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
             <i class="fa-solid fa-plus"></i>
         </a>
-        <a href="gallery.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+        <a href="gallery.html" class="text-[#F6F2FF] text-[1.1rem] font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
             <i class="fa-solid fa-images"></i>
         </a>
-        <a href="user.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+        <a href="user.html" class="text-[#F6F2FF] text-[1.1rem] font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
             <i class="fa-solid fa-user"></i>
         </a>
-        <a href="setting.html" class="text-[#F6F2FF] text-lg font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
+        <a href="setting.html" class="text-[#F6F2FF] text-[1.1rem] font-semibold hover:text-[#DCCCFF] transition-colors duration-200">
             <i class="fa-solid fa-user-gear"></i>
         </a>
-    </footer>
+    </header>
+    <main class="h-[100dvh]">
+        <section id="user-card">
+            <div class="text-[1.3rem]" id="signed-in-username"></div>
+            <button id="delete-all-post" class="bg-[#E07BE0] text-[#32364f] font-[550] text-[0.9rem] p-[0.46rem] rounded-[0.46rem] cursor-pointer">Delete All Post</button>
+            <button type="button" id="sign-out" class="bg-[#E07BE0] text-[#32364f] font-[550] text-[0.9rem] p-[0.46rem] rounded-[0.46rem] cursor-pointer">Sign Out</button>
+        </section>
+    </main>
     <script type="module" src="../ts/auth-guard.ts"></script>
     <script type="module" src="../ts/setting.ts"></script>
 </body>
