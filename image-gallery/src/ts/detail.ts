@@ -1,7 +1,8 @@
 import DatabaseStorage from "./supabase-table";
-import Modal from "./modal";
+import Modal from "./components/modal";
 import type { GalleryDetails, Like, UserOpinion } from "./custom-types";
 import { getSession, supabase } from "./supabase-config";
+import CommentList from "./components/comment-list";
 
 class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
     private urlParams = new URLSearchParams(window.location.search);
@@ -21,10 +22,10 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
 
     private currentIndex = 0;
     private totalSlide = 0;
+    private commentTotal = document.getElementById('comment-total') as HTMLElement;
 
     private detailPostNotification = document.getElementById("detail-post-notification") as HTMLElement;
     private galleryDetailModal: Modal = new Modal(this.detailPostNotification);
-
     private uploaderName = document.querySelector("#uploader-name") as HTMLParagraphElement;
     private carouselContainer = document.querySelector("#carousel-container") as HTMLElement; 
     private navigationContainer = document.querySelector("#navigation") as HTMLElement; 
@@ -33,8 +34,10 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
 
     private likeButton = document.querySelector("#like-button") as HTMLButtonElement;
     private likeCountElement = document.querySelector("#like-count") as HTMLSpanElement;
+
+    private commentSection = document.getElementById('comment-section') as HTMLElement;
     private commentForm = document.querySelector("#comment-maker") as HTMLFormElement;
-    private commentInput = document.querySelector("#opinions") as HTMLTextAreaElement;
+    private commentInput = document.querySelector("#opinions") as HTMLInputElement;
     private commentsContainer = document.querySelector("#comments-container") as HTMLElement;
 
     constructor() {
@@ -49,6 +52,7 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
             if (this.currentUserId) await this.getUserName(this.currentUserId);
         } else {
             window.location.replace('/html/signin.html');
+            return;
         }
 
         document.addEventListener("click", (event) => {
@@ -62,6 +66,8 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
                     this.nextSlide();
                 }
             } 
+            else if (target.closest("#show-comment")) this.showComments();
+            else if (target.closest("#hide-comment")) this.hideComments();
         }, { signal: this.controller.signal });
 
         this.likeButton.addEventListener("click", () => this.handleLike(), {
@@ -74,13 +80,8 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
 
         await this.realtimeInit({
             tableName: this.imageTable,
-            callback: (images) => {this.showDetailPost(images); console.log(images)},
+            callback: (images) => this.showDetailPost(images),
             initialQuery: (addQuery) => addQuery.eq('id', this.imageId),
-            relationalQuery: `
-                id, created_at, uploader_name, title, image_url,
-                image_gallery_comments (id, username, opinions, user_id), 
-                image_gallery_likes (id, likes_count)
-            `
         });
 
         await this.commentStorage.realtimeInit({
@@ -94,6 +95,16 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
             callback: (likes) => this.updateLikeStatus(likes),
             initialQuery: (query) => query.eq('post_id', this.imageId)
         });
+    }
+
+    private showComments(): void {
+        this.commentSection.classList.remove('hidden');
+        this.commentSection.classList.add('flex');
+    }
+
+    private hideComments(): void {
+        this.commentSection.classList.remove('flex');
+        this.commentSection.classList.add('hidden');
     }
 
     private async getUserName(userId: string): Promise<void> {
@@ -130,10 +141,10 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
 
         detail.image_url.forEach((image, index) => {
             const imageWrap = document.createElement("div") as HTMLDivElement;
-            imageWrap.className = "flex-shrink-0 w-full h-full relative overflow-hidden";
+            imageWrap.className = "flex-shrink-0 lg:w-[650px] lg:h-[650px] md:w-[350px] md:h-[350px] w-[280px] h-[280px] relative overflow-hidden";
 
             const imageElement = document.createElement("img") as HTMLImageElement;
-            imageElement.className = "w-full h-full object-contain block";
+            imageElement.className = "w-full h-full object-cover block";
             imageElement.src = image;
             imageElement.alt = `${detail.title} - Image ${index + 1}`;
 
@@ -239,28 +250,16 @@ class PublicGalleryDetail extends DatabaseStorage<GalleryDetails> {
 
     private showAllComments(comments: UserOpinion[]): void {
         this.commentsContainer.innerHTML = '';
+        this.commentTotal.innerHTML = '';
 
         if (comments.length === 0) {
-            this.commentsContainer.innerHTML = `
-                <p class="text-gray-500 text-center py-4">No comments yet</p>
-            `;
+            this.commentTotal.textContent = `${0}`;
+            this.commentsContainer.textContent = 'No Comments Yet...';
             return;
         }
 
-        comments.forEach(comment => {
-            const commentElement = document.createElement('div');
-            commentElement.className = 'bg-gray-50 p-4 rounded-lg';
-            commentElement.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div>
-                        <strong class="text-gray-800">${comment.username}</strong>
-                        <p class="text-gray-600 mt-1">${comment.opinions}</p>
-                    </div>
-                    <span class="text-gray-400 text-sm">${new Date(comment.created_at).toLocaleTimeString()}</span>
-                </div>
-            `;
-            this.commentsContainer.appendChild(commentElement);
-        });
+        this.commentTotal.textContent = `${comments.length}`;
+        CommentList(this.commentsContainer, comments);
     }
 
     private async handleCommentSubmit(event: SubmitEvent): Promise<void> {

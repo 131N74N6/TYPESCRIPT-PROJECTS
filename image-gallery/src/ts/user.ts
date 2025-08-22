@@ -1,7 +1,8 @@
 import DatabaseStorage from "./supabase-table";
-import Modal from "./modal";
+import Modal from "./components/modal";
 import { getSession, supabase } from "./supabase-config";
 import type { UserGalleryDisplay } from "./custom-types";
+import { UserPost } from "./components/user-post";
 
 class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
     private controller = new AbortController();
@@ -68,12 +69,9 @@ class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
             return;
         }
 
-        // Filter gambar berdasarkan user_id
-        const userImages = allImages.filter(image => image.user_id === this.currentUserId);
-
         try {    
-            if (userImages.length > 0) {
-                userImages.forEach(image => fragment.appendChild(this.createComponent(image)));
+            if (allImages.length > 0) {
+                allImages.forEach(image => fragment.appendChild(UserPost(image)));
                 this.personalImagesGallery.appendChild(fragment);
                 this.displayNoPostMessage(false); // Sembunyikan pesan jika ada gambar
             } else {
@@ -87,28 +85,6 @@ class UserGalleryDisplayer extends DatabaseStorage<UserGalleryDisplay> {
         }
     }
 
-    private createComponent(detail: UserGalleryDisplay): HTMLDivElement {
-        const link = document.createElement("a") as HTMLAnchorElement;
-        link.href = `detail-user-only.html?id=${detail.id}`; 
-        link.className = "block";
-        
-        const imagePost = document.createElement("div") as HTMLDivElement;
-        imagePost.className = "image-post-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300";
-
-        const imageWrap = document.createElement("div") as HTMLDivElement;
-        imageWrap.className = "image-wrap w-full aspect-square overflow-hidden rounded-t-lg"; 
-
-        detail.image_url.forEach((image_src: string) => {
-            const imageContent = document.createElement("img") as HTMLImageElement;
-            imageContent.src = image_src;
-            imageContent.className = "w-full h-full object-cover block";
-            imageWrap.appendChild(imageContent);
-        });
-
-        link.appendChild(imageWrap);
-        imagePost.appendChild(link);
-        return imagePost;
-    }
 
     private displayNoPostMessage(show: boolean, message: string = "Tidak ada gambar pribadi yang diunggah."): void {
         if (show) {

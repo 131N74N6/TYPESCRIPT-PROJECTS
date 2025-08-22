@@ -18,7 +18,7 @@ function TableStorage<TT extends { id: string }>() {
             }
 
             if (this.realtimeChannel) {
-                this.realtimeChannel.unsubscribe;
+                this.realtimeChannel.unsubscribe();
                 this.realtimeChannel = null;
             }
 

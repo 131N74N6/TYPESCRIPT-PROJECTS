@@ -1,6 +1,7 @@
 import DatabaseStorage from "./supabase-table";
-import Modal from "./modal";
+import Modal from "./components/modal";
 import type { GalleryDisplayer } from "./custom-types";
+import { PublicPost } from "./components/user-post";
 
 class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
     private controller = new AbortController();
@@ -50,7 +51,7 @@ class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
         this.imagesGallery.innerHTML = '';
         const filteredFragment = document.createDocumentFragment();
 
-        filtered.forEach(data => filteredFragment.appendChild(this.createComponent(data)));
+        filtered.forEach(data => filteredFragment.appendChild(PublicPost(data)));
         this.imagesGallery.appendChild(filteredFragment);
     }
 
@@ -58,7 +59,7 @@ class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
         const fragment = document.createDocumentFragment();
         try {    
             if (images.length > 0) {
-                images.forEach(image => fragment.appendChild(this.createComponent(image)));
+                images.forEach(image => fragment.appendChild(PublicPost(image)));
                 this.imagesGallery.innerHTML = '';
                 this.imagesGallery.appendChild(fragment);
             } else {
@@ -73,28 +74,6 @@ class ImageGalleryDisplayer extends DatabaseStorage<GalleryDisplayer> {
             this.imagesGallery.textContent = 'No Image Uploaded';
             this.imagesGallery.classList.add('text-red-600', 'text-center', 'col-span-full', 'py-8');
         }
-    }
-
-    private createComponent(detail: GalleryDisplayer): HTMLDivElement {
-        const link = document.createElement("a") as HTMLAnchorElement;
-        link.href = `detail.html?id=${detail.id}`;
-        
-        const imagePost = document.createElement("div") as HTMLDivElement;
-        imagePost.className = "image-post-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300";
-
-        const imageWrap = document.createElement("div") as HTMLDivElement;
-        imageWrap.className = "image-wrap w-full aspect-square overflow-hidden rounded-t-lg";
-
-        detail.image_url.forEach((image_src) => {
-            const imageContent = document.createElement("img") as HTMLImageElement;
-            imageContent.src = image_src;
-            imageContent.className = "w-full h-full object-cover block";
-            imageWrap.appendChild(imageContent);
-        });
-
-        link.append(imageWrap);
-        imagePost.append(link);
-        return imagePost;
     }
 
     private resetFilter(): void {

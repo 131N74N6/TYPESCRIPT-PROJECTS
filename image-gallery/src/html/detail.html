@@ -24,39 +24,45 @@
             <i class="fa-solid fa-user-gear"></i>
         </a>
     </header>
-    <main id="gallery-detail" class="container mx-auto p-4 flex-grow grid grid-cols-3 md:grid-cols-[0.55fr_300px] gap-4 md:gap-8 lg:gap-12 py-8">
-        <section id="image-group" class="relative overflow-hidden aspect-square rounded-lg shadow-xl">
-            <div id="carousel-container" class="flex h-full transition-transform duration-300 ease-in-out"></div>
-            <div id="navigation" class="absolute inset-0 flex items-center justify-between px-4" style="display: none;">
-                <button type="button" id="left-button" class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white transition-colors duration-200">&larr;</button>
-                <button type="button" id="right-button" class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white transition-colors duration-200">&rarr;</button>
-            </div>
-        </section>
-        <div id="detail-info" class="bg-white p-6 rounded-lg shadow-xl flex flex-col space-y-4">
-            <p id="uploader-name" class="text-gray-700 text-lg font-medium"></p>
-            <p id="image-title" class="text-gray-600 text-xl font-semibold"></p>
-            <p id="created-at" class="text-gray-500 text-sm"></p>
-            <div class="flex items-center gap-4">
-                <button id="like-button" class="flex items-center gap-2">
-                    <i class="far fa-heart text-xl"></i>
-                    <span id="like-count">0</span>
-                </button>
-            </div>
-        </div>
-        <div id="comment-section" class="bg-white rounded-lg shadow-xl p-6 flex flex-col gap-4 col-span-3 md:col-span-1">
-            <h3 class="text-xl font-semibold text-gray-800">Comments</h3>
-            <form id="comment-maker" class="flex flex-col gap-4 p-4 border rounded-lg">
-                <textarea id="opinions" placeholder="Add your opinions..." 
-                    class="w-full p-3 border rounded-lg resize-none min-h-[100px]"></textarea>
-                <button type="submit" class="self-end bg-[#ed9322] text-white px-4 py-2 rounded-lg">
-                    <i class="fa-regular fa-paper-plane mr-2"></i>Kirim
-                </button>
-            </form>
-            <section id="comments-group" class="space-y-4">
-                <h3 class="text-lg font-semibold border-b pb-2">Comments</h3>
-                <div id="comments-container" class="space-y-4"></div>
+    <main id="gallery-detail" class="flex justify-center p-[1rem] relative z-10">
+        <section class="shadow-[0_0_4px_rgba(0,0,0,0.3)] lg:flex lg:flex-row md:flex md:flex-col flex flex-col">
+            <section id="image-group" class="relative lg:w-[650px] lg:h-[650px] md:w-[350px] md:h-[350px] w-[280px] h-[280px] overflow-hidden aspect-square rounded-lg">
+                <div id="carousel-container" class="flex h-full transition-transform duration-300 ease-in-out"></div>
+                <div id="navigation" class="absolute inset-0 flex items-center justify-between px-4" style="display: none;">
+                    <button type="button" id="left-button" class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white transition-colors duration-200">&larr;</button>
+                    <button type="button" id="right-button" class="bg-black bg-opacity-30 hover:bg-opacity-50 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white transition-colors duration-200">&rarr;</button>
+                </div>
             </section>
-        </div>
+            <section id="detail-info" class="bg-white p-6 lg:w-[650px] lg:h-[650px] md:w-[350px] md:h-[350px] w-[280px] h-[280px] border-l-[1px] border-l-[rgba(0,0,0,0.3)] overflow-hidden flex flex-col space-y-4">
+                <p id="uploader-name" class="text-gray-700 text-lg font-medium"></p>
+                <p id="image-title" class="text-gray-600 text-xl font-semibold"></p>
+                <p id="created-at" class="text-gray-500 text-sm"></p>
+                <div class="flex items-center gap-4">
+                    <button type="button" id="like-button" class="flex items-center gap-2">
+                        <i class="far fa-heart text-xl"></i>
+                        <span id="like-count">0</span>
+                    </button>
+                    <button type="button" id="show-comment" class="flex items-center gap-2">
+                        <i class="fa-regular fa-comment"></i>
+                        <span id="comment-total">0</span>
+                    </button>
+                </div>
+                <form id="comment-maker" class="flex gap-[0.5rem]">
+                    <input id="opinions" type="text" placeholder="Add your opinions..." class="outline-0 w-[80%] border rounded-lg resize-none p-[0.45rem]"/>
+                    <button type="submit" class="bg-[#ed9322] cursor-pointer text-white p-[0.45rem] rounded-[0.45rem] w-[90px]">
+                        <i class="fa-regular fa-paper-plane"></i>
+                    </button>
+                </form>
+            </section>
+            <section id="comment-section" class="hidden flex-col justify-center items-center gap-4 col-span-3 fixed inset-0 z-20">
+                <div class="bg-white overflow-auto scrollbar-hidden w-[450px] h-[550px] p-[1.5rem] shadow-[0_0_4px_rgba(0,0,0,0.3)]">
+                    <button type="button" id="hide-comment" class="flex items-center gap-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <section id="comments-container" class="space-y-4 p-[1rem]">No Comments Yet...</section>
+                </div>
+            </section>
+        </section>
     </main>
     <script type="module" src="../ts/detail.ts"></script>
     <script type="module" src="../ts/auth-guard.ts"></script>

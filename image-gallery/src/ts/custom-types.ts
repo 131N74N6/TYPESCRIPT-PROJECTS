@@ -10,17 +10,6 @@ export type GalleryPost = {
 
 export type GalleryDisplayer = Pick<GalleryPost, 'id' | 'image_url' | 'title'>;
 
-export type GalleryDetails = {
-    id: string;
-    created_at: Date;
-    title: string;
-    image_url: string[];
-    uploader_name: string;
-    like_total: number;
-    user_liked: boolean;
-    post_id: string;
-}
-
 export type UserOpinion = {
     id: string;
     created_at: Date;
@@ -36,6 +25,18 @@ export type Like = {
     likes_count: number;
     post_id: string;
     user_id: string;
+}
+
+export type GalleryDetails = {
+    id: string;
+    created_at: Date;
+    title: string;
+    image_url: string[];
+    uploader_name: string;
+    like_total: number;
+    comment_total: number;
+    user_liked: boolean;
+    post_id: string;
 }
 
 export type Users = {

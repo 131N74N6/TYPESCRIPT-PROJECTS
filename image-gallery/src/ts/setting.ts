@@ -1,5 +1,5 @@
 import type { GalleryPost } from "./custom-types";
-import Modal from "./modal";
+import Modal from "./components/modal";
 import { getSession, supabase } from "./supabase-config";
 import { RemoveFile } from "./supabase-storage";
 import DatabaseStorage from "./supabase-table";

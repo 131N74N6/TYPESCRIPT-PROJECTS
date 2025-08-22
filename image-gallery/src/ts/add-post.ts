@@ -1,6 +1,6 @@
 import DatabaseStorage from "./supabase-table";
 import { InsertFile } from "./supabase-storage";
-import Modal from "./modal";
+import Modal from "./components/modal";
 import type { GalleryPost } from "./custom-types";
 import { getSession, supabase } from "./supabase-config";
 
@@ -10,6 +10,7 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
     private notification = document.getElementById("notification_") as HTMLElement;
     private uploaderModal: Modal = new Modal(this.notification);
     private imageTable = 'image_gallery';
+    private galleryUserTable = 'image_gallery_user';
     
     private imageUploadField = document.getElementById("image-upload-field") as HTMLFormElement;
     private imageTitle = document.getElementById("image-title") as HTMLInputElement;
@@ -31,7 +32,7 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
             
             try {
                 const { data, error } = await supabase
-                .from('image_gallery_user')
+                .from(this.galleryUserTable)
                 .select('username')
                 .eq('id', this.currentUserId)
                 .single();
@@ -51,11 +52,10 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
             }
 
         } else {
-            // Jika tidak login, arahkan kembali ke halaman sign-in
             this.uploaderModal.createComponent("Please sign-in to insert your image");
             this.uploaderModal.showComponent();
             window.location.replace('/html/signin.html');
-            return; // Penting untuk menghentikan eksekusi lebih lanjut
+            return;
         }
 
         document.addEventListener("click", (event) => {
@@ -78,7 +78,6 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
         
         if (!files || files.length === 0) return;
         
-        // Reset preview container
         this.imagePreviewContainer.innerHTML = '';
         this.imageFiles = [];
         
@@ -141,6 +140,7 @@ class ImageForm extends DatabaseStorage<GalleryPost> {
         } finally {
             this.submitButton.disabled = false;
             this.submitButton.textContent = 'Upload Images';
+            this.imageFiles = [];
         }
     }
 

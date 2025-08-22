@@ -28,7 +28,7 @@ class DatabaseStorage <B extends { id: string }> {
         this.additionalQueryFn = props.initialQuery || null;
         this.relationalQuery = props.relationalQuery || null;
         
-        this.realtimeChannel = supabase.channel('any');
+        this.realtimeChannel = supabase.channel(`db_${props.tableName}`);
         this.realtimeChannel.on(
             'postgres_changes',
             { event: '*', schema: 'public', table: props.tableName },

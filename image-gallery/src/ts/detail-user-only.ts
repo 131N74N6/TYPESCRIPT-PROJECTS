@@ -1,5 +1,5 @@
 import DatabaseStorage from "./supabase-table";
-import Modal from "./modal";
+import Modal from "./components/modal";
 import type { GalleryDetails } from "./custom-types";
 import { RemoveFile } from "./supabase-storage";
 

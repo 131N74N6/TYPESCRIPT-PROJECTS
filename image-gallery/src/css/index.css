@@ -15,3 +15,7 @@
     --periwinkle: #DCCCFF;
     --magnolia: #F6F2FF;
 }
+
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
