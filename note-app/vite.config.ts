@@ -13,7 +13,7 @@ export default defineConfig ({
         emptyOutDir: true,
         rollupOptions: {
             input: {
-                main: resolve(root, 'html', 'signin.html'),
+                main: resolve(root, 'html', 'index.html'),
                 sign_up: resolve(root, 'html', 'signup.html'),
                 home: resolve(root, 'html', 'home.html'),
                 detail_note: resolve(root, 'html', 'detail-note.html'),
@@ -21,5 +21,5 @@ export default defineConfig ({
             }
         }
     },
-    server: { open: 'html/signin.html' }
+    server: { open: 'html/index.html' }
 })

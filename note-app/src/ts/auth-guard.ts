@@ -1,10 +1,9 @@
 import { getSession, onAuthStateChange, signOut as supabaseSignOut } from './supabase-config';
 
-const publicRoutes = ['/html/signin.html', '/html/signup.html'];
+const publicRoutes = ['/html/index.html', '/html/signup.html'];
 let authUnsubscribe: (() => void) | null = null;
 let isCheckingAuth = false;
 
-// Handle redirect logic
 const handleRedirect = (sessionExists: boolean) => {
     const currentPath = window.location.pathname;
     const isPublicRoute = publicRoutes.includes(currentPath);
@@ -12,11 +11,10 @@ const handleRedirect = (sessionExists: boolean) => {
     if (sessionExists && isPublicRoute) {
         window.location.href = '/html/home.html';
     } else if (!sessionExists && !isPublicRoute) {
-        window.location.href = '/html/signin.html';
+        window.location.href = '/html/index.html';
     }
 }
 
-// Centralized auth check
 const checkAuth = async () => {
     if (isCheckingAuth) return;
     isCheckingAuth = true;
@@ -27,7 +25,7 @@ const checkAuth = async () => {
     } catch (error) {
         console.error('Auth check failed:', error);
         if (!publicRoutes.includes(window.location.pathname)) {
-            window.location.href = '/html/signin.html';
+            window.location.href = '/html/index.html';
         }
     } finally {
         isCheckingAuth = false;
@@ -37,7 +35,6 @@ const checkAuth = async () => {
 const initAuthGuard = () => {
     checkAuth();
     
-    // Auth state listener
     authUnsubscribe = onAuthStateChange((event) => {
         if (event === 'SIGNED_OUT') {
             handleRedirect(false);

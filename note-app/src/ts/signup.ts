@@ -35,7 +35,7 @@ class SignUp extends SupabaseTable<Users> {
                     data: {
                         username: trimmedUserName
                     },
-                    emailRedirectTo: 'http://localhost:5173/html/signin.html'
+                    emailRedirectTo: 'http://localhost:5173/html/index.html'
                 } 
             });
             

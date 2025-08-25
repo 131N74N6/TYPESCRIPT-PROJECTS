@@ -20,13 +20,14 @@ class HomePage extends SupabaseTable<Note> {
             currentUserId = session.user.id;
             if (currentUserId) await this.showUserName(currentUserId);
         } else {
-            window.location.replace('/html/signin.html');
+            window.location.replace('/html/index.html');
             return;
         }
 
         await this.realtimeInit({
             tableName: noteTable,
-            callback: (notes) => this.showAllNotes(notes)
+            callback: (notes) => this.showAllNotes(notes),
+            initialQuery: (addQuery) => addQuery.eq('user_id', currentUserId)
         });
         
         deleteAllButton.onclick = async () => await this.deleteAllNotes();
@@ -120,6 +121,7 @@ class HomePage extends SupabaseTable<Note> {
 
     teardownHomePage(): void {
         this.teardownTable();
+        currentUserId = null;
     }
 
     async deleteAllNotes(): Promise<void> {

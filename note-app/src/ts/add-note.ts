@@ -26,7 +26,7 @@ class NoteForm extends SupabaseTable<Note> {
             currentUserId = session.user.id;
             if (currentUserId) await this.showUserName(currentUserId);
         } else {
-            window.location.replace('/html/signin.html');
+            window.location.replace('/html/index.html');
             return;
         }
 
@@ -88,6 +88,7 @@ class NoteForm extends SupabaseTable<Note> {
 
     teardownNoteForm(): void {
         controller.abort();
+        noteForm.reset();
         setNotification.teardownModal();
         currentUserId = null;
         this.teardownTable();
