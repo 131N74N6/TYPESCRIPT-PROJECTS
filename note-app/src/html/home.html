@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/web-logo.svg"/>
+    <link rel="stylesheet" href="../css/index.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Note</title>
+</head>
+<body class="bg-[#000000] flex gap-[1rem] p-[1rem]">
+    <header class="flex flex-col gap-[1rem] p-[1rem] bg-[#1A1A1A] text-[#B91372] w-[20%]">
+        <div id="username" class="font-[550] text-[1.2rem]">User</div>
+        <a href="home.html" class="text-[#B91372] text-[1rem] decoration-0 font-[550]">
+            <i class="fa-regular fa-house"></i>
+            <span>Home</span>
+        </a>
+        <a href="add-note.html" class="text-[#B91372] text-[1rem] decoration-0 font-[550]">
+            <span>Add Notes</span>
+        </a>
+        <button type="button" id="sign-out" class="cursor-pointer">
+            <div class="text-left">Sign Out</div>
+        </button>
+    </header>
+    <main id="note" class="px-[1rem] pb-[1rem] w-[80%] border-[1px] border-[#B91372]">
+        <section id="tools" class="py-[1rem]">
+            <button 
+                id="delete-all-notes" 
+                class="text-[#000000] w-[90px] bg-[#FA198B] p-[0.4rem] rounded-[0.4rem] text-[0.9rem] font-[450] cursor-pointer">
+                Delete All
+            </button>
+        </section>
+        <section id="note-list" class="grid gap-[1rem] lg:grid-cols-3 md:grid-cols-2 grid-cols-2">
+            <div class="h-[90dvh] text-[#B91372] flex justify-center align-middle text-[2rem] 
+            font-[550]" id="error-message">
+                No Note Added Recently...
+            </div>
+        </section>
+    </main>
+    <script type="module" src="../ts/auth-guard.ts"></script>
+    <script type="module" src="../ts/home.ts"></script>
+</body>
+</html>
