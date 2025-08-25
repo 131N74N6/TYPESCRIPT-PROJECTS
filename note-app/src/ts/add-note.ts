@@ -26,7 +26,7 @@ class NoteForm extends SupabaseTable<Note> {
             currentUserId = session.user.id;
             if (currentUserId) await this.showUserName(currentUserId);
         } else {
-            window.location.replace('/html/index.html');
+            window.location.replace('/index.html');
             return;
         }
 

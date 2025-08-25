@@ -1,6 +1,6 @@
 import { getSession, onAuthStateChange, signOut as supabaseSignOut } from './supabase-config';
 
-const publicRoutes = ['/html/index.html', '/html/signup.html'];
+const publicRoutes = ['/index.html', '/html/signup.html'];
 let authUnsubscribe: (() => void) | null = null;
 let isCheckingAuth = false;
 
@@ -11,7 +11,7 @@ const handleRedirect = (sessionExists: boolean) => {
     if (sessionExists && isPublicRoute) {
         window.location.href = '/html/home.html';
     } else if (!sessionExists && !isPublicRoute) {
-        window.location.href = '/html/index.html';
+        window.location.href = '/index.html';
     }
 }
 
@@ -25,7 +25,7 @@ const checkAuth = async () => {
     } catch (error) {
         console.error('Auth check failed:', error);
         if (!publicRoutes.includes(window.location.pathname)) {
-            window.location.href = '/html/index.html';
+            window.location.href = '/index.html';
         }
     } finally {
         isCheckingAuth = false;
