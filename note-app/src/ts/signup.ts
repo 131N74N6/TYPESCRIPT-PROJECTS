@@ -35,7 +35,7 @@ class SignUp extends SupabaseTable<Users> {
                     data: {
                         username: trimmedUserName
                     },
-                    emailRedirectTo: 'https://your-note-vert.vercel.app/index.html'
+                    emailRedirectTo: 'http://localhost:3000/index.html'
                 } 
             });
             
